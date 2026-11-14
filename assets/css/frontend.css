@@ -1,0 +1,136 @@
+/*
+ * SlashPhoto front-end styles.
+ *
+ * Theme-first rules, in two layers:
+ *  - Layout (grid, list resets) uses two-class selectors (specificity 0,2,0)
+ *    so it beats generic content typography such as ".entry-content ul" or
+ *    ".entry-content li" that most themes ship. Without this, classic themes
+ *    put bullets and indentation into the grid.
+ *  - Appearance (colors, type, radius, hover) is wrapped in :where(), so it
+ *    has zero specificity and any theme rule wins without !important.
+ *  - Colors, spacing and type come from the theme: currentColor, inherit and
+ *    theme.json presets (--wp--preset--*, --wp--style--*) with fallbacks for
+ *    classic themes.
+ *  - The grid adapts to the width of the content area, not the viewport, so
+ *    it works in sidebars, full-width templates and narrow columns alike.
+ *  - Themes can tune the layout with the --slashphoto-* custom properties
+ *    below instead of overriding rules.
+ */
+
+:where(.slashphoto) {
+	--slashphoto-gap: var(--wp--style--block-gap, 1rem);
+	--slashphoto-column-min: 14rem;
+	--slashphoto-aspect: 3 / 2;
+	--slashphoto-radius: 0;
+	--slashphoto-caption-size: var(--wp--preset--font-size--small, 0.875em);
+	--slashphoto-muted: color-mix(in srgb, currentColor 60%, transparent);
+	--slashphoto-placeholder: color-mix(in srgb, currentColor 8%, transparent);
+	--slashphoto-badge-bg: rgb(0 0 0 / 0.65);
+	--slashphoto-badge-fg: #fff;
+
+	margin-block: var(--wp--style--block-gap, 1.5rem);
+}
+
+/* Layout: must win over generic theme rules for lists and figures. */
+.slashphoto .slashphoto-grid,
+.slashphoto .slashphoto-albums {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(var(--slashphoto-column-min), 100%), 1fr));
+	gap: var(--slashphoto-gap);
+	max-width: none;
+	margin: 0 0 var(--slashphoto-gap);
+	padding: 0;
+	list-style: none;
+}
+
+.slashphoto .slashphoto-item,
+.slashphoto .slashphoto-album {
+	max-width: none;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.slashphoto .slashphoto-item::marker,
+.slashphoto .slashphoto-album::marker {
+	content: none;
+}
+
+.slashphoto .slashphoto-figure {
+	max-width: none;
+	margin: 0;
+}
+
+/* Appearance: zero specificity, the theme wins. */
+
+:where(.slashphoto-link, .slashphoto-album-link) {
+	position: relative;
+	display: block;
+	color: inherit;
+	text-decoration: none;
+}
+
+:where(.slashphoto-image, .slashphoto-album-cover) {
+	display: block;
+	width: 100%;
+	height: auto;
+	aspect-ratio: var(--slashphoto-aspect);
+	object-fit: cover;
+	border-radius: var(--slashphoto-radius);
+	background: var(--slashphoto-placeholder);
+}
+
+/* Wide panoramas span the whole row and keep their own proportions. */
+.slashphoto .slashphoto-item--wide {
+	grid-column: 1 / -1;
+}
+
+:where(.slashphoto-item--wide .slashphoto-image) {
+	aspect-ratio: auto;
+}
+
+:where(.slashphoto-badge) {
+	position: absolute;
+	inset-block-start: 0.5rem;
+	inset-inline-end: 0.5rem;
+	padding: 0.15em 0.5em;
+	border-radius: 999px;
+	background: var(--slashphoto-badge-bg);
+	color: var(--slashphoto-badge-fg);
+	font-size: var(--slashphoto-caption-size);
+	font-weight: 600;
+	line-height: 1.4;
+	pointer-events: none;
+}
+
+:where(.slashphoto-album-title) {
+	display: block;
+	margin-block-start: 0.5em;
+	font-size: var(--wp--preset--font-size--medium, 1.125em);
+	font-weight: 600;
+}
+
+:where(.slashphoto-caption) {
+	margin-block-start: 0.4em;
+	color: var(--slashphoto-muted);
+	font-size: var(--slashphoto-caption-size);
+}
+
+:where(.slashphoto-link:focus-visible, .slashphoto-album-link:focus-visible) {
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
+}
+
+:where(.slashphoto-empty) {
+	color: var(--slashphoto-muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	:where(.slashphoto-image, .slashphoto-album-cover) {
+		transition: opacity 0.2s ease;
+	}
+
+	:where(.slashphoto-link:hover .slashphoto-image, .slashphoto-album-link:hover .slashphoto-album-cover) {
+		opacity: 0.88;
+	}
+}

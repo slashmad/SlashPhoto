@@ -1,0 +1,116 @@
+# Copyright (C) 2026 Slashmad
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: SlashPhoto 0.1.0-dev\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/slashphoto\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-14T20:54:44+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: slashphoto\n"
+
+#. Plugin Name of the plugin
+#: slashphoto.php
+#: src/Gallery/PostType.php:51
+msgid "SlashPhoto"
+msgstr ""
+
+#. Description of the plugin
+#: slashphoto.php
+msgid "Open-source photography galleries, client proofing and photo sales for WordPress. No subscriptions, no locked features."
+msgstr ""
+
+#. Author of the plugin
+#: slashphoto.php
+msgid "Slashmad"
+msgstr ""
+
+#: src/Gallery/PostType.php:45
+msgctxt "URL slug"
+msgid "galleries"
+msgstr ""
+
+#: src/Gallery/PostType.php:49
+msgid "Galleries"
+msgstr ""
+
+#: src/Gallery/PostType.php:50
+msgid "Gallery"
+msgstr ""
+
+#: src/Gallery/PostType.php:52
+msgid "All galleries"
+msgstr ""
+
+#: src/Gallery/PostType.php:53
+msgid "Add new gallery"
+msgstr ""
+
+#: src/Gallery/PostType.php:54
+msgid "Edit gallery"
+msgstr ""
+
+#: src/Gallery/PostType.php:55
+msgid "New gallery"
+msgstr ""
+
+#: src/Gallery/PostType.php:56
+msgid "View gallery"
+msgstr ""
+
+#: src/Gallery/PostType.php:57
+msgid "Search galleries"
+msgstr ""
+
+#: src/Gallery/PostType.php:58
+msgid "No galleries found."
+msgstr ""
+
+#: src/Gallery/PostType.php:59
+msgid "No galleries found in Trash."
+msgstr ""
+
+#: src/Gallery/PostType.php:60
+msgid "Parent gallery:"
+msgstr ""
+
+#: src/Media/Panorama.php:222
+msgid "detected: 360°"
+msgstr ""
+
+#: src/Media/Panorama.php:222
+msgid "detected: not 360°"
+msgstr ""
+
+#. translators: %s: detection result
+#: src/Media/Panorama.php:224
+#, php-format
+msgid "Automatic (%s)"
+msgstr ""
+
+#. translators: %s: detection result
+#: src/Media/Panorama.php:225
+msgid "360° panorama"
+msgstr ""
+
+#: src/Media/Panorama.php:226
+msgid "Not 360°"
+msgstr ""
+
+#: src/Media/Panorama.php:237
+msgid "Panorama"
+msgstr ""
+
+#: templates/gallery.php:73
+msgctxt "panorama badge"
+msgid "360°"
+msgstr ""
+
+#: templates/gallery.php:84
+msgid "This gallery has no images yet."
+msgstr ""

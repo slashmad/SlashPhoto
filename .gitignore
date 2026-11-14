@@ -1,0 +1,11 @@
+/vendor/
+/node_modules/
+/build/
+/dist/
+*.zip
+.phpunit.result.cache
+.wp-env.override.json
+.DS_Store
+
+# Local photos for npm run seed; never committed.
+/.dev-media/

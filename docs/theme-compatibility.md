@@ -1,0 +1,92 @@
+# Theme compatibility
+
+SlashPhoto has to look right in thousands of themes it has never seen: block
+themes, classic themes, page builders and heavily customised child themes.
+The rule is simple: **the theme owns the page, SlashPhoto owns the gallery.**
+
+## How a gallery is rendered
+
+1. A gallery is an ordinary post of type `slashphoto_gallery`. WordPress picks
+   the template through the normal template hierarchy, so the theme's own
+   header, footer, sidebars, title and content width are used, in block
+   themes and classic themes alike.
+2. SlashPhoto appends its markup to the post content (`the_content`, priority
+   20), only for the main query of a single gallery, inside the loop, and not
+   for password-protected galleries. The photographer's own text and blocks
+   come first.
+3. The gallery wrapper gets `alignwide` when the theme supports wide
+   alignment (all block themes, and classic themes with
+   `add_theme_support( 'align-wide' )`). The width therefore comes from the
+   theme: `wideSize` in `theme.json` or the theme's `.alignwide` rules.
+
+## Styles
+
+`assets/css/frontend.css` is loaded only on gallery views, in two layers:
+
+| Layer | Selectors | Purpose |
+|---|---|---|
+| Layout | `.slashphoto .slashphoto-grid` (0,2,0) | Grid and list resets that must beat generic theme rules such as `.entry-content ul` and `.entry-content li`. Without this, classic themes put bullets and indentation into the grid. |
+| Appearance | `:where(...)` (0,0,0) | Colors, type, radius, hover. Any theme rule wins without `!important`. |
+
+Colors and spacing come from the theme: `currentColor`, `inherit` and the
+`theme.json` presets (`--wp--preset--*`, `--wp--style--block-gap`) with
+fallbacks for classic themes. The grid uses `auto-fill` with a minimum column
+width, so it adapts to the width of the content area rather than the
+viewport, whether that is a sidebar layout, a boxed layout or full width.
+
+Themes can tune the gallery with custom properties instead of overriding rules:
+
+```css
+.slashphoto {
+	--slashphoto-gap: 4px;
+	--slashphoto-column-min: 18rem;
+	--slashphoto-aspect: 1;          /* square thumbnails */
+	--slashphoto-radius: 6px;
+	--slashphoto-badge-bg: var(--wp--preset--color--contrast);
+}
+```
+
+## Hooks for themes
+
+| Hook | Use |
+|---|---|
+| `slashphoto_append_gallery_to_content` (filter, bool) | Return `false` when your own template renders the gallery. |
+| `slashphoto_gallery_align` (filter, `wide`/`full`/`''`) | Change the gallery width. |
+| `slashphoto_enqueue_frontend_styles` (filter, bool) | Return `false` to drop the stylesheet entirely. |
+| `slashphoto_locate_template` (filter, path) | Load a partial from anywhere. |
+| `slashphoto_image_kind` (filter) | Change how an image is classified (`photo`, `wide`, `360`). |
+
+Body classes on gallery views: `slashphoto-page` plus
+`slashphoto-block-theme` or `slashphoto-classic-theme`.
+
+## Overriding templates
+
+Copy a file from the plugin's `templates/` folder to a `slashphoto/` folder in
+your theme (child theme first, then parent theme):
+
+```text
+wp-content/themes/your-theme/slashphoto/gallery.php
+```
+
+Keep the `slashphoto-*` class names and `data-slashphoto-*` attributes so the
+lightbox, 360° viewer and proofing scripts keep working.
+
+For full control over the page, provide `single-slashphoto_gallery.php`
+(classic) or `templates/single-slashphoto_gallery.html` (block theme) and
+return `false` from `slashphoto_append_gallery_to_content`.
+
+## Test matrix
+
+The development environment (`npm run env:start`) installs these themes.
+Check every front-end change in all of them, on desktop and phone widths:
+
+| Theme | Type | Notes |
+|---|---|---|
+| Twenty Twenty-Five | Block theme | Constrained layout, `theme.json` presets |
+| Twenty Twenty-One | Classic | Strong `.entry-content` list styles |
+| Astra | Classic, popular | Boxed content area, image shadows |
+
+```sh
+npx wp-env run cli wp theme activate astra
+npm run seed
+```

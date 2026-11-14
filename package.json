@@ -1,0 +1,21 @@
+{
+	"name": "slashphoto",
+	"version": "0.1.0-dev",
+	"private": true,
+	"description": "Open-source photography galleries, client proofing and photo sales for WordPress.",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"env:start": "wp-env start",
+		"env:stop": "wp-env stop",
+		"env:destroy": "wp-env destroy",
+		"composer": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto composer",
+		"setup": "npm run composer -- install",
+		"lint:php": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto composer lint",
+		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/slashphoto composer test",
+		"i18n:pot": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto wp i18n make-pot . languages/slashphoto.pot --exclude=vendor,node_modules,tests",
+		"seed": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto wp eval-file bin/dev-seed.php"
+	},
+	"devDependencies": {
+		"@wordpress/env": "^12.1.0"
+	}
+}

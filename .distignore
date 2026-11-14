@@ -1,0 +1,25 @@
+# Files excluded from release zips (wp dist-archive / 10up deploy action).
+/.git
+/.github
+/.wp-env.json
+/.wp-env.override.json
+/.editorconfig
+/.gitattributes
+/.gitignore
+/.distignore
+/node_modules
+/vendor
+/tests
+/docs
+/AGENTS.md
+/AI_CONTEXT.md
+/composer.json
+/composer.lock
+/package.json
+/package-lock.json
+/phpcs.xml.dist
+/phpunit.xml.dist
+/.phpunit.result.cache
+/CONTRIBUTING.md
+/bin
+/.dev-media
