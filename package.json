@@ -13,9 +13,15 @@
 		"lint:php": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto composer lint",
 		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/slashphoto composer test",
 		"i18n:pot": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto wp i18n make-pot . languages/slashphoto.pot --exclude=vendor,node_modules,tests",
-		"seed": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto wp eval-file bin/dev-seed.php"
+		"seed": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto wp eval-file bin/dev-seed.php",
+		"vendor": "node bin/vendor.mjs",
+		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
-		"@wordpress/env": "^12.1.0"
+		"@photo-sphere-viewer/core": "5.15.1",
+		"@photo-sphere-viewer/visible-range-plugin": "5.15.1",
+		"@playwright/test": "^1.65.1",
+		"@wordpress/env": "^12.1.0",
+		"three": "0.185.1"
 	}
 }

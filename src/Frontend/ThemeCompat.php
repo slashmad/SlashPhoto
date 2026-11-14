@@ -107,7 +107,7 @@ final class ThemeCompat {
 			$items[] = [
 				'attachment' => $attachment,
 				'kind'       => $kind,
-				'panorama'   => '360' === $kind ? $this->panorama->viewer_data( $attachment->ID ) : [],
+				'panorama'   => '360' === $kind ? $this->panorama->pano_data( $attachment->ID ) : [],
 			];
 		}
 		return $items;

@@ -106,6 +106,16 @@ final class Panorama {
 		$file = wp_get_original_image_path( (int) $attachment_id );
 		$data = $file ? self::detect_file( $file ) : null;
 
+		if ( null !== $data ) {
+			// GPano values refer to the original file; keep its size so they
+			// can be mapped onto the downscaled web copy later.
+			$size = wp_getimagesize( $file );
+			if ( $size ) {
+				$data['image_width']  = (int) $size[0];
+				$data['image_height'] = (int) $size[1];
+			}
+		}
+
 		if ( null === $data ) {
 			delete_post_meta( (int) $attachment_id, self::META_DETECTED );
 		} else {
@@ -142,15 +152,120 @@ final class Panorama {
 	}
 
 	/**
-	 * Returns viewer data for a 360° image: detected GPano values, or an
-	 * empty array when the photographer marked it as 360° manually.
+	 * Returns the raw GPano data detected on upload, or an empty array.
 	 *
 	 * @param int $attachment_id Attachment ID.
 	 * @return array<string, string|float|int>
 	 */
-	public function viewer_data( int $attachment_id ): array {
+	public function detected( int $attachment_id ): array {
 		$detected = get_post_meta( $attachment_id, self::META_DETECTED, true );
 		return is_array( $detected ) ? $detected : [];
+	}
+
+	/**
+	 * Returns viewer geometry for the web copy ("full" size) of a 360° image,
+	 * in Photo Sphere Viewer's panoData format.
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 * @return array<string, int|float>
+	 */
+	public function pano_data( int $attachment_id ): array {
+		$meta  = wp_get_attachment_metadata( $attachment_id );
+		$web_w = (int) ( $meta['width'] ?? 0 );
+		$web_h = (int) ( $meta['height'] ?? 0 );
+		if ( $web_w <= 0 || $web_h <= 0 ) {
+			return [];
+		}
+
+		/**
+		 * Filters the viewer geometry of a 360° image.
+		 *
+		 * @param array $pano_data     panoData for Photo Sphere Viewer.
+		 * @param int   $attachment_id Attachment ID.
+		 */
+		return (array) apply_filters(
+			'slashphoto_panorama_pano_data',
+			self::normalize( $this->detected( $attachment_id ), $web_w, $web_h ),
+			$attachment_id
+		);
+	}
+
+	/**
+	 * Maps GPano values onto the image that is actually displayed.
+	 *
+	 * GPano describes the original file, but the displayed image can differ:
+	 *  - WordPress may have made a smaller "-scaled" web copy.
+	 *  - Photographers often crop a stitched panorama again (for example in
+	 *    Lightroom) after the stitcher wrote GPano, so the cropped area in the
+	 *    metadata no longer matches the pixels. The horizontal extent is
+	 *    trusted (it defines the angle of view); a height mismatch is treated
+	 *    as an even trim of top and bottom.
+	 * Without GPano (marked as 360° by hand) the image is assumed to cover a
+	 * full 360° horizontally, centred vertically.
+	 *
+	 * @param array $gpano Detected data (snake_case keys from parse_xmp(), plus image_width/image_height).
+	 * @param int   $web_w Width of the displayed image.
+	 * @param int   $web_h Height of the displayed image.
+	 * @return array<string, int|float> panoData: fullWidth, fullHeight, croppedWidth, croppedHeight, croppedX, croppedY, pose*.
+	 */
+	public static function normalize( array $gpano, int $web_w, int $web_h ): array {
+		$orig_w = (int) ( $gpano['image_width'] ?? $gpano['cropped_width'] ?? 0 );
+		$orig_h = (int) ( $gpano['image_height'] ?? $gpano['cropped_height'] ?? 0 );
+
+		if ( empty( $gpano['full_width'] ) || $orig_w <= 0 || $orig_h <= 0 ) {
+			$full_w = max( $web_w, 2 * $web_h );
+			$full_h = (int) round( $full_w / 2 );
+			return [
+				'fullWidth'     => $full_w,
+				'fullHeight'    => $full_h,
+				'croppedWidth'  => $web_w,
+				'croppedHeight' => $web_h,
+				'croppedX'      => (int) round( ( $full_w - $web_w ) / 2 ),
+				'croppedY'      => (int) round( ( $full_h - $web_h ) / 2 ),
+			];
+		}
+
+		// 1. Express GPano in original pixels, trusting the horizontal extent.
+		$crop_w = (float) ( $gpano['cropped_width'] ?? $orig_w );
+		$s0     = $crop_w > 0 ? $orig_w / $crop_w : 1.0;
+		$full_w = (float) $gpano['full_width'] * $s0;
+		$crop_x = (float) ( $gpano['cropped_x'] ?? ( $full_w - $orig_w ) / 2 / $s0 ) * $s0;
+		$crop_h = (float) ( $gpano['cropped_height'] ?? $orig_h ) * $s0;
+		$crop_y = isset( $gpano['cropped_y'] ) ? (float) $gpano['cropped_y'] * $s0 : null;
+
+		// 2. Re-crop after stitching: trim the difference evenly.
+		$full_h = $full_w / 2;
+		if ( null === $crop_y ) {
+			$crop_y = ( $full_h - $orig_h ) / 2;
+		} elseif ( abs( $crop_h - $orig_h ) > 1 ) {
+			$crop_y += ( $crop_h - $orig_h ) / 2;
+		}
+		$crop_y = min( max( 0.0, $crop_y ), max( 0.0, $full_h - $orig_h ) );
+
+		// 3. Scale from the original to the displayed copy.
+		$s1     = $web_w / $orig_w;
+		$full_w = (int) round( $full_w * $s1 );
+		$full_h = (int) round( $full_w / 2 );
+
+		$data = [
+			'fullWidth'     => $full_w,
+			'fullHeight'    => $full_h,
+			'croppedWidth'  => $web_w,
+			'croppedHeight' => $web_h,
+			'croppedX'      => (int) min( max( 0, round( $crop_x * $s1 ) ), $full_w - $web_w ),
+			'croppedY'      => (int) min( max( 0, round( $crop_y * $s1 ) ), max( 0, $full_h - $web_h ) ),
+		];
+
+		foreach ( [
+			'pose_heading' => 'poseHeading',
+			'pose_pitch'   => 'posePitch',
+			'pose_roll'    => 'poseRoll',
+		] as $from => $to ) {
+			if ( isset( $gpano[ $from ] ) ) {
+				$data[ $to ] = (float) $gpano[ $from ];
+			}
+		}
+		return $data;
 	}
 
 	/**

@@ -46,7 +46,8 @@ final class PanoramaTest extends WP_UnitTestCase {
 
 		$panorama = new Panorama();
 		$this->assertSame( '360', $panorama->kind( $image_id ) );
-		$this->assertSame( 3000, $panorama->viewer_data( $image_id )['full_width'] );
+		$this->assertSame( 3000, $panorama->detected( $image_id )['full_width'] );
+		$this->assertSame( 3000, $panorama->detected( $image_id )['image_width'] );
 		$this->assertSame( 3000, $meta['width'], '360° images must not be downscaled to 2560 px.' );
 		$this->assertArrayNotHasKey( 'original_image', $meta );
 	}
@@ -66,7 +67,19 @@ final class PanoramaTest extends WP_UnitTestCase {
 
 		$panorama->save_fields( [ 'ID' => $image_id ], [ 'slashphoto_projection' => '360' ] );
 		$this->assertSame( '360', $panorama->kind( $image_id ) );
-		$this->assertSame( [], $panorama->viewer_data( $image_id ) );
+		$this->assertSame( [], $panorama->detected( $image_id ) );
+		$this->assertSame(
+			[
+				'fullWidth'     => 2000,
+				'fullHeight'    => 1000,
+				'croppedWidth'  => 2000,
+				'croppedHeight' => 1000,
+				'croppedX'      => 0,
+				'croppedY'      => 0,
+			],
+			$panorama->pano_data( $image_id ),
+			'A manually marked 2:1 image is a full sphere.'
+		);
 
 		$panorama->save_fields( [ 'ID' => $image_id ], [ 'slashphoto_projection' => '' ] );
 		$this->assertSame( 'wide', $panorama->kind( $image_id ) );
@@ -96,8 +109,56 @@ final class PanoramaTest extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( 'slashphoto-item--360', $html );
 		$this->assertStringContainsString( 'data-slashphoto-id="' . $image_id . '"', $html );
-		$this->assertStringContainsString( 'data-slashphoto-panorama="{&quot;projection&quot;:&quot;equirectangular&quot;', $html );
+		$this->assertStringContainsString( 'data-slashphoto-panorama="{&quot;fullWidth&quot;:3000,&quot;fullHeight&quot;:1500', $html );
 		$this->assertStringContainsString( 'slashphoto-badge', $html );
+	}
+
+	/**
+	 * Real PTGui panorama, re-cropped vertically in Lightroom after stitching
+	 * and downscaled by WordPress to an 8192 px web copy.
+	 */
+	public function test_normalize_recropped_and_scaled_partial_sphere(): void {
+		$gpano                 = Panorama::parse_xmp( '<x GPano:ProjectionType="equirectangular" GPano:FullPanoWidthPixels="10723" GPano:FullPanoHeightPixels="5362" GPano:CroppedAreaImageWidthPixels="10723" GPano:CroppedAreaImageHeightPixels="4370" GPano:CroppedAreaLeftPixels="0" GPano:CroppedAreaTopPixels="496"/>' );
+		$gpano['image_width']  = 10723;
+		$gpano['image_height'] = 4118;
+
+		$this->assertSame(
+			[
+				'fullWidth'     => 8192,
+				'fullHeight'    => 4096,
+				'croppedWidth'  => 8192,
+				'croppedHeight' => 3146,
+				'croppedX'      => 0,
+				'croppedY'      => 475,
+			],
+			Panorama::normalize( $gpano, 8192, 3146 )
+		);
+	}
+
+	/**
+	 * Real PTGui panorama covering about 224 degrees, re-cropped vertically, not scaled.
+	 */
+	public function test_normalize_recropped_horizontal_partial(): void {
+		$gpano                 = Panorama::parse_xmp( '<x GPano:ProjectionType="equirectangular" GPano:FullPanoWidthPixels="10894" GPano:FullPanoHeightPixels="5448" GPano:CroppedAreaImageWidthPixels="6788" GPano:CroppedAreaImageHeightPixels="4086" GPano:CroppedAreaLeftPixels="2053" GPano:CroppedAreaTopPixels="681"/>' );
+		$gpano['image_width']  = 6788;
+		$gpano['image_height'] = 3633;
+
+		$data = Panorama::normalize( $gpano, 6788, 3633 );
+
+		$this->assertSame( 10894, $data['fullWidth'] );
+		$this->assertSame( 5447, $data['fullHeight'], 'fullHeight must be exactly half of fullWidth.' );
+		$this->assertSame( 2053, $data['croppedX'] );
+		$this->assertSame( 908, $data['croppedY'], 'Half of the 453 px height difference is trimmed from the top.' );
+		$this->assertLessThanOrEqual( $data['fullHeight'], $data['croppedY'] + $data['croppedHeight'] );
+	}
+
+	public function test_normalize_without_original_size_trusts_gpano(): void {
+		$gpano = Panorama::parse_xmp( TestImages::gpano_xmp( 8000, 4000 ) );
+
+		$data = Panorama::normalize( $gpano, 4000, 2000 );
+
+		$this->assertSame( 4000, $data['fullWidth'] );
+		$this->assertSame( 0, $data['croppedY'] );
 	}
 
 	public function test_media_library_field_is_offered_for_images(): void {

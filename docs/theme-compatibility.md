@@ -46,6 +46,24 @@ Themes can tune the gallery with custom properties instead of overriding rules:
 }
 ```
 
+## Lightbox
+
+The lightbox is a native `<dialog>` in the browser's top layer, so it is not
+affected by the theme's layout, but global theme rules for `button`, `img`
+and `p` can still reach it. Its structural rules therefore use two-class
+selectors, and its colors are custom properties:
+
+```css
+.slashphoto-lightbox {
+	--slashphoto-lightbox-bg: #000;
+	--slashphoto-lightbox-fg: #fff;
+	--slashphoto-lightbox-muted: rgb(255 255 255 / 0.7);
+	--slashphoto-lightbox-button-hover: rgb(255 255 255 / 0.14);
+}
+```
+
+Without JavaScript, every image is still a plain link to its full-size file.
+
 ## Hooks for themes
 
 | Hook | Use |
@@ -55,6 +73,8 @@ Themes can tune the gallery with custom properties instead of overriding rules:
 | `slashphoto_enqueue_frontend_styles` (filter, bool) | Return `false` to drop the stylesheet entirely. |
 | `slashphoto_locate_template` (filter, path) | Load a partial from anywhere. |
 | `slashphoto_image_kind` (filter) | Change how an image is classified (`photo`, `wide`, `360`). |
+| `slashphoto_enable_lightbox` (filter, bool) | Return `false` to keep plain links, for example when the theme has its own lightbox. |
+| `slashphoto_panorama_pano_data` (filter) | Adjust the 360° viewer geometry of an image. |
 
 Body classes on gallery views: `slashphoto-page` plus
 `slashphoto-block-theme` or `slashphoto-classic-theme`.
@@ -78,7 +98,9 @@ return `false` from `slashphoto_append_gallery_to_content`.
 ## Test matrix
 
 The development environment (`npm run env:start`) installs these themes.
-Check every front-end change in all of them, on desktop and phone widths:
+Check every front-end change in all of them, on desktop and phone widths.
+`npm run test:e2e` does this automatically for the lightbox
+(`tests/e2e/themes.spec.mjs`):
 
 | Theme | Type | Notes |
 |---|---|---|

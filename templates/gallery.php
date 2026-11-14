@@ -49,7 +49,7 @@ $slashphoto_classes  = 'slashphoto slashphoto-gallery' . ( $slashphoto_align ? '
 			foreach ( $slashphoto_items as $slashphoto_item ) :
 				$slashphoto_id   = $slashphoto_item['attachment']->ID;
 				$slashphoto_kind = $slashphoto_item['kind'];
-				$slashphoto_full = wp_get_attachment_image_url( $slashphoto_id, 'full' );
+				$slashphoto_full = wp_get_attachment_image_src( $slashphoto_id, 'full' );
 				?>
 				<li class="slashphoto-item slashphoto-item--<?php echo esc_attr( $slashphoto_kind ); ?>" data-slashphoto-id="<?php echo esc_attr( (string) $slashphoto_id ); ?>" data-slashphoto-kind="<?php echo esc_attr( $slashphoto_kind ); ?>"
 					<?php if ( '360' === $slashphoto_kind ) : ?>
@@ -57,7 +57,11 @@ $slashphoto_classes  = 'slashphoto slashphoto-gallery' . ( $slashphoto_align ? '
 					<?php endif; ?>
 				>
 					<figure class="slashphoto-figure">
-						<a class="slashphoto-link" href="<?php echo esc_url( (string) $slashphoto_full ); ?>">
+						<a class="slashphoto-link" href="<?php echo esc_url( $slashphoto_full ? $slashphoto_full[0] : '' ); ?>"
+							<?php if ( $slashphoto_full ) : ?>
+								data-slashphoto-width="<?php echo esc_attr( (string) $slashphoto_full[1] ); ?>" data-slashphoto-height="<?php echo esc_attr( (string) $slashphoto_full[2] ); ?>"
+							<?php endif; ?>
+						>
 							<?php
 							echo wp_get_attachment_image(
 								$slashphoto_id,

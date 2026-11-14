@@ -9,3 +9,5 @@
 
 # Local photos for npm run seed; never committed.
 /.dev-media/
+/tests/e2e/.results/
+/playwright-report/

@@ -17,12 +17,19 @@ Working now:
   spheres. They keep up to 8192 px instead of WordPress' usual 2560 px, and
   can be marked manually in the media library. Wide flat panoramas span the
   full gallery row.
+- **Lightbox and 360° viewer.** A native `<dialog>` lightbox with keyboard,
+  swipe and focus handling. 360° images open in an interactive viewer
+  ([Photo Sphere Viewer](https://photo-sphere-viewer.js.org/) on
+  [three.js](https://threejs.org/), both MIT, bundled) that is downloaded
+  only when a visitor opens one. Partial panoramas cannot be panned past
+  their edges, and panoramas that were cropped again after stitching are
+  mapped correctly.
 - **Theme-first styling** that adapts to the theme's colors, fonts and width.
   See [docs/theme-compatibility.md](docs/theme-compatibility.md).
 
 Planned, in order:
 
-1. Lightbox and interactive 360° viewer
+1. Gallery block for the block editor
 2. Client access: private galleries, client accounts, watermarked previews
 3. Proofing: favourites and selections without payment
 4. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
@@ -33,7 +40,7 @@ Planned, in order:
 ## Requirements
 
 - WordPress 6.7 or later
-- PHP 8.1 or later
+- PHP 8.3 or later (CI covers 8.3–8.5)
 
 ## Development
 
@@ -47,12 +54,22 @@ npm run setup          # composer install inside the container
 npm run test:php       # PHPUnit integration tests
 npm run lint:php       # WordPress Coding Standards + PHP compatibility
 npm run seed           # demo galleries; uses your own JPEGs from .dev-media/ if present
+npm run test:e2e       # Playwright browser tests (needs the seeded site)
+npm run vendor         # copy three.js / Photo Sphere Viewer from node_modules to assets/vendor
 npm run i18n:pot       # regenerate languages/slashphoto.pot
 npm run env:stop
 ```
 
 Put your own test photos, for example 360° panoramas, in `.dev-media/`. The
 folder is ignored by Git.
+
+Browser tests use Playwright's Chromium (`npx playwright install chromium`),
+or a system Chromium: `PLAYWRIGHT_CHROMIUM=/usr/bin/chromium-browser npm run test:e2e`.
+
+Third-party browser libraries are pinned in `package.json` and copied into
+`assets/vendor/` by `npm run vendor`, which also rewrites their imports to
+SlashPhoto-prefixed module IDs so they cannot collide with other plugins.
+The copies are committed, so the plugin needs no build step.
 
 ### Layout
 
@@ -64,8 +81,9 @@ src/                    PSR-4 classes (SlashPhoto\)
   Frontend/             theme compatibility, templates, assets
   Media/                panorama and 360° detection
 templates/              overridable partials (copy to yourtheme/slashphoto/)
-assets/                 CSS and, later, JavaScript
+assets/                 CSS, JavaScript modules, bundled vendor libraries
 tests/Integration/      PHPUnit tests against the WordPress test suite
+tests/e2e/              Playwright browser tests
 docs/                   developer documentation
 ```
 
