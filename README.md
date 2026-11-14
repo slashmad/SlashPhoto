@@ -69,6 +69,14 @@ tests/Integration/      PHPUnit tests against the WordPress test suite
 docs/                   developer documentation
 ```
 
+## Support the project
+
+SlashPhoto is free and will stay free, with no paid add-ons. If it saves you
+a subscription, consider supporting development through
+[GitHub Sponsors](https://github.com/sponsors/slashmad),
+[Ko-fi](https://ko-fi.com/slashmad) or
+[Liberapay](https://liberapay.com/slashmad).
+
 ## Licence
 
 GPL-2.0-or-later. See [LICENSE](LICENSE).

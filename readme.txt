@@ -1,5 +1,6 @@
 === SlashPhoto ===
 Contributors: slashmad
+Donate link: https://github.com/sponsors/slashmad
 Tags: photography, gallery, proofing, panorama, 360
 Requires at least: 6.7
 Tested up to: 7.1
