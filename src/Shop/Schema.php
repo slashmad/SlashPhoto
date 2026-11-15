@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Schema {
 
-	public const VERSION = 1;
+	public const VERSION = 2;
 	public const OPTION  = 'slashphoto_db_version';
 
 	/**
@@ -60,6 +60,7 @@ final class Schema {
 		$orders  = self::orders();
 		$items   = self::items();
 
+		// Version 2 added discount, coupon and parent_id (packages).
 		// dbDelta needs two spaces after PRIMARY KEY and one field per line.
 		dbDelta(
 			"CREATE TABLE {$orders} (
@@ -75,6 +76,8 @@ final class Schema {
 	admin_note text NULL,
 	currency char(3) NOT NULL,
 	subtotal bigint(20) NOT NULL DEFAULT 0,
+	discount bigint(20) NOT NULL DEFAULT 0,
+	coupon varchar(50) NOT NULL DEFAULT '',
 	shipping bigint(20) NOT NULL DEFAULT 0,
 	tax bigint(20) NOT NULL DEFAULT 0,
 	total bigint(20) NOT NULL DEFAULT 0,
@@ -90,11 +93,13 @@ final class Schema {
 	KEY status (status),
 	KEY email (email(100)),
 	KEY user_id (user_id),
-	KEY gateway_ref (gateway_ref(100))
+	KEY gateway_ref (gateway_ref(100)),
+	KEY coupon (coupon)
 ) {$charset};
 CREATE TABLE {$items} (
 	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 	order_id bigint(20) unsigned NOT NULL,
+	parent_id bigint(20) unsigned NOT NULL DEFAULT 0,
 	kind varchar(20) NOT NULL,
 	gallery_id bigint(20) unsigned NOT NULL DEFAULT 0,
 	image_id bigint(20) unsigned NOT NULL DEFAULT 0,

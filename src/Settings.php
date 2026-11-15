@@ -37,7 +37,7 @@ final class Settings {
 	 */
 	public const SECTIONS   = [
 		'general' => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity', 'display_size', 'display_quality', 'snapotter_mode', 'snapotter_min_mp' ],
-		'shop'    => [ 'currency', 'prices_include_tax', 'tax_rate', 'shipping_flat', 'free_shipping_over', 'shipping_countries', 'download_days', 'shop_page', 'shop_terms_page', 'shop_email', 'shop_price_list', 'manual_enabled', 'manual_title', 'manual_instructions' ],
+		'shop'    => [ 'currency', 'prices_include_tax', 'tax_rate', 'shipping_flat', 'free_shipping_over', 'shipping_countries', 'download_days', 'shop_page', 'shop_terms_page', 'shop_email', 'shop_price_list', 'manual_enabled', 'manual_title', 'manual_instructions', 'business_name', 'business_details', 'receipt_note' ],
 	];
 	public const CHECKBOXES = [ 'watermark_default', 'prices_include_tax', 'manual_enabled' ];
 	public const AMOUNTS    = [ 'shipping_flat', 'free_shipping_over' ];
@@ -73,6 +73,9 @@ final class Settings {
 			'manual_enabled'      => true,
 			'manual_title'        => '',
 			'manual_instructions' => '',
+			'business_name'       => '',
+			'business_details'    => '',
+			'receipt_note'        => '',
 		];
 	}
 
@@ -168,6 +171,9 @@ final class Settings {
 			'manual_enabled'      => (bool) $value( 'manual_enabled' ),
 			'manual_title'        => mb_substr( sanitize_text_field( (string) $value( 'manual_title' ) ), 0, 100 ),
 			'manual_instructions' => mb_substr( sanitize_textarea_field( (string) $value( 'manual_instructions' ) ), 0, 2000 ),
+			'business_name'       => mb_substr( sanitize_text_field( (string) $value( 'business_name' ) ), 0, 200 ),
+			'business_details'    => mb_substr( sanitize_textarea_field( (string) $value( 'business_details' ) ), 0, 1000 ),
+			'receipt_note'        => mb_substr( sanitize_textarea_field( (string) $value( 'receipt_note' ) ), 0, 1000 ),
 		];
 		foreach ( self::AMOUNTS as $key ) {
 			$clean[ $key ] = array_key_exists( $key . '_input', $input )

@@ -25,6 +25,7 @@ use SlashPhoto\Gallery\Uploads;
 use SlashPhoto\Media\Watermark;
 use SlashPhoto\Proofing\Proofing;
 use SlashPhoto\Settings;
+use SlashPhoto\Shop\Coupons;
 use SlashPhoto\Shop\PriceLists;
 use SlashPhoto\Tests\Integration\TestImages;
 
@@ -103,7 +104,7 @@ foreach ( get_posts(
 }
 foreach ( get_posts(
 	[
-		'post_type'   => [ PriceLists::POST_TYPE, 'page' ],
+		'post_type'   => [ PriceLists::POST_TYPE, Coupons::POST_TYPE, 'page' ],
 		'post_status' => 'any',
 		'numberposts' => -1,
 	]
@@ -293,6 +294,7 @@ PriceLists::save_products(
 	$slashphoto_list,
 	[
 		[
+			'id'    => 'd0000001',
 			'kind'  => 'download',
 			'name'  => 'Digital download, full resolution',
 			'price' => 30000,
@@ -312,8 +314,31 @@ PriceLists::save_products(
 			'name'  => 'Print 30 × 45 cm',
 			'price' => 34900,
 		],
+		[
+			'kind'     => 'package',
+			'name'     => 'Three downloads',
+			'price'    => 70000,
+			'count'    => 3,
+			'includes' => 'd0000001',
+		],
+		[
+			'kind'     => 'package',
+			'name'     => 'The whole gallery as downloads',
+			'price'    => 90000,
+			'count'    => 0,
+			'includes' => 'd0000001',
+		],
 	]
 );
+$slashphoto_coupon = wp_insert_post(
+	[
+		'post_type'   => Coupons::POST_TYPE,
+		'post_status' => 'publish',
+		'post_title'  => 'DEMO10',
+		'post_name'   => 'demo-coupon',
+	]
+);
+Coupons::save_rules( $slashphoto_coupon, [ 'amount' => 10 ] );
 $slashphoto_cart = wp_insert_post(
 	[
 		'post_type'    => 'page',
@@ -338,6 +363,8 @@ update_option(
 			'manual_enabled'      => true,
 			'manual_title'        => 'Pay later (Swish or invoice)',
 			'manual_instructions' => 'Swish 123 456 78 90 and mark the payment with your order number.',
+			'business_name'       => 'Demo Studio',
+			'business_details'    => "Storgatan 1\n111 22 Stockholm\nOrg.nr 556000-0000",
 		]
 	)
 );

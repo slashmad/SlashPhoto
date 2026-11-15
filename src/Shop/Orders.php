@@ -89,6 +89,8 @@ final class Orders {
 				'customer_note'      => (string) ( $order['customer_note'] ?? '' ),
 				'currency'           => (string) $quote['currency'],
 				'subtotal'           => (int) $quote['subtotal'],
+				'discount'           => (int) ( $quote['discount'] ?? 0 ),
+				'coupon'             => (string) ( $quote['coupon'] ?? '' ),
 				'shipping'           => (int) $quote['shipping'],
 				'tax'                => (int) $quote['tax'],
 				'total'              => (int) $quote['total'],
@@ -105,9 +107,7 @@ final class Orders {
 		$id = (int) $wpdb->insert_id;
 
 		foreach ( $quote['lines'] as $line ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- custom table.
-			$wpdb->insert(
-				Schema::items(),
+			$parent = self::insert_item(
 				[
 					'order_id'   => $id,
 					'kind'       => $line['kind'],
@@ -115,14 +115,47 @@ final class Orders {
 					'image_id'   => $line['image'],
 					'product_id' => $line['product'],
 					'name'       => $line['name'],
-					'file_label' => $line['file'],
+					/* translators: %d: number of photos */
+					'file_label' => 'package' === $line['kind'] ? sprintf( _n( '%d photo', '%d photos', count( $line['images'] ), 'slashphoto' ), count( $line['images'] ) ) : $line['file'],
 					'quantity'   => $line['qty'],
 					'unit_price' => $line['unit'],
 					'total'      => $line['total'],
 				]
 			);
-		}
+			// Each photo of a package becomes its own line (price 0), so
+			// downloads and prints work exactly as for single products.
+			foreach ( $line['images'] ?? [] as $image ) {
+				self::insert_item(
+					[
+						'order_id'   => $id,
+						'parent_id'  => $parent,
+						'kind'       => $line['includes']['kind'],
+						'gallery_id' => $image['gallery'],
+						'image_id'   => $image['id'],
+						'product_id' => $line['includes']['id'],
+						'name'       => $line['includes']['name'],
+						'file_label' => $image['file'],
+						'quantity'   => 1,
+						'unit_price' => 0,
+						'total'      => 0,
+					]
+				);
+			}
+		}//end foreach
 		return $id;
+	}
+
+	/**
+	 * Inserts an order line.
+	 *
+	 * @param array $row Columns.
+	 * @return int Line ID.
+	 */
+	private static function insert_item( array $row ): int {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- custom table.
+		$wpdb->insert( Schema::items(), $row );
+		return (int) $wpdb->insert_id;
 	}
 
 	/**
@@ -152,7 +185,7 @@ final class Orders {
 		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE order_id = %d ORDER BY id", $id ), ARRAY_A );
 		return array_map(
 			static function ( array $row ): array {
-				foreach ( [ 'id', 'order_id', 'gallery_id', 'image_id', 'quantity', 'unit_price', 'total' ] as $key ) {
+				foreach ( [ 'id', 'order_id', 'parent_id', 'gallery_id', 'image_id', 'quantity', 'unit_price', 'total' ] as $key ) {
 					$row[ $key ] = (int) $row[ $key ];
 				}
 				return $row;
@@ -375,7 +408,7 @@ final class Orders {
 	 * @param array $row Row.
 	 */
 	private static function hydrate( array $row ): array {
-		foreach ( [ 'id', 'user_id', 'subtotal', 'shipping', 'tax', 'total' ] as $key ) {
+		foreach ( [ 'id', 'user_id', 'subtotal', 'discount', 'shipping', 'tax', 'total' ] as $key ) {
 			$row[ $key ] = (int) $row[ $key ];
 		}
 		$row['tax_rate']           = (float) $row['tax_rate'];

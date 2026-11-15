@@ -114,7 +114,10 @@ computed on the server, every image in a cart must be visible to the buyer
 through the access rules above, order links carry an HMAC key that is not
 stored, order pages are not cached or indexed and send no referrer,
 downloads are streamed only for paid orders, and Stripe webhooks need a
-valid, fresh signature. Stripe Checkout is hosted by Stripe: card details
+valid, fresh signature. Receipts and invoices use the same order key and
+headers as the order page. Discount codes are counted from orders, not
+from visitors; there is no rate limit by IP address, so use codes that are
+not easy to guess. Stripe Checkout is hosted by Stripe: card details
 never reach the site and no Stripe script is loaded on its pages. Stripe
 keys are stored encrypted like the SnapOtter key.
 

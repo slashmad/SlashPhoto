@@ -149,3 +149,76 @@ test( 'proofing and shop tools share the lightbox', async ( { page } ) => {
 	await page.keyboard.press( 'ArrowRight' );
 	await expect( dialog.locator( '.slashphoto-lightbox__group' ) ).toHaveCount( 2 );
 } );
+
+test( 'a package, a discount code, an invoice and then a receipt', async ( { page } ) => {
+	await page.goto( GALLERY );
+	await page.evaluate( () => {
+		window.localStorage.removeItem( 'slashphoto-cart' );
+		window.localStorage.removeItem( 'slashphoto-coupon' );
+	} );
+	await page.reload();
+
+	// Two photos into "Three downloads" from the lightbox.
+	await page.locator( '.slashphoto-gallery[data-slashphoto-shop-ready] .slashphoto-link' ).first().click();
+	const dialog = page.locator( 'dialog.slashphoto-lightbox' );
+	for ( const step of [ 1, 2 ] ) {
+		await dialog.getByRole( 'button', { name: 'Buy this photo' } ).click();
+		const panel = dialog.locator( '.slashphoto-lightbox__buy' );
+		await expect( panel ).toContainText( '3 photos you choose, each: Digital download, full resolution' );
+		await panel.getByRole( 'button', { name: 'Add this photo to Three downloads' } ).click();
+		await expect( panel.locator( '.slashphoto-lightbox__buy-status' ) ).toContainText( `Added to Three downloads: ${ step } of 3 photos.` );
+		await page.keyboard.press( 'Escape' );
+		await page.keyboard.press( 'ArrowRight' );
+	}
+	await page.keyboard.press( 'Escape' );
+	await expect( page.locator( '.slashphoto-shopbar__status' ) ).toHaveText( 'Cart: 1 item' );
+
+	await page.goto( '/demo-cart/' );
+	const line = page.locator( '.slashphoto-cart__line--package' );
+	await expect( line ).toContainText( '2 of 3 photos chosen' );
+	await expect( line.locator( '.slashphoto-cart__package img' ) ).toHaveCount( 2 );
+	await line.locator( '.slashphoto-cart__unpick' ).first().click();
+	await expect( line ).toContainText( '1 of 3 photos chosen' );
+
+	// Codes: a wrong one is explained, the right one applied.
+	const coupon = page.locator( '[data-slashphoto-coupon]' );
+	await coupon.getByLabel( 'Discount code' ).fill( 'nope' );
+	await coupon.getByRole( 'button', { name: 'Apply' } ).click();
+	await expect( coupon.locator( '.slashphoto-coupon__message' ) ).toHaveText( 'This discount code is not valid.' );
+	await coupon.getByLabel( 'Discount code' ).fill( 'demo10' );
+	await coupon.getByLabel( 'Discount code' ).press( 'Enter' );
+	await expect( coupon.locator( '.slashphoto-coupon__message' ) ).toHaveText( 'Code DEMO10 applied.' );
+	await expect( page.locator( '.slashphoto-cart__totals' ) ).toContainText( 'Discount (DEMO10)' );
+	await expect( page.locator( 'dd.slashphoto-cart__total' ) ).toHaveText( /630/ );
+
+	const form = page.locator( '[data-slashphoto-checkout-form]' );
+	await expect( page.locator( '[data-slashphoto-address]' ) ).toBeHidden();
+	await form.getByLabel( 'Email', { exact: true } ).fill( 'e2e-package@example.org' );
+	await form.getByLabel( 'Name', { exact: true } ).fill( 'E2E Package' );
+	await form.getByRole( 'button', { name: 'Place order' } ).click();
+	await expect( page ).toHaveURL( /[?&]order=\d+&key=/ );
+	await expect( page.locator( '.slashphoto-order__totals' ) ).toContainText( 'Discount (DEMO10)' );
+	expect( await page.evaluate( () => window.localStorage.getItem( 'slashphoto-coupon' ) ) ).toBeNull();
+
+	// Invoice while unpaid.
+	const invoiceLink = page.getByRole( 'link', { name: 'Invoice (print or save as PDF)' } );
+	const invoice = await page.context().newPage();
+	await invoice.goto( await invoiceLink.getAttribute( 'href' ) );
+	await expect( invoice.getByRole( 'heading', { level: 1 } ) ).toHaveText( /^Invoice \d+$/ );
+	await expect( invoice.locator( 'body' ) ).toContainText( 'Not paid' );
+	await expect( invoice.locator( 'body' ) ).toContainText( 'Swish 123 456 78 90' );
+	await expect( invoice.locator( 'body' ) ).toContainText( 'Demo Studio' );
+	await invoice.close();
+
+	// Paid: a receipt, and the package's photo can be downloaded.
+	const id = new URL( page.url() ).searchParams.get( 'order' );
+	wpEval( `SlashPhoto\\Shop\\Orders::mark_paid( ${ id } );` );
+	await page.reload();
+	await expect( page.locator( '.slashphoto-order__download' ) ).toHaveCount( 1 );
+	const receipt = await page.context().newPage();
+	await receipt.goto( await page.getByRole( 'link', { name: 'Receipt (print or save as PDF)' } ).getAttribute( 'href' ) );
+	await expect( receipt.getByRole( 'heading', { level: 1 } ) ).toHaveText( /^Receipt \d+$/ );
+	await expect( receipt.locator( '.status' ) ).toHaveText( 'Paid' );
+	await expect( receipt.locator( 'body' ) ).not.toContainText( 'Swish 123 456 78 90' );
+	await receipt.close();
+} );

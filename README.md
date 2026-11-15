@@ -4,8 +4,9 @@ Open-source photography galleries, client proofing and photo sales for
 WordPress. No subscriptions, no paid add-ons, no locked features.
 
 > **Status: early development (0.1.0-dev).** Galleries, panoramas, client
-> access, proofing, full-size uploads and a first shop (downloads and prints)
-> work. Not ready for production.
+> access, proofing, full-size uploads, the shop (downloads, prints, packages,
+> discount codes, receipts) and the Sunshine importer work. Not ready for
+> production.
 
 ## Features
 
@@ -55,7 +56,12 @@ Working now:
   and pay manually (invoice, transfer, Swish) or on Stripe's hosted Checkout
   page (no platform fee). Orders with status emails, an order screen with
   file names and originals for printing, and downloads streamed only for
-  paid orders through a private link. See [docs/shop.md](docs/shop.md).
+  paid orders through a private link. Packages ("10 downloads", "the
+  whole gallery"), discount codes, and printable receipts and invoices.
+  See [docs/shop.md](docs/shop.md).
+- **Import from Sunshine Photo Cart.** Copies galleries with their access
+  settings, images, price levels and orders, in repeatable steps, without
+  changing Sunshine's data. See [docs/import-sunshine.md](docs/import-sunshine.md).
 - **No visitor logging.** No IP addresses, analytics or third-party requests;
   terms acceptance is a signed cookie in the visitor's browser only.
 - **Gallery block** for placing any gallery on any page, with the same
@@ -65,10 +71,9 @@ Working now:
 
 Planned, in order:
 
-1. Shop, continued: discount codes, packages, product options, invoices,
-   CSV export
-2. Import from Sunshine Photo Cart
-3. Client invitations by email, licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
+1. Shop, continued: product options (paper, frames), CSV export, tax per
+   country, gift cards
+2. Client invitations by email, licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
 
 ## Requirements
 

@@ -26,7 +26,8 @@ final class PriceLists {
 	public const META         = '_slashphoto_products';
 	public const GALLERY_META = '_slashphoto_price_list';
 	public const NONE         = 'none';
-	public const KINDS        = [ 'download', 'print' ];
+	public const KINDS        = [ 'download', 'print', 'package' ];
+	public const MAX_PACKAGE  = 500;
 	public const MAX_PRODUCTS = 100;
 	public const NONCE        = 'slashphoto_pricelist';
 
@@ -104,8 +105,16 @@ final class PriceLists {
 		if ( ! $post || self::POST_TYPE !== $post->post_type || 'publish' !== $post->post_status ) {
 			return [];
 		}
-		$saved = json_decode( (string) get_post_meta( $list_id, self::META, true ), true );
-		return self::clean( is_array( $saved ) ? $saved : [] );
+		$saved    = json_decode( (string) get_post_meta( $list_id, self::META, true ), true );
+		$products = self::clean( is_array( $saved ) ? $saved : [] );
+		// A package must give each photo a download or print from the same list.
+		$plain = [];
+		foreach ( $products as $product ) {
+			if ( 'package' !== $product['kind'] ) {
+				$plain[ $product['id'] ] = true;
+			}
+		}
+		return array_values( array_filter( $products, static fn( array $product ): bool => 'package' !== $product['kind'] || isset( $plain[ $product['includes'] ] ) ) );
 	}
 
 	/**
@@ -135,10 +144,12 @@ final class PriceLists {
 	}
 
 	/**
-	 * Normalises a product list.
+	 * Normalises a product list. Packages also have "count" (number of
+	 * photos, 0 for every photo in the gallery) and "includes" (the ID of
+	 * the download or print each photo gets).
 	 *
 	 * @param array $rows Rows.
-	 * @return array<int, array{id: string, kind: string, name: string, price: int}>
+	 * @return array<int, array{id: string, kind: string, name: string, price: int, count?: int, includes?: string}>
 	 */
 	public static function clean( array $rows ): array {
 		$products = [];
@@ -157,12 +168,17 @@ final class PriceLists {
 				$id = bin2hex( random_bytes( 4 ) );
 			}
 			$seen[ $id ] = true;
-			$products[]  = [
+			$product     = [
 				'id'    => $id,
 				'kind'  => $kind,
 				'name'  => $name,
 				'price' => max( 0, (int) ( $row['price'] ?? 0 ) ),
 			];
+			if ( 'package' === $kind ) {
+				$product['count']    = min( self::MAX_PACKAGE, max( 0, (int) ( $row['count'] ?? 0 ) ) );
+				$product['includes'] = preg_match( '/^[a-f0-9]{8}$/', (string) ( $row['includes'] ?? '' ) ) ? (string) $row['includes'] : '';
+			}
+			$products[] = $product;
 		}//end foreach
 		return $products;
 	}
@@ -238,9 +254,11 @@ final class PriceLists {
 		$saved    = json_decode( (string) get_post_meta( $post->ID, self::META, true ), true );
 		$products = is_array( $saved ) ? self::clean( $saved ) : [];
 		$rows     = $products ? $products : self::suggestions();
+		$plain    = array_values( array_filter( $products, static fn( array $p ): bool => 'package' !== $p['kind'] ) );
 		wp_nonce_field( self::NONCE, self::NONCE . '_nonce' );
 		?>
 		<p><?php esc_html_e( 'Customers choose one of these for each image. Downloads deliver the original file you uploaded; prints are made and sent by you. Rows without a price are not saved; enter 0 for something free.', 'slashphoto' ); ?></p>
+		<p><?php esc_html_e( 'A package is a number of photos the customer chooses, each with the same download or print, for one price, e.g. “10 downloads”. Set the number to 0 for every photo in the gallery. Save new downloads and prints before choosing them in a package.', 'slashphoto' ); ?></p>
 		<table class="widefat striped slashphoto-products" data-slashphoto-products>
 			<thead>
 				<tr>
@@ -258,7 +276,7 @@ final class PriceLists {
 			<tbody>
 				<?php
 				foreach ( $rows as $index => $row ) {
-					$this->row( (string) $index, $row, $currency );
+					$this->row( (string) $index, $row, $currency, $plain );
 				}
 				?>
 			</tbody>
@@ -273,7 +291,8 @@ final class PriceLists {
 					'name'  => '',
 					'price' => 0,
 				],
-				$currency
+				$currency,
+				$plain
 			);
 			?>
 		</template>
@@ -296,9 +315,11 @@ final class PriceLists {
 	 * @param string $index    Row index.
 	 * @param array  $row      Product.
 	 * @param string $currency Currency.
+	 * @param array  $plain    Saved downloads and prints, for packages.
 	 */
-	private function row( string $index, array $row, string $currency ): void {
-		$name = 'slashphoto_products[' . $index . ']';
+	private function row( string $index, array $row, string $currency, array $plain ): void {
+		$package = 'package' === $row['kind'];
+		$name    = 'slashphoto_products[' . $index . ']';
 		?>
 		<tr>
 			<td>
@@ -307,15 +328,26 @@ final class PriceLists {
 				<select id="slashphoto-kind-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[kind]">
 					<option value="download" <?php selected( $row['kind'], 'download' ); ?>><?php esc_html_e( 'Download', 'slashphoto' ); ?></option>
 					<option value="print" <?php selected( $row['kind'], 'print' ); ?>><?php esc_html_e( 'Print', 'slashphoto' ); ?></option>
+					<option value="package" <?php selected( $row['kind'], 'package' ); ?>><?php esc_html_e( 'Package', 'slashphoto' ); ?></option>
 				</select>
 			</td>
 			<td>
 				<label class="screen-reader-text" for="slashphoto-name-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Name shown to customers', 'slashphoto' ); ?></label>
 				<input type="text" class="widefat" maxlength="120" id="slashphoto-name-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[name]" value="<?php echo esc_attr( (string) $row['name'] ); ?>">
+				<p class="slashphoto-package-fields" data-slashphoto-package-fields <?php echo $package ? '' : 'hidden'; ?>>
+					<label for="slashphoto-count-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Photos', 'slashphoto' ); ?></label>
+					<input type="number" min="0" max="<?php echo esc_attr( (string) self::MAX_PACKAGE ); ?>" style="width:5em" id="slashphoto-count-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[count]" value="<?php echo esc_attr( (string) ( $row['count'] ?? 10 ) ); ?>">
+					<label for="slashphoto-includes-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'each with', 'slashphoto' ); ?></label>
+					<select id="slashphoto-includes-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[includes]">
+						<?php foreach ( $plain as $option ) : ?>
+							<option value="<?php echo esc_attr( $option['id'] ); ?>" <?php selected( $row['includes'] ?? '', $option['id'] ); ?>><?php echo esc_html( $option['name'] ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</p>
 			</td>
 			<td>
 				<label class="screen-reader-text" for="slashphoto-price-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Price', 'slashphoto' ); ?></label>
-				<input type="text" inputmode="decimal" size="8" id="slashphoto-price-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[price]" value="<?php echo esc_attr( (int) $row['price'] ? Money::to_input( (int) $row['price'], $currency ) : '' ); ?>">
+				<input type="text" inputmode="decimal" size="8" id="slashphoto-price-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[price]" value="<?php echo esc_attr( '' === (string) $row['id'] && ! (int) $row['price'] ? '' : Money::to_input( (int) $row['price'], $currency ) ); ?>">
 			</td>
 			<td><button type="button" class="button-link button-link-delete" data-slashphoto-remove-product><?php esc_html_e( 'Remove', 'slashphoto' ); ?></button></td>
 		</tr>
@@ -380,6 +412,11 @@ final class PriceLists {
 		const html = template.innerHTML.replaceAll( '__i__', 'n' + next++ );
 		table.tBodies[ 0 ].insertAdjacentHTML( 'beforeend', html );
 		table.tBodies[ 0 ].lastElementChild.querySelector( 'input[type="text"]' ).focus();
+	} );
+	table.addEventListener( 'change', ( event ) => {
+		if ( event.target.matches( 'select[name$="[kind]"]' ) ) {
+			event.target.closest( 'tr' ).querySelector( '[data-slashphoto-package-fields]' ).hidden = 'package' !== event.target.value;
+		}
 	} );
 	table.addEventListener( 'click', ( event ) => {
 		const button = event.target.closest( '[data-slashphoto-remove-product]' );

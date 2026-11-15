@@ -27,6 +27,51 @@ There are no platform fees, no paid add-ons and no WooCommerce dependency.
    by default: write your payment details in the settings. For card
    payments, connect Stripe (below).
 
+## Packages
+
+A package is a number of photos the customer chooses, each with the same
+download or print, for one price: "10 downloads", "5 prints 13 × 18 cm".
+Add a row of type "Package" to a price list, set the number of photos and
+choose the product each photo gets (save new downloads and prints first).
+With the number set to 0 the package covers every photo in the gallery
+("the whole gallery as downloads").
+
+Customers add photos to a package from the lightbox ("Add to package");
+the cart shows "3 of 10 photos chosen", the photos as thumbnails that can
+be removed one by one, and the package price. A package can be ordered
+before it is full. After the order each photo is its own line (price 0)
+under the package, so downloads and prints work as usual and the order
+screen lists every file. A package of prints is shipped.
+
+## Discount codes
+
+**SlashPhoto → Discount codes → Add discount code.** The title is the code
+(stored in capitals; customers can type it in any case). Rules:
+
+- percent or a fixed amount, on everything, downloads only or prints only
+  (a package counts as what it contains);
+- free shipping, with or without an amount off;
+- minimum order value, first and last day;
+- total number of uses and uses per customer (by email address).
+
+Publish the code to switch it on, save it as a draft to switch it off. The
+list shows how often each code was used; uses are counted from orders, so
+cancelled orders give the use back. Customers type the code in the cart;
+the discount is shown before VAT and shipping are worked out. With Stripe,
+the discount is sent as a one-time coupon on the Checkout page.
+
+## Receipts and invoices
+
+Every order has a printable page: an **invoice** while a manual payment is
+outstanding (with your payment details and the order number as reference)
+and a **receipt** once paid, showing your business name and details from
+the shop settings, the customer, every line (photos of packages listed
+below them), discount, shipping, the VAT included or added and the
+payment method. Customers open it from their order page or the payment
+email and print it or save it as PDF in their browser; you open it from
+the order screen. Add your address, company registration and VAT number
+under Shop settings → Receipts and invoices.
+
 ## What customers see
 
 - In the lightbox, a cart button opens the products for the photo, with a
@@ -129,11 +174,10 @@ Refunds are made in the Stripe Dashboard; then set the order to "Refunded".
 - `slashphoto_currencies` filters the currencies in the settings and
   `slashphoto_orders_capability` the capability for the Orders screen
   (default `manage_options`).
-- Templates `checkout.php` and `order.php` can be copied to
+- Templates `checkout.php`, `order.php` and `receipt.php` can be copied to
   `yourtheme/slashphoto/`.
 
 ## Not yet
 
-Discount codes, packages, product options (paper, frames), tax per country,
-printable invoices, CSV export, print-lab integrations and downloads in
-smaller sizes are planned.
+Product options (paper, frames), tax per country, CSV export, print-lab
+integrations, downloads in smaller sizes and gift cards are planned.

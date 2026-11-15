@@ -12,6 +12,7 @@ use SlashPhoto\Access\AccessGuard;
 use SlashPhoto\Access\ShareLinks;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Admin\AccessSettings;
+use SlashPhoto\Admin\ImportPage;
 use SlashPhoto\Admin\OrdersPage;
 use SlashPhoto\Admin\SelectionsBox;
 use SlashPhoto\Admin\ShopSettings;
@@ -38,11 +39,13 @@ use SlashPhoto\Proofing\Proofing;
 use SlashPhoto\Proofing\Selections;
 use SlashPhoto\Proofing\SelectionsRest;
 use SlashPhoto\Shop\CheckoutRest;
+use SlashPhoto\Shop\Coupons;
 use SlashPhoto\Shop\Downloads;
 use SlashPhoto\Shop\Emails;
 use SlashPhoto\Shop\Gateways\StripeGateway;
 use SlashPhoto\Shop\Orders;
 use SlashPhoto\Shop\PriceLists;
+use SlashPhoto\Shop\Receipts;
 use SlashPhoto\Shop\Schema;
 use SlashPhoto\Shop\Shop;
 use SlashPhoto\Shop\ShopPage;
@@ -158,10 +161,12 @@ final class Plugin {
 		$this->shop = new Shop( $this->access, $terms );
 		( new Schema() )->register_hooks();
 		( new PriceLists() )->register_hooks();
+		( new Coupons() )->register_hooks();
 		( new Orders() )->register_hooks();
 		( new CheckoutRest( $this->shop ) )->register_hooks();
 		( new ShopPage( $this->templates ) )->register_hooks();
 		( new Downloads() )->register_hooks();
+		( new Receipts( $this->templates ) )->register_hooks();
 		( new Emails() )->register_hooks();
 		( new StripeGateway() )->register_hooks();
 
@@ -179,6 +184,7 @@ final class Plugin {
 		( new SettingsPage() )->register_hooks();
 		( new ShopSettings() )->register_hooks();
 		( new OrdersPage() )->register_hooks();
+		( new ImportPage() )->register_hooks();
 		( new Privacy() )->register_hooks();
 
 		/**
@@ -247,6 +253,7 @@ final class Plugin {
 	public static function activate(): void {
 		PostType::register();
 		PriceLists::register();
+		Coupons::register();
 		GalleryMeta::ensure_role();
 		Schema::install();
 		flush_rewrite_rules();

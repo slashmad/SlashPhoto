@@ -31,6 +31,15 @@ $slashphoto_names     = function_exists( 'locale_get_display_region' );
 		<p class="slashphoto-cart__loading"><?php esc_html_e( 'Loading your cart…', 'slashphoto' ); ?></p>
 	</div>
 
+	<div class="slashphoto-coupon" data-slashphoto-coupon hidden>
+		<p class="slashphoto-field">
+			<label for="slashphoto-coupon"><?php esc_html_e( 'Discount code', 'slashphoto' ); ?></label>
+			<input type="text" id="slashphoto-coupon" name="coupon" maxlength="50" autocomplete="off" autocapitalize="characters" spellcheck="false">
+		</p>
+		<button type="button" class="slashphoto-coupon__apply wp-element-button"><?php esc_html_e( 'Apply', 'slashphoto' ); ?></button>
+		<p class="slashphoto-coupon__message" role="status" hidden></p>
+	</div>
+
 	<form class="slashphoto-checkout__form" data-slashphoto-checkout-form hidden novalidate>
 		<h2 class="slashphoto-checkout__title"><?php esc_html_e( 'Your details', 'slashphoto' ); ?></h2>
 		<?php if ( ! is_user_logged_in() ) : ?>

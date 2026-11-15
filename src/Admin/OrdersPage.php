@@ -14,6 +14,7 @@ use SlashPhoto\Shop\Emails;
 use SlashPhoto\Shop\Gateways\Gateways;
 use SlashPhoto\Shop\Money;
 use SlashPhoto\Shop\Orders;
+use SlashPhoto\Shop\Receipts;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -156,7 +157,21 @@ final class OrdersPage {
 				echo esc_html( sprintf( __( 'Order %d', 'slashphoto' ), $id ) );
 				?>
 			</h1>
-			<p><a href="<?php echo esc_url( $back ); ?>">&larr; <?php esc_html_e( 'All orders', 'slashphoto' ); ?></a></p>
+			<p>
+				<a href="<?php echo esc_url( $back ); ?>">&larr; <?php esc_html_e( 'All orders', 'slashphoto' ); ?></a>
+				&nbsp;·&nbsp;
+				<a href="<?php echo esc_url( Receipts::admin_url( $id ) ); ?>" target="_blank" rel="noopener">
+				<?php
+				echo esc_html(
+					[
+						'receipt'      => __( 'Receipt', 'slashphoto' ),
+						'invoice'      => __( 'Invoice', 'slashphoto' ),
+						'confirmation' => __( 'Order summary', 'slashphoto' ),
+					][ Receipts::type( $order ) ]
+				);
+				?>
+							</a>
+			</p>
 			<?php if ( $updated ) : ?>
 				<div class="notice notice-success inline"><p><?php esc_html_e( 'Order updated.', 'slashphoto' ); ?></p></div>
 			<?php endif; ?>
@@ -175,8 +190,8 @@ final class OrdersPage {
 						</thead>
 						<tbody>
 							<?php foreach ( $items as $item ) : ?>
-								<tr>
-									<td>
+								<tr<?php echo $item['parent_id'] ? ' class="slashphoto-order-child"' : ''; ?>>
+									<td<?php echo $item['parent_id'] ? ' style="padding-left:32px"' : ''; ?>>
 										<?php echo wp_get_attachment_image( $item['image_id'], [ 80, 80 ], false, [ 'style' => 'width:60px;height:auto;vertical-align:middle;margin-right:8px' ] ); ?>
 										<strong><?php echo esc_html( $item['file_label'] ); ?></strong>
 										<?php if ( $item['gallery_id'] && get_post( $item['gallery_id'] ) ) : ?>
@@ -185,9 +200,11 @@ final class OrdersPage {
 									</td>
 									<td><?php echo esc_html( $item['name'] ); ?></td>
 									<td><?php echo esc_html( (string) $item['quantity'] ); ?></td>
-									<td><?php echo esc_html( $money( $item['total'] ) ); ?></td>
+									<td><?php echo esc_html( $item['parent_id'] ? __( 'In package', 'slashphoto' ) : $money( $item['total'] ) ); ?></td>
 									<td>
-										<?php if ( get_post( $item['image_id'] ) ) : ?>
+										<?php if ( 'package' === $item['kind'] ) : ?>
+											&nbsp;
+										<?php elseif ( get_post( $item['image_id'] ) ) : ?>
 											<a href="<?php echo esc_url( Downloads::admin_url( $item['image_id'] ) ); ?>"><?php esc_html_e( 'Download', 'slashphoto' ); ?></a>
 										<?php else : ?>
 											<?php esc_html_e( 'Deleted', 'slashphoto' ); ?>
@@ -197,6 +214,9 @@ final class OrdersPage {
 							<?php endforeach; ?>
 						</tbody>
 						<tfoot>
+							<?php if ( $order['discount'] > 0 ) : ?>
+								<tr><th colspan="3"><?php echo esc_html( '' !== (string) $order['coupon'] ? sprintf( /* translators: %s: discount code */ __( 'Discount (%s)', 'slashphoto' ), $order['coupon'] ) : __( 'Discount', 'slashphoto' ) ); ?></th><td colspan="2"><?php echo esc_html( '−' . $money( $order['discount'] ) ); ?></td></tr>
+							<?php endif; ?>
 							<?php if ( $order['shipping'] > 0 || $order['address'] ) : ?>
 								<tr><th colspan="3"><?php esc_html_e( 'Shipping', 'slashphoto' ); ?></th><td colspan="2"><?php echo esc_html( $money( $order['shipping'] ) ); ?></td></tr>
 							<?php endif; ?>

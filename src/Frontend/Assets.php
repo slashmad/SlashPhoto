@@ -220,32 +220,57 @@ final class Assets {
 				'nonce'   => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
 				'cartUrl' => $page ? (string) get_permalink( $page ) : '',
 				'i18n'    => [
-					'cart'        => __( 'Cart', 'slashphoto' ),
-					'buy'         => __( 'Buy this photo', 'slashphoto' ),
+					'cart'              => __( 'Cart', 'slashphoto' ),
+					'buy'               => __( 'Buy this photo', 'slashphoto' ),
 					/* translators: %d: number of items */
-					'countOne'    => __( 'Cart: %d item', 'slashphoto' ),
+					'countOne'          => __( 'Cart: %d item', 'slashphoto' ),
 					/* translators: %d: number of items */
-					'count'       => __( 'Cart: %d items', 'slashphoto' ),
-					'hint'        => __( 'Open a photo to order prints or downloads.', 'slashphoto' ),
-					'goToCart'    => __( 'Go to cart', 'slashphoto' ),
-					'add'         => __( 'Add', 'slashphoto' ),
+					'count'             => __( 'Cart: %d items', 'slashphoto' ),
+					'hint'              => __( 'Open a photo to order prints or downloads.', 'slashphoto' ),
+					'goToCart'          => __( 'Go to cart', 'slashphoto' ),
+					'add'               => __( 'Add', 'slashphoto' ),
 					/* translators: %s: product name */
-					'addProduct'  => __( 'Add %s to cart', 'slashphoto' ),
+					'addProduct'        => __( 'Add %s to cart', 'slashphoto' ),
 					/* translators: %s: product name */
-					'added'       => __( 'Added: %s.', 'slashphoto' ),
+					'added'             => __( 'Added: %s.', 'slashphoto' ),
 					/* translators: %s: product name */
-					'quantityFor' => __( 'Quantity, %s', 'slashphoto' ),
-					'close'       => __( 'Close', 'slashphoto' ),
-					'empty'       => __( 'Your cart is empty.', 'slashphoto' ),
-					'unavailable' => __( 'Some photos are no longer available to you and were removed from the cart.', 'slashphoto' ),
-					'remove'      => __( 'Remove', 'slashphoto' ),
+					'quantityFor'       => __( 'Quantity, %s', 'slashphoto' ),
+					'close'             => __( 'Close', 'slashphoto' ),
+					'empty'             => __( 'Your cart is empty.', 'slashphoto' ),
+					'unavailable'       => __( 'Some photos are no longer available to you and were removed from the cart.', 'slashphoto' ),
+					'remove'            => __( 'Remove', 'slashphoto' ),
 					/* translators: %s: product and photo */
-					'removeLine'  => __( 'Remove %s', 'slashphoto' ),
-					'subtotal'    => __( 'Subtotal', 'slashphoto' ),
-					'shipping'    => __( 'Shipping', 'slashphoto' ),
-					'total'       => __( 'Total', 'slashphoto' ),
-					'fillIn'      => __( 'Fill in the marked fields.', 'slashphoto' ),
-					'error'       => __( 'Something went wrong. Check your connection and try again.', 'slashphoto' ),
+					'removeLine'        => __( 'Remove %s', 'slashphoto' ),
+					'subtotal'          => __( 'Subtotal', 'slashphoto' ),
+					'shipping'          => __( 'Shipping', 'slashphoto' ),
+					'total'             => __( 'Total', 'slashphoto' ),
+					'fillIn'            => __( 'Fill in the marked fields.', 'slashphoto' ),
+					/* translators: 1: number of photos, 2: product such as "Download" */
+					'packageOf'         => __( '%1$d photos you choose, each: %2$s', 'slashphoto' ),
+					/* translators: %s: product such as "Download" */
+					'packageAll'        => __( 'Every photo in this gallery, each: %s', 'slashphoto' ),
+					'addToPackage'      => __( 'Add to package', 'slashphoto' ),
+					/* translators: %s: package name */
+					'addToPackageName'  => __( 'Add this photo to %s', 'slashphoto' ),
+					/* translators: 1: package name, 2: photos chosen, 3: package size */
+					'addedToPackage'    => __( 'Added to %1$s: %2$d of %3$d photos.', 'slashphoto' ),
+					/* translators: %s: package name */
+					'alreadyInPackage'  => __( 'This photo is already in %s.', 'slashphoto' ),
+					/* translators: %s: product name */
+					'alreadyInCart'     => __( '%s is already in your cart.', 'slashphoto' ),
+					/* translators: 1: photos chosen, 2: package size */
+					'packageLeft'       => __( '%1$d of %2$d photos chosen. Open more photos to add them.', 'slashphoto' ),
+					/* translators: 1: photos chosen, 2: package size */
+					'packageFull'       => __( '%1$d of %2$d photos chosen.', 'slashphoto' ),
+					/* translators: %d: number of photos */
+					'packageWhole'      => __( 'All %d photos', 'slashphoto' ),
+					/* translators: %s: photo title */
+					'removeFromPackage' => __( 'Remove %s from the package', 'slashphoto' ),
+					/* translators: %s: discount code */
+					'couponApplied'     => __( 'Code %s applied.', 'slashphoto' ),
+					/* translators: %s: discount code */
+					'discount'          => __( 'Discount (%s)', 'slashphoto' ),
+					'error'             => __( 'Something went wrong. Check your connection and try again.', 'slashphoto' ),
 				],
 			]
 		);

@@ -64,14 +64,14 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 
 	<ul class="slashphoto-order__lines">
 		<?php foreach ( $slashphoto_items as $slashphoto_item ) : ?>
-			<li class="slashphoto-order__line">
+			<li class="slashphoto-order__line<?php echo $slashphoto_item['parent_id'] ? ' slashphoto-order__line--in-package' : ''; ?>">
 				<?php echo wp_get_attachment_image( $slashphoto_item['image_id'], 'thumbnail', false, [ 'class' => 'slashphoto-order__thumb' ] ); ?>
 				<span class="slashphoto-order__what">
 					<span class="slashphoto-order__name"><?php echo esc_html( $slashphoto_item['name'] ); ?></span>
 					<span class="slashphoto-order__file"><?php echo esc_html( $slashphoto_item['file_label'] ); ?></span>
 				</span>
-				<span class="slashphoto-order__qty"><?php echo esc_html( '× ' . $slashphoto_item['quantity'] ); ?></span>
-				<span class="slashphoto-order__price"><?php echo esc_html( $slashphoto_money( $slashphoto_item['total'] ) ); ?></span>
+				<span class="slashphoto-order__qty"><?php echo esc_html( $slashphoto_item['parent_id'] ? '' : '× ' . $slashphoto_item['quantity'] ); ?></span>
+				<span class="slashphoto-order__price"><?php echo esc_html( $slashphoto_item['parent_id'] ? __( 'In package', 'slashphoto' ) : $slashphoto_money( $slashphoto_item['total'] ) ); ?></span>
 				<?php if ( ! empty( $slashphoto_item['download'] ) ) : ?>
 					<a class="slashphoto-order__download wp-element-button" href="<?php echo esc_url( $slashphoto_item['download'] ); ?>" download><?php esc_html_e( 'Download', 'slashphoto' ); ?></a>
 				<?php endif; ?>
@@ -80,6 +80,19 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 	</ul>
 
 	<dl class="slashphoto-order__totals">
+		<?php if ( $slashphoto_order['discount'] > 0 ) : ?>
+			<dt>
+				<?php
+				echo esc_html(
+					'' !== (string) $slashphoto_order['coupon']
+						/* translators: %s: discount code */
+						? sprintf( __( 'Discount (%s)', 'slashphoto' ), $slashphoto_order['coupon'] )
+						: __( 'Discount', 'slashphoto' )
+				);
+				?>
+			</dt>
+			<dd><?php echo esc_html( '−' . $slashphoto_money( $slashphoto_order['discount'] ) ); ?></dd>
+		<?php endif; ?>
 		<?php if ( $slashphoto_order['shipping'] > 0 || $slashphoto_order['address'] ) : ?>
 			<dt><?php esc_html_e( 'Shipping', 'slashphoto' ); ?></dt>
 			<dd><?php echo esc_html( $slashphoto_money( $slashphoto_order['shipping'] ) ); ?></dd>
@@ -97,10 +110,19 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 		<p class="slashphoto-order__address"><?php echo implode( '<br>', array_map( 'esc_html', \SlashPhoto\Shop\Emails::address_lines( $slashphoto_order ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped per line. ?></p>
 	<?php endif; ?>
 
+	<p class="slashphoto-order__receipt">
+		<?php
+		$slashphoto_doc = \SlashPhoto\Shop\Receipts::type( $slashphoto_order );
+		if ( 'confirmation' !== $slashphoto_doc ) :
+			?>
+			<a href="<?php echo esc_url( \SlashPhoto\Shop\Receipts::url( $slashphoto_order ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( 'receipt' === $slashphoto_doc ? __( 'Receipt (print or save as PDF)', 'slashphoto' ) : __( 'Invoice (print or save as PDF)', 'slashphoto' ) ); ?></a>
+		<?php endif; ?>
+	</p>
+
 	<p class="slashphoto-order__privacy"><?php esc_html_e( 'Keep the link to this page to yourself: anyone who has it can see the order and download the files.', 'slashphoto' ); ?></p>
 </div>
 <?php
 // The order is placed: empty the cart in this browser.
 if ( in_array( $slashphoto_order['status'], [ 'on-hold', 'paid', 'completed' ], true ) ) {
-	wp_print_inline_script_tag( 'try{window.localStorage.removeItem("slashphoto-cart")}catch(e){}' );
+	wp_print_inline_script_tag( 'try{window.localStorage.removeItem("slashphoto-cart");window.localStorage.removeItem("slashphoto-coupon")}catch(e){}' );
 }

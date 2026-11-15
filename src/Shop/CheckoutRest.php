@@ -76,6 +76,22 @@ final class CheckoutRest {
 						'minimum' => 1,
 						'maximum' => Shop::MAX_QTY,
 					],
+					'package' => [
+						'type'    => 'string',
+						'pattern' => '^[a-z0-9]{1,20}$',
+					],
+					'gallery' => [
+						'type'    => 'integer',
+						'minimum' => 0,
+					],
+					'images'  => [
+						'type'     => 'array',
+						'maxItems' => PriceLists::MAX_PACKAGE,
+						'items'    => [
+							'type'    => 'integer',
+							'minimum' => 1,
+						],
+					],
 				],
 			],
 		];
@@ -92,7 +108,10 @@ final class CheckoutRest {
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => [ $this, 'quote' ],
 				'permission_callback' => '__return_true',
-				'args'                => [ 'items' => $items ],
+				'args'                => [
+					'items'  => $items,
+					'coupon' => $text( 50 ),
+				],
 			]
 		);
 
@@ -123,6 +142,7 @@ final class CheckoutRest {
 						],
 					],
 					'note'    => $text( 2000 ),
+					'coupon'  => $text( 50 ),
 					'gateway' => $text( 30, true ),
 					'terms'   => [ 'type' => 'boolean' ],
 					// Honeypot: people never see or fill this field.
@@ -138,7 +158,7 @@ final class CheckoutRest {
 	 * @param WP_REST_Request $request Request.
 	 */
 	public function quote( WP_REST_Request $request ): WP_REST_Response {
-		$response = rest_ensure_response( self::present( $this->shop->quote( (array) $request['items'] ) ) );
+		$response = rest_ensure_response( self::present( $this->shop->quote( (array) $request['items'], (string) $request['coupon'] ) ) );
 		$response->header( 'Cache-Control', 'no-store' );
 		return $response;
 	}
@@ -154,7 +174,9 @@ final class CheckoutRest {
 			return new WP_Error( 'slashphoto_order_rejected', __( 'The order could not be placed.', 'slashphoto' ), [ 'status' => 400 ] );
 		}
 
-		$quote = $this->shop->quote( (array) $request['items'] );
+		$email = sanitize_email( (string) $request['email'] );
+		$code  = (string) $request['coupon'];
+		$quote = $this->shop->quote( (array) $request['items'], $code, $email );
 		if ( ! $quote['lines'] ) {
 			return new WP_Error( 'slashphoto_cart_empty', __( 'Your cart is empty.', 'slashphoto' ), [ 'status' => 400 ] );
 		}
@@ -169,8 +191,10 @@ final class CheckoutRest {
 			);
 		}
 
-		$email = sanitize_email( (string) $request['email'] );
-		$name  = sanitize_text_field( (string) $request['name'] );
+		if ( '' !== $quote['coupon_error'] ) {
+			return self::invalid( 'coupon', $quote['coupon_error'] );
+		}
+		$name = sanitize_text_field( (string) $request['name'] );
 		if ( ! is_email( $email ) ) {
 			return self::invalid( 'email', __( 'Enter a valid email address.', 'slashphoto' ) );
 		}
@@ -278,22 +302,42 @@ final class CheckoutRest {
 		$percent  = number_format_i18n( $rate, floor( $rate ) === $rate ? 0 : 1 );
 		return [
 			'lines'         => array_map(
-				static fn( array $line ): array => [
-					'key'     => $line['key'],
-					'image'   => $line['image'],
-					'product' => $line['product'],
-					'kind'    => $line['kind'],
-					'name'    => $line['name'],
-					'title'   => $line['title'],
-					'thumb'   => $line['thumb'],
-					'qty'     => $line['qty'],
-					'unit'    => $money( $line['unit'] ),
-					'total'   => $money( $line['total'] ),
-				],
+				static function ( array $line ) use ( $money ): array {
+					$out = [
+						'key'     => $line['key'],
+						'image'   => $line['image'],
+						'product' => $line['product'],
+						'kind'    => $line['kind'],
+						'name'    => $line['name'],
+						'title'   => $line['title'],
+						'thumb'   => $line['thumb'],
+						'qty'     => $line['qty'],
+						'unit'    => $money( $line['unit'] ),
+						'total'   => $money( $line['total'] ),
+					];
+					if ( 'package' === $line['kind'] ) {
+						$out['package']  = $line['package'];
+						$out['gallery']  = $line['gallery'];
+						$out['count']    = $line['count'];
+						$out['includes'] = $line['includes']['name'];
+						$out['images']   = array_map(
+							static fn( array $image ): array => [
+								'id'    => $image['id'],
+								'title' => $image['title'],
+								'thumb' => $image['thumb'],
+							],
+							$line['images']
+						);
+					}
+					return $out;
+				},
 				$quote['lines']
 			),
 			'unavailable'   => $quote['unavailable'],
 			'subtotal'      => $money( $quote['subtotal'] ),
+			'discount'      => $quote['discount'] > 0 ? '−' . $money( $quote['discount'] ) : '',
+			'coupon'        => $quote['coupon'],
+			'couponError'   => $quote['coupon_error'],
 			'shipping'      => $quote['needs_shipping'] ? $money( $quote['shipping'] ) : '',
 			'tax'           => $quote['tax'] > 0 ? $money( $quote['tax'] ) : '',
 			'taxLabel'      => $quote['prices_include_tax']

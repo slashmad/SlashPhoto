@@ -194,6 +194,10 @@ final class StripeGateway implements Gateway {
 			],
 		];
 		foreach ( $items as $item ) {
+			if ( $item['parent_id'] ) {
+				continue;
+				// Photos of a package; the package line carries the price.
+			}
 			$params['line_items'][] = $line( $item['name'] . ' – ' . $item['file_label'], (int) $item['unit_price'], (int) $item['quantity'] );
 		}
 		if ( $order['shipping'] > 0 ) {
@@ -202,6 +206,27 @@ final class StripeGateway implements Gateway {
 		if ( ! $order['prices_include_tax'] && $order['tax'] > 0 ) {
 			/* translators: %s: tax rate in percent */
 			$params['line_items'][] = $line( sprintf( __( 'VAT %s %%', 'slashphoto' ), number_format_i18n( $order['tax_rate'], floor( $order['tax_rate'] ) === $order['tax_rate'] ? 0 : 1 ) ), (int) $order['tax'], 1 );
+		}
+
+		if ( $order['discount'] > 0 ) {
+			// Line items cannot be negative: the discount becomes a one-time Stripe coupon.
+			$coupon = self::request(
+				'POST',
+				'coupons',
+				[
+					'amount_off'      => (int) $order['discount'],
+					'currency'        => $currency,
+					'duration'        => 'once',
+					'max_redemptions' => 1,
+					'name'            => mb_substr( '' !== (string) $order['coupon'] ? (string) $order['coupon'] : __( 'Discount', 'slashphoto' ), 0, 40 ),
+				],
+				'',
+				'slashphoto-coupon-' . $order['id'] . '-' . $order['token']
+			);
+			if ( is_wp_error( $coupon ) ) {
+				return $coupon;
+			}
+			$params['discounts'] = [ [ 'coupon' => (string) $coupon['id'] ] ];
 		}
 
 		$session = self::request( 'POST', 'checkout/sessions', $params, '', 'slashphoto-order-' . $order['id'] . '-' . $order['token'] );

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-15T19:13:13+00:00\n"
+"POT-Creation-Date: 2026-11-15T19:46:27+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: slashphoto\n"
@@ -132,142 +132,313 @@ msgstr ""
 msgid "Set a password under Visibility. Sub-galleries also follow the rules of the galleries above them."
 msgstr ""
 
-#: src/Admin/OrdersPage.php:61
+#: src/Admin/ImportPage.php:47
+#: src/Admin/ImportPage.php:48
+msgid "Import from Sunshine"
+msgstr ""
+
+#: src/Admin/ImportPage.php:125
+msgid "Import from Sunshine Photo Cart"
+msgstr ""
+
+#: src/Admin/ImportPage.php:126
+msgid "Copies your Sunshine galleries, images, prices and orders into SlashPhoto. Sunshine’s own data is only read and never changed, so you can compare both before you switch Sunshine off. You can run the import again: what is already imported is skipped."
+msgstr ""
+
+#: src/Admin/ImportPage.php:128
+msgid "Found on this site"
+msgstr ""
+
+#. translators: %d: number
+#: src/Admin/ImportPage.php:131
+#, php-format
+msgid "%d gallery"
+msgid_plural "%d galleries"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number
+#: src/Admin/ImportPage.php:133
+#, php-format
+msgid "%d image"
+msgid_plural "%d images"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number
+#: src/Admin/ImportPage.php:135
+#, php-format
+msgid "%d product"
+msgid_plural "%d products"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number
+#: src/Admin/ImportPage.php:137
+#, php-format
+msgid "%d price level"
+msgid_plural "%d price levels"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number
+#: src/Admin/ImportPage.php:139
+#, php-format
+msgid "%d order"
+msgid_plural "%d orders"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Admin/ImportPage.php:142
+msgid "How things are carried over"
+msgstr ""
+
+#: src/Admin/ImportPage.php:144
+msgid "Each price level becomes a price list with the products that have a price at that level; galleries keep their price level. Downloads stay downloads, everything else becomes a print."
+msgstr ""
+
+#: src/Admin/ImportPage.php:145
+msgid "Galleries keep their title, text, order, sub-galleries, password, private clients, expiry date and terms. Galleries opened with a direct URL get a secret link. SlashPhoto has no “email address” or “any logged-in visitor” gate; such galleries become public and are listed below so you can choose another protection."
+msgstr ""
+
+#: src/Admin/ImportPage.php:146
+msgid "Images are copied: each gets a display copy and its original is stored privately, exactly like new uploads. This needs disk space for a second copy until you remove Sunshine."
+msgstr ""
+
+#: src/Admin/ImportPage.php:147
+msgid "Orders are copied with their lines and amounts for your records. Customers do not get emails, and their old Sunshine order links do not carry over."
+msgstr ""
+
+#: src/Admin/ImportPage.php:153
+msgid "Look for new Sunshine content again"
+msgstr ""
+
+#: src/Admin/ImportPage.php:155
+msgid "Start the import"
+msgstr ""
+
+#: src/Admin/ImportPage.php:155
+msgid "Continue the import"
+msgstr ""
+
+#: src/Admin/ImportPage.php:161
+#: src/Admin/ImportPage.php:193
+msgid "The import is complete."
+msgstr ""
+
+#. translators: 1: price lists, 2: galleries, 3: images, 4: orders
+#: src/Admin/ImportPage.php:166
+#, php-format
+msgid "Imported so far: %1$d price lists, %2$d galleries, %3$d images, %4$d orders."
+msgstr ""
+
+#: src/Admin/ImportPage.php:169
+#: src/Admin/ImportPage.php:230
+msgid "To check"
+msgstr ""
+
+#: src/Admin/ImportPage.php:189
+msgid "Copying price lists…"
+msgstr ""
+
+#: src/Admin/ImportPage.php:190
+msgid "Creating galleries…"
+msgstr ""
+
+#: src/Admin/ImportPage.php:191
+msgid "Copying images… This can take a while; keep this page open."
+msgstr ""
+
+#: src/Admin/ImportPage.php:192
+msgid "Copying orders…"
+msgstr ""
+
+#: src/Admin/ImportPage.php:194
+msgid "The import stopped because of an error. Click the button to continue."
+msgstr ""
+
 #: src/Admin/OrdersPage.php:62
-#: src/Admin/OrdersPage.php:118
+#: src/Admin/OrdersPage.php:63
+#: src/Admin/OrdersPage.php:119
 msgid "Orders"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:75
+#: src/Admin/OrdersPage.php:76
 msgid "You are not allowed to change orders."
 msgstr ""
 
-#: src/Admin/OrdersPage.php:80
-#: src/Admin/OrdersPage.php:144
+#: src/Admin/OrdersPage.php:81
+#: src/Admin/OrdersPage.php:145
+#: src/Shop/Receipts.php:118
 msgid "Order not found."
 msgstr ""
 
-#: src/Admin/OrdersPage.php:126
+#: src/Admin/OrdersPage.php:127
 msgid "Search orders"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:144
-#: src/Admin/OrdersPage.php:159
+#: src/Admin/OrdersPage.php:145
+#: src/Admin/OrdersPage.php:161
 msgid "All orders"
 msgstr ""
 
 #. translators: %d: order number
-#: src/Admin/OrdersPage.php:156
+#: src/Admin/OrdersPage.php:157
 #: src/Admin/OrdersTable.php:113
-#: src/Shop/Emails.php:142
+#: src/Shop/Emails.php:147
 #: src/Shop/Gateways/StripeGateway.php:182
+#: src/Shop/Receipts.php:139
 #: templates/order.php:39
 #, php-format
 msgid "Order %d"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:161
-msgid "Order updated."
+#: src/Admin/OrdersPage.php:167
+msgid "Receipt"
+msgstr ""
+
+#: src/Admin/OrdersPage.php:168
+msgid "Invoice"
 msgstr ""
 
 #: src/Admin/OrdersPage.php:169
+msgid "Order summary"
+msgstr ""
+
+#: src/Admin/OrdersPage.php:176
+msgid "Order updated."
+msgstr ""
+
+#: src/Admin/OrdersPage.php:184
 msgid "Image"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:170
+#: src/Admin/OrdersPage.php:185
+#: templates/receipt.php:115
 msgid "Product"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:171
+#: src/Admin/OrdersPage.php:186
+#: templates/receipt.php:116
 msgid "Quantity"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:172
-#: src/Admin/OrdersPage.php:206
+#: src/Admin/OrdersPage.php:187
+#: src/Admin/OrdersPage.php:226
 #: src/Admin/OrdersTable.php:51
 #: src/Frontend/Assets.php:246
 #: src/Privacy.php:215
-#: templates/order.php:91
+#: templates/order.php:104
+#: templates/receipt.php:166
 msgid "Total"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:173
+#: src/Admin/OrdersPage.php:188
 msgid "Original"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:191
+#: src/Admin/OrdersPage.php:203
+#: templates/order.php:74
+msgid "In package"
+msgstr ""
+
+#: src/Admin/OrdersPage.php:208
 #: src/Shop/Downloads.php:130
-#: src/Shop/PriceLists.php:308
+#: src/Shop/PriceLists.php:329
 #: templates/order.php:76
 msgid "Download"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:193
+#: src/Admin/OrdersPage.php:210
 msgid "Deleted"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:201
+#. translators: %s: discount code
+#: src/Admin/OrdersPage.php:218
+#: src/Frontend/Assets.php:272
+#: templates/order.php:89
+#: templates/receipt.php:144
+#, php-format
+msgid "Discount (%s)"
+msgstr ""
+
+#. translators: %s: discount code
+#: src/Admin/OrdersPage.php:218
+#: src/Shop/Coupons.php:299
+#: src/Shop/Coupons.php:351
+#: src/Shop/Coupons.php:368
+#: src/Shop/Gateways/StripeGateway.php:221
+#: templates/order.php:90
+#: templates/receipt.php:145
+msgid "Discount"
+msgstr ""
+
+#: src/Admin/OrdersPage.php:221
 #: src/Frontend/Assets.php:245
-#: src/Shop/Gateways/StripeGateway.php:200
-#: templates/order.php:84
+#: src/Shop/Coupons.php:389
+#: src/Shop/Gateways/StripeGateway.php:204
+#: templates/order.php:97
+#: templates/receipt.php:153
 msgid "Shipping"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:204
-#: templates/order.php:88
+#: src/Admin/OrdersPage.php:224
+#: templates/order.php:101
 msgid "Including VAT"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:204
-#: templates/order.php:88
+#: src/Admin/OrdersPage.php:224
+#: templates/order.php:101
 msgid "VAT"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:210
+#: src/Admin/OrdersPage.php:230
 msgid "Message from the customer"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:217
+#: src/Admin/OrdersPage.php:237
 #: src/Admin/OrdersTable.php:49
+#: templates/receipt.php:101
 msgid "Customer"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:226
+#: src/Admin/OrdersPage.php:246
 #: src/Privacy.php:203
-#: templates/order.php:96
+#: templates/order.php:109
+#: templates/receipt.php:106
 msgid "Delivery address"
 msgstr ""
 
 #. translators: 1: date, 2: payment method
-#: src/Admin/OrdersPage.php:234
+#: src/Admin/OrdersPage.php:254
 #, php-format
 msgid "Placed %1$s · %2$s"
 msgstr ""
 
 #. translators: %s: date
-#: src/Admin/OrdersPage.php:243
+#: src/Admin/OrdersPage.php:263
 #, php-format
 msgid "Paid %s"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:256
-#: src/Admin/OrdersPage.php:261
+#: src/Admin/OrdersPage.php:276
+#: src/Admin/OrdersPage.php:281
 #: src/Admin/OrdersTable.php:50
-#: src/Admin/ShopSettings.php:297
+#: src/Admin/ShopSettings.php:317
 #: src/Admin/SnapOtterSettings.php:124
 #: src/Privacy.php:187
 msgid "Status"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:268
+#: src/Admin/OrdersPage.php:288
 msgid "The customer gets an email when the order becomes paid, completed, cancelled or refunded. Marking it paid opens the downloads. Refunds through Stripe are made in the Stripe Dashboard."
 msgstr ""
 
-#: src/Admin/OrdersPage.php:270
+#: src/Admin/OrdersPage.php:290
 msgid "Private note"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:273
+#: src/Admin/OrdersPage.php:293
 msgid "Update order"
 msgstr ""
 
@@ -567,6 +738,7 @@ msgid "Manage price lists"
 msgstr ""
 
 #: src/Admin/ShopSettings.php:202
+#: src/Shop/Coupons.php:384
 msgid "Prints"
 msgstr ""
 
@@ -591,6 +763,7 @@ msgid "Two-letter country codes, separated by commas. Prints cannot be ordered w
 msgstr ""
 
 #: src/Admin/ShopSettings.php:224
+#: src/Shop/Coupons.php:383
 msgid "Downloads"
 msgstr ""
 
@@ -603,103 +776,127 @@ msgid "Counted from payment; 0 means no end date. Customers download the origina
 msgstr ""
 
 #: src/Admin/ShopSettings.php:235
-msgid "Payment and notifications"
+msgid "Receipts and invoices"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:238
-msgid "Manual payment"
+#: src/Admin/ShopSettings.php:236
+msgid "Customers can open and print a receipt for paid orders, and an invoice while a manual payment is outstanding. Check what your country requires on receipts."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:240
-msgid "Customers may order and pay later (invoice, bank transfer, Swish, cash)"
+#: src/Admin/ShopSettings.php:239
+msgid "Business name"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:241
-msgid "The order waits until you mark it paid; downloads open then."
-msgstr ""
-
-#: src/Admin/ShopSettings.php:245
-msgid "Name at checkout"
+#: src/Admin/ShopSettings.php:243
+msgid "Address and registration"
 msgstr ""
 
 #: src/Admin/ShopSettings.php:246
+msgid "Address, company registration number, VAT number, contact details. Shown as written."
+msgstr ""
+
+#: src/Admin/ShopSettings.php:250
+msgid "Note at the bottom"
+msgstr ""
+
+#: src/Admin/ShopSettings.php:255
+msgid "Payment and notifications"
+msgstr ""
+
+#: src/Admin/ShopSettings.php:258
+msgid "Manual payment"
+msgstr ""
+
+#: src/Admin/ShopSettings.php:260
+msgid "Customers may order and pay later (invoice, bank transfer, Swish, cash)"
+msgstr ""
+
+#: src/Admin/ShopSettings.php:261
+msgid "The order waits until you mark it paid; downloads open then."
+msgstr ""
+
+#: src/Admin/ShopSettings.php:265
+msgid "Name at checkout"
+msgstr ""
+
+#: src/Admin/ShopSettings.php:266
 #: src/Shop/Gateways/ManualGateway.php:34
 msgid "Pay later (invoice or transfer)"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:249
+#: src/Admin/ShopSettings.php:269
 msgid "Payment details"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:252
+#: src/Admin/ShopSettings.php:272
 msgid "Shown on the order page and in the order email, e.g. “Swish 123 456 78 90, mark the payment with your order number.”"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:256
+#: src/Admin/ShopSettings.php:276
 msgid "Order notifications to"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:277
+#: src/Admin/ShopSettings.php:297
 msgid "Card payments with Stripe"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:278
+#: src/Admin/ShopSettings.php:298
 msgid "Customers pay on Stripe’s own checkout page with card, or with Swish, Klarna and other methods you switch on in the Stripe Dashboard. Card details never reach this site, no Stripe scripts are loaded on your pages and SlashPhoto adds no fees."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:285
+#: src/Admin/ShopSettings.php:305
 msgid "The Stripe keys were removed."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:287
+#: src/Admin/ShopSettings.php:307
 msgid "Saved. Stripe accepted the key."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:301
+#: src/Admin/ShopSettings.php:321
 msgid "Connected, live payments."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:303
+#: src/Admin/ShopSettings.php:323
 msgid "Connected in test mode: no real money is charged."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:305
+#: src/Admin/ShopSettings.php:325
 msgid "Not connected."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:311
+#: src/Admin/ShopSettings.php:331
 msgid "Secret key"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:313
+#: src/Admin/ShopSettings.php:333
 msgid "Saved. Enter a new key to replace it."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:314
+#: src/Admin/ShopSettings.php:334
 msgid "Stripe Dashboard → Developers → API keys. A restricted key needs write access to Checkout Sessions. Stored encrypted."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:318
+#: src/Admin/ShopSettings.php:338
 msgid "Webhook signing secret"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:320
+#: src/Admin/ShopSettings.php:340
 msgid "Saved. Enter a new secret to replace it."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:322
+#: src/Admin/ShopSettings.php:342
 msgid "Recommended. In the Stripe Dashboard add a webhook endpoint with this address and the events checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed and checkout.session.expired:"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:324
+#: src/Admin/ShopSettings.php:344
 msgid "Without it, orders are marked paid when the customer returns to your site after paying."
 msgstr ""
 
-#: src/Admin/ShopSettings.php:330
+#: src/Admin/ShopSettings.php:350
 msgid "Save Stripe keys"
 msgstr ""
 
-#: src/Admin/ShopSettings.php:332
+#: src/Admin/ShopSettings.php:352
 msgid "Remove keys"
 msgstr ""
 
@@ -892,7 +1089,7 @@ msgid "Cancel"
 msgstr ""
 
 #: src/Frontend/Assets.php:193
-#: templates/checkout.php:87
+#: templates/checkout.php:96
 msgid "Message to the photographer (optional)"
 msgstr ""
 
@@ -978,7 +1175,7 @@ msgid "Quantity, %s"
 msgstr ""
 
 #: src/Frontend/Assets.php:239
-#: src/Shop/CheckoutRest.php:159
+#: src/Shop/CheckoutRest.php:181
 msgid "Your cart is empty."
 msgstr ""
 
@@ -987,8 +1184,8 @@ msgid "Some photos are no longer available to you and were removed from the cart
 msgstr ""
 
 #: src/Frontend/Assets.php:241
-#: src/Shop/PriceLists.php:255
-#: src/Shop/PriceLists.php:320
+#: src/Shop/PriceLists.php:273
+#: src/Shop/PriceLists.php:352
 msgid "Remove"
 msgstr ""
 
@@ -999,6 +1196,7 @@ msgid "Remove %s"
 msgstr ""
 
 #: src/Frontend/Assets.php:244
+#: templates/receipt.php:136
 msgid "Subtotal"
 msgstr ""
 
@@ -1006,7 +1204,77 @@ msgstr ""
 msgid "Fill in the marked fields."
 msgstr ""
 
-#: src/Frontend/Assets.php:248
+#. translators: 1: number of photos, 2: product such as "Download"
+#: src/Frontend/Assets.php:249
+#, php-format
+msgid "%1$d photos you choose, each: %2$s"
+msgstr ""
+
+#. translators: %s: product such as "Download"
+#: src/Frontend/Assets.php:251
+#, php-format
+msgid "Every photo in this gallery, each: %s"
+msgstr ""
+
+#: src/Frontend/Assets.php:252
+msgid "Add to package"
+msgstr ""
+
+#. translators: %s: package name
+#: src/Frontend/Assets.php:254
+#, php-format
+msgid "Add this photo to %s"
+msgstr ""
+
+#. translators: 1: package name, 2: photos chosen, 3: package size
+#: src/Frontend/Assets.php:256
+#, php-format
+msgid "Added to %1$s: %2$d of %3$d photos."
+msgstr ""
+
+#. translators: %s: package name
+#: src/Frontend/Assets.php:258
+#, php-format
+msgid "This photo is already in %s."
+msgstr ""
+
+#. translators: %s: product name
+#: src/Frontend/Assets.php:260
+#, php-format
+msgid "%s is already in your cart."
+msgstr ""
+
+#. translators: 1: photos chosen, 2: package size
+#: src/Frontend/Assets.php:262
+#, php-format
+msgid "%1$d of %2$d photos chosen. Open more photos to add them."
+msgstr ""
+
+#. translators: 1: photos chosen, 2: package size
+#: src/Frontend/Assets.php:264
+#, php-format
+msgid "%1$d of %2$d photos chosen."
+msgstr ""
+
+#. translators: %d: number of photos
+#: src/Frontend/Assets.php:266
+#, php-format
+msgid "All %d photos"
+msgstr ""
+
+#. translators: %s: photo title
+#: src/Frontend/Assets.php:268
+#, php-format
+msgid "Remove %s from the package"
+msgstr ""
+
+#. translators: %s: discount code
+#: src/Frontend/Assets.php:270
+#, php-format
+msgid "Code %s applied."
+msgstr ""
+
+#: src/Frontend/Assets.php:273
 msgid "Something went wrong. Check your connection and try again."
 msgstr ""
 
@@ -1117,6 +1385,56 @@ msgstr ""
 msgid "Parent gallery:"
 msgstr ""
 
+#. translators: %s: Sunshine price level name
+#: src/Import/SunshineImporter.php:187
+#, php-format
+msgid "%s (from Sunshine)"
+msgstr ""
+
+#. translators: 1: gallery title, 2: error
+#: src/Import/SunshineImporter.php:312
+#, php-format
+msgid "Gallery “%1$s” could not be created: %2$s"
+msgstr ""
+
+#. translators: %s: gallery title
+#: src/Import/SunshineImporter.php:328
+#, php-format
+msgid "Gallery “%s” was open to any logged-in visitor in Sunshine. SlashPhoto has no such setting: it is public now; choose clients or a secret link if needed."
+msgstr ""
+
+#. translators: %s: gallery title
+#: src/Import/SunshineImporter.php:328
+#, php-format
+msgid "Gallery “%s” asked visitors for their email address in Sunshine. SlashPhoto does not collect visitor emails: it is public now; choose a password, clients or a secret link if needed."
+msgstr ""
+
+#. translators: 1: gallery title, 2: password hint
+#: src/Import/SunshineImporter.php:334
+#, php-format
+msgid "Gallery “%1$s” had the password hint “%2$s”, which was not imported."
+msgstr ""
+
+#. translators: 1: file name, 2: reason
+#: src/Import/SunshineImporter.php:454
+#, php-format
+msgid "Image %1$s was not imported: %2$s"
+msgstr ""
+
+#: src/Import/SunshineImporter.php:459
+msgid "the file is missing."
+msgstr ""
+
+#: src/Import/SunshineImporter.php:463
+msgid "the file could not be copied."
+msgstr ""
+
+#. translators: 1: Sunshine order number, 2: payment method
+#: src/Import/SunshineImporter.php:591
+#, php-format
+msgid "Imported from Sunshine order %1$s (payment: %2$s)."
+msgstr ""
+
 #: src/Media/Panorama.php:337
 msgid "detected: 360°"
 msgstr ""
@@ -1214,12 +1532,12 @@ msgid "Sent"
 msgstr ""
 
 #: src/Privacy.php:191
-#: templates/checkout.php:47
+#: templates/checkout.php:56
 msgid "Name"
 msgstr ""
 
 #: src/Privacy.php:195
-#: templates/checkout.php:43
+#: templates/checkout.php:52
 msgid "Email"
 msgstr ""
 
@@ -1290,48 +1608,187 @@ msgstr ""
 msgid "Your selection has been sent. Ask the photographer if you want to change it."
 msgstr ""
 
-#: src/Shop/CheckoutRest.php:154
+#: src/Shop/CheckoutRest.php:174
 msgid "The order could not be placed."
 msgstr ""
 
-#: src/Shop/CheckoutRest.php:164
+#: src/Shop/CheckoutRest.php:186
 msgid "Your cart has changed: some prices or images are no longer the same. Check it and try again."
 msgstr ""
 
-#: src/Shop/CheckoutRest.php:175
+#: src/Shop/CheckoutRest.php:199
 msgid "Enter a valid email address."
 msgstr ""
 
-#: src/Shop/CheckoutRest.php:178
+#: src/Shop/CheckoutRest.php:202
 msgid "Enter your name."
 msgstr ""
 
-#: src/Shop/CheckoutRest.php:193
+#: src/Shop/CheckoutRest.php:217
 msgid "Enter the delivery address for your prints."
 msgstr ""
 
-#: src/Shop/CheckoutRest.php:197
+#: src/Shop/CheckoutRest.php:221
 msgid "Prints cannot be sent to that country."
 msgstr ""
 
-#: src/Shop/CheckoutRest.php:202
+#: src/Shop/CheckoutRest.php:226
 msgid "Accept the terms of purchase to place the order."
 msgstr ""
 
-#: src/Shop/CheckoutRest.php:208
+#: src/Shop/CheckoutRest.php:232
 msgid "Choose how to pay."
 msgstr ""
 
 #. translators: %s: tax rate
-#: src/Shop/CheckoutRest.php:301
+#: src/Shop/CheckoutRest.php:345
 #, php-format
 msgid "Including VAT (%s %%)"
 msgstr ""
 
 #. translators: %s: tax rate
-#: src/Shop/CheckoutRest.php:303
+#: src/Shop/CheckoutRest.php:347
 #, php-format
 msgid "VAT (%s %%)"
+msgstr ""
+
+#: src/Shop/Coupons.php:60
+#: src/Shop/Coupons.php:68
+msgid "Discount codes"
+msgstr ""
+
+#: src/Shop/Coupons.php:61
+#: templates/checkout.php:36
+msgid "Discount code"
+msgstr ""
+
+#: src/Shop/Coupons.php:62
+#: src/Shop/Coupons.php:63
+msgid "Add discount code"
+msgstr ""
+
+#: src/Shop/Coupons.php:64
+msgid "Edit discount code"
+msgstr ""
+
+#: src/Shop/Coupons.php:65
+msgid "Search discount codes"
+msgstr ""
+
+#: src/Shop/Coupons.php:66
+msgid "No discount codes found."
+msgstr ""
+
+#: src/Shop/Coupons.php:67
+msgid "No discount codes found in Trash."
+msgstr ""
+
+#: src/Shop/Coupons.php:215
+msgid "This discount code is not valid."
+msgstr ""
+
+#: src/Shop/Coupons.php:222
+msgid "This discount code is not valid right now."
+msgstr ""
+
+#. translators: %s: amount
+#: src/Shop/Coupons.php:228
+#, php-format
+msgid "This discount code needs an order of at least %s."
+msgstr ""
+
+#: src/Shop/Coupons.php:232
+msgid "This discount code has been used up."
+msgstr ""
+
+#: src/Shop/Coupons.php:235
+msgid "You have already used this discount code."
+msgstr ""
+
+#: src/Shop/Coupons.php:247
+msgid "This discount code does not apply to anything in your cart."
+msgstr ""
+
+#: src/Shop/Coupons.php:286
+msgid "Code, e.g. SUMMER20"
+msgstr ""
+
+#: src/Shop/Coupons.php:298
+msgid "Code"
+msgstr ""
+
+#: src/Shop/Coupons.php:300
+msgid "Used"
+msgstr ""
+
+#: src/Shop/Coupons.php:335
+msgid "free shipping"
+msgstr ""
+
+#: src/Shop/Coupons.php:338
+msgid "downloads only"
+msgstr ""
+
+#: src/Shop/Coupons.php:339
+msgid "prints only"
+msgstr ""
+
+#: src/Shop/Coupons.php:365
+msgid "Customers type the code (the title above) in the cart. Publish it to switch it on; save it as a draft to switch it off."
+msgstr ""
+
+#: src/Shop/Coupons.php:371
+#: src/Shop/PriceLists.php:265
+#: src/Shop/PriceLists.php:327
+msgid "Type"
+msgstr ""
+
+#: src/Shop/Coupons.php:379
+msgid "Applies to"
+msgstr ""
+
+#: src/Shop/Coupons.php:382
+msgid "Everything (downloads, prints, packages)"
+msgstr ""
+
+#: src/Shop/Coupons.php:390
+msgid "Free shipping"
+msgstr ""
+
+#: src/Shop/Coupons.php:393
+msgid "Minimum order"
+msgstr ""
+
+#: src/Shop/Coupons.php:397
+msgid "Valid"
+msgstr ""
+
+#: src/Shop/Coupons.php:399
+msgid "From"
+msgstr ""
+
+#: src/Shop/Coupons.php:401
+msgid "until"
+msgstr ""
+
+#: src/Shop/Coupons.php:403
+msgid "Both days included. Leave empty for no limit."
+msgstr ""
+
+#: src/Shop/Coupons.php:407
+msgid "Uses in total"
+msgstr ""
+
+#: src/Shop/Coupons.php:408
+msgid "0 means no limit."
+msgstr ""
+
+#: src/Shop/Coupons.php:411
+msgid "Uses per customer"
+msgstr ""
+
+#: src/Shop/Coupons.php:412
+msgid "Counted by email address; 0 means no limit."
 msgstr ""
 
 #: src/Shop/Downloads.php:72
@@ -1425,43 +1882,63 @@ msgstr ""
 msgid "See your order here:"
 msgstr ""
 
-#: src/Shop/Emails.php:112
+#: src/Shop/Emails.php:113
+msgid "Your receipt:"
+msgstr ""
+
+#: src/Shop/Emails.php:113
+msgid "Your invoice:"
+msgstr ""
+
+#: src/Shop/Emails.php:117
 msgid "Keep this link to yourself: anyone who has it can see the order."
 msgstr ""
 
-#: src/Shop/Emails.php:127
+#: src/Shop/Emails.php:132
 msgid "Open the order:"
 msgstr ""
 
-#. translators: %s: amount
-#: src/Shop/Emails.php:148
+#. translators: 1: discount code, 2: amount
+#: src/Shop/Emails.php:156
 #, php-format
-msgid "Shipping: %s"
-msgstr ""
-
-#. translators: %s: amount
-#: src/Shop/Emails.php:153
-#, php-format
-msgid "Including VAT: %s"
-msgstr ""
-
-#. translators: %s: amount
-#: src/Shop/Emails.php:155
-#, php-format
-msgid "VAT: %s"
+msgid "Discount (%1$s): −%2$s"
 msgstr ""
 
 #. translators: %s: amount
 #: src/Shop/Emails.php:158
 #, php-format
+msgid "Discount: −%s"
+msgstr ""
+
+#. translators: %s: amount
+#: src/Shop/Emails.php:162
+#, php-format
+msgid "Shipping: %s"
+msgstr ""
+
+#. translators: %s: amount
+#: src/Shop/Emails.php:167
+#, php-format
+msgid "Including VAT: %s"
+msgstr ""
+
+#. translators: %s: amount
+#: src/Shop/Emails.php:169
+#, php-format
+msgid "VAT: %s"
+msgstr ""
+
+#. translators: %s: amount
+#: src/Shop/Emails.php:172
+#, php-format
 msgid "Total: %s"
 msgstr ""
 
-#: src/Shop/Emails.php:166
+#: src/Shop/Emails.php:180
 msgid "Delivery address:"
 msgstr ""
 
-#: src/Shop/Emails.php:171
+#: src/Shop/Emails.php:185
 msgid "Message from the customer:"
 msgstr ""
 
@@ -1486,33 +1963,35 @@ msgid "The webhook signing secret starts with whsec_."
 msgstr ""
 
 #. translators: %s: tax rate in percent
-#: src/Shop/Gateways/StripeGateway.php:204
+#. translators: %s: VAT rate
+#: src/Shop/Gateways/StripeGateway.php:208
+#: templates/receipt.php:160
 #, php-format
 msgid "VAT %s %%"
 msgstr ""
 
-#: src/Shop/Gateways/StripeGateway.php:212
+#: src/Shop/Gateways/StripeGateway.php:237
 msgid "Stripe sent an unexpected answer."
 msgstr ""
 
-#: src/Shop/Gateways/StripeGateway.php:242
+#: src/Shop/Gateways/StripeGateway.php:267
 msgid "The payment has not been confirmed yet. If you paid, this page updates within a few minutes."
 msgstr ""
 
-#: src/Shop/Gateways/StripeGateway.php:343
+#: src/Shop/Gateways/StripeGateway.php:368
 msgid "Stripe is not set up."
 msgstr ""
 
-#: src/Shop/Gateways/StripeGateway.php:362
+#: src/Shop/Gateways/StripeGateway.php:387
 msgid "Stripe could not be reached. Try again in a moment."
 msgstr ""
 
-#: src/Shop/Gateways/StripeGateway.php:367
+#: src/Shop/Gateways/StripeGateway.php:392
 msgid "Stripe refused the request."
 msgstr ""
 
 #. translators: %s: message from Stripe
-#: src/Shop/Gateways/StripeGateway.php:371
+#: src/Shop/Gateways/StripeGateway.php:396
 #, php-format
 msgid "Stripe: %s"
 msgstr ""
@@ -1538,6 +2017,7 @@ msgid "Cancelled"
 msgstr ""
 
 #: src/Shop/Orders.php:62
+#: templates/receipt.php:86
 msgid "Refunded"
 msgstr ""
 
@@ -1545,104 +2025,144 @@ msgstr ""
 msgid "Payment failed"
 msgstr ""
 
-#: src/Shop/Orders.php:103
+#: src/Shop/Orders.php:105
 msgid "The order could not be saved."
 msgstr ""
 
-#: src/Shop/PriceLists.php:51
-#: src/Shop/PriceLists.php:60
+#. translators: %d: number of photos
+#: src/Shop/Orders.php:119
+#, php-format
+msgid "%d photo"
+msgid_plural "%d photos"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Shop/PriceLists.php:52
+#: src/Shop/PriceLists.php:61
 #: assets/js/editor-access.js:280
 msgid "Price lists"
 msgstr ""
 
-#: src/Shop/PriceLists.php:52
+#: src/Shop/PriceLists.php:53
 #: assets/js/editor-access.js:264
 msgid "Price list"
 msgstr ""
 
-#: src/Shop/PriceLists.php:53
 #: src/Shop/PriceLists.php:54
+#: src/Shop/PriceLists.php:55
 msgid "Add price list"
 msgstr ""
 
-#: src/Shop/PriceLists.php:55
+#: src/Shop/PriceLists.php:56
 msgid "Edit price list"
 msgstr ""
 
-#: src/Shop/PriceLists.php:56
+#: src/Shop/PriceLists.php:57
 msgid "New price list"
 msgstr ""
 
-#: src/Shop/PriceLists.php:57
+#: src/Shop/PriceLists.php:58
 msgid "Search price lists"
 msgstr ""
 
-#: src/Shop/PriceLists.php:58
+#: src/Shop/PriceLists.php:59
 msgid "No price lists found."
 msgstr ""
 
-#: src/Shop/PriceLists.php:59
+#: src/Shop/PriceLists.php:60
 msgid "No price lists found in Trash."
 msgstr ""
 
-#: src/Shop/PriceLists.php:194
+#: src/Shop/PriceLists.php:210
 msgid "Products"
 msgstr ""
 
-#: src/Shop/PriceLists.php:207
+#: src/Shop/PriceLists.php:223
 msgid "Digital download, full resolution"
 msgstr ""
 
-#: src/Shop/PriceLists.php:213
+#: src/Shop/PriceLists.php:229
 msgid "Print 13 × 18 cm"
 msgstr ""
 
-#: src/Shop/PriceLists.php:219
+#: src/Shop/PriceLists.php:235
 msgid "Print 20 × 30 cm"
 msgstr ""
 
-#: src/Shop/PriceLists.php:225
+#: src/Shop/PriceLists.php:241
 msgid "Print 30 × 45 cm"
 msgstr ""
 
-#: src/Shop/PriceLists.php:243
+#: src/Shop/PriceLists.php:260
 msgid "Customers choose one of these for each image. Downloads deliver the original file you uploaded; prints are made and sent by you. Rows without a price are not saved; enter 0 for something free."
 msgstr ""
 
-#: src/Shop/PriceLists.php:247
-#: src/Shop/PriceLists.php:306
-msgid "Type"
+#: src/Shop/PriceLists.php:261
+msgid "A package is a number of photos the customer chooses, each with the same download or print, for one price, e.g. “10 downloads”. Set the number to 0 for every photo in the gallery. Save new downloads and prints before choosing them in a package."
 msgstr ""
 
-#: src/Shop/PriceLists.php:248
-#: src/Shop/PriceLists.php:313
+#: src/Shop/PriceLists.php:266
+#: src/Shop/PriceLists.php:335
 msgid "Name shown to customers"
 msgstr ""
 
 #. translators: %s: currency code such as SEK
-#: src/Shop/PriceLists.php:252
+#: src/Shop/PriceLists.php:270
 #, php-format
 msgid "Price (%s)"
 msgstr ""
 
-#: src/Shop/PriceLists.php:280
+#: src/Shop/PriceLists.php:299
 msgid "Add product"
 msgstr ""
 
-#: src/Shop/PriceLists.php:285
+#: src/Shop/PriceLists.php:304
 msgid "Prices include VAT, as set under SlashPhoto → Settings."
 msgstr ""
 
-#: src/Shop/PriceLists.php:286
+#: src/Shop/PriceLists.php:305
 msgid "VAT is added on top of these prices, as set under SlashPhoto → Settings."
 msgstr ""
 
-#: src/Shop/PriceLists.php:309
+#: src/Shop/PriceLists.php:330
 msgid "Print"
 msgstr ""
 
-#: src/Shop/PriceLists.php:317
+#: src/Shop/PriceLists.php:331
+msgid "Package"
+msgstr ""
+
+#: src/Shop/PriceLists.php:338
+msgid "Photos"
+msgstr ""
+
+#: src/Shop/PriceLists.php:340
+msgid "each with"
+msgstr ""
+
+#: src/Shop/PriceLists.php:349
+#: templates/receipt.php:117
 msgid "Price"
+msgstr ""
+
+#: src/Shop/Receipts.php:114
+msgid "You are not allowed to see orders."
+msgstr ""
+
+#. translators: %d: order number
+#: src/Shop/Receipts.php:135
+#, php-format
+msgid "Receipt %d"
+msgstr ""
+
+#. translators: %d: order number
+#: src/Shop/Receipts.php:137
+#, php-format
+msgid "Invoice %d"
+msgstr ""
+
+#: src/Shop/Receipts.php:152
+msgid "No payment needed"
 msgstr ""
 
 #: src/SnapOtter/Client.php:69
@@ -1744,73 +2264,78 @@ msgstr ""
 msgid "Loading your cart…"
 msgstr ""
 
-#: templates/checkout.php:35
+#: templates/checkout.php:39
+msgid "Apply"
+msgstr ""
+
+#: templates/checkout.php:44
 msgid "Your details"
 msgstr ""
 
-#: templates/checkout.php:38
+#: templates/checkout.php:47
 msgid "If the photographer gave you an account, log in first so images from your private galleries can be ordered."
 msgstr ""
 
-#: templates/checkout.php:39
+#: templates/checkout.php:48
 msgid "Log in"
 msgstr ""
 
-#: templates/checkout.php:51
+#: templates/checkout.php:60
 msgid "Phone (optional)"
 msgstr ""
 
-#: templates/checkout.php:56
+#: templates/checkout.php:65
 msgid "Delivery address for prints"
 msgstr ""
 
-#: templates/checkout.php:58
+#: templates/checkout.php:67
 msgid "Prints cannot be sent at the moment. Remove them from the cart to order the rest."
 msgstr ""
 
-#: templates/checkout.php:61
+#: templates/checkout.php:70
 msgid "Street address"
 msgstr ""
 
-#: templates/checkout.php:65
+#: templates/checkout.php:74
 msgid "Apartment, c/o (optional)"
 msgstr ""
 
-#: templates/checkout.php:69
+#: templates/checkout.php:78
 msgid "Postcode"
 msgstr ""
 
-#: templates/checkout.php:73
+#: templates/checkout.php:82
 msgid "City"
 msgstr ""
 
-#: templates/checkout.php:77
+#: templates/checkout.php:86
 msgid "Country"
 msgstr ""
 
-#: templates/checkout.php:97
+#: templates/checkout.php:106
+#: templates/receipt.php:82
 msgid "Payment"
 msgstr ""
 
-#: templates/checkout.php:99
+#: templates/checkout.php:108
 msgid "Ordering is not open at the moment."
 msgstr ""
 
 #. translators: %s: link to the terms of purchase
-#: templates/checkout.php:119
+#: templates/checkout.php:128
 #, php-format
 msgid "I accept the %s"
 msgstr ""
 
-#: templates/checkout.php:120
+#: templates/checkout.php:129
 msgid "terms of purchase"
 msgstr ""
 
-#: templates/checkout.php:128
+#: templates/checkout.php:137
 msgid "Place order"
 msgstr ""
 
-#: templates/checkout.php:129
+#: templates/checkout.php:138
 msgid "We store your details with the order only to deliver it and for our bookkeeping. Orders that are never paid are deleted after a week."
 msgstr ""
 
@@ -1849,8 +2374,53 @@ msgstr ""
 msgid "Downloads appear here when the payment has arrived."
 msgstr ""
 
-#: templates/order.php:100
+#: templates/order.php:118
+msgid "Receipt (print or save as PDF)"
+msgstr ""
+
+#: templates/order.php:118
+msgid "Invoice (print or save as PDF)"
+msgstr ""
+
+#: templates/order.php:122
 msgid "Keep the link to this page to yourself: anyone who has it can see the order and download the files."
+msgstr ""
+
+#: templates/receipt.php:76
+msgid "Order date"
+msgstr ""
+
+#: templates/receipt.php:79
+#: templates/receipt.php:88
+msgid "Paid"
+msgstr ""
+
+#: templates/receipt.php:90
+msgid "Not paid"
+msgstr ""
+
+#: templates/receipt.php:118
+msgid "Amount"
+msgstr ""
+
+#. translators: 1: VAT rate, 2: amount before VAT
+#: templates/receipt.php:172
+#, php-format
+msgid "Of which VAT %1$s %% (on %2$s)"
+msgstr ""
+
+#: templates/receipt.php:183
+msgid "How to pay"
+msgstr ""
+
+#. translators: %d: order number
+#: templates/receipt.php:186
+#, php-format
+msgid "Reference: order %d"
+msgstr ""
+
+#: templates/receipt.php:195
+msgid "Print or save as PDF"
 msgstr ""
 
 #: templates/terms.php:27

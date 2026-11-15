@@ -108,6 +108,11 @@ final class Emails {
 			$lines[] = __( 'See your order here:', 'slashphoto' );
 		}
 		$lines[] = Orders::url( $order );
+		if ( 'confirmation' !== Receipts::type( $order ) ) {
+			$lines[] = '';
+			$lines[] = 'receipt' === Receipts::type( $order ) ? __( 'Your receipt:', 'slashphoto' ) : __( 'Your invoice:', 'slashphoto' );
+			$lines[] = Receipts::url( $order );
+		}
 		$lines[] = '';
 		$lines[] = __( 'Keep this link to yourself: anyone who has it can see the order.', 'slashphoto' );
 
@@ -141,7 +146,16 @@ final class Emails {
 		/* translators: %d: order number */
 		$lines = [ sprintf( __( 'Order %d', 'slashphoto' ), $order['id'] ) ];
 		foreach ( Orders::items( (int) $order['id'] ) as $item ) {
-			$lines[] = sprintf( '%d × %s – %s: %s', $item['quantity'], $item['name'], $item['file_label'], $money( $item['total'] ) );
+			$lines[] = $item['parent_id']
+				? sprintf( '    – %s', $item['file_label'] )
+				: sprintf( '%d × %s – %s: %s', $item['quantity'], $item['name'], $item['file_label'], $money( $item['total'] ) );
+		}
+		if ( $order['discount'] > 0 ) {
+			$lines[] = '' !== (string) $order['coupon']
+				/* translators: 1: discount code, 2: amount */
+				? sprintf( __( 'Discount (%1$s): −%2$s', 'slashphoto' ), $order['coupon'], $money( $order['discount'] ) )
+				/* translators: %s: amount */
+				: sprintf( __( 'Discount: −%s', 'slashphoto' ), $money( $order['discount'] ) );
 		}
 		if ( $order['shipping'] > 0 || ! empty( $order['address'] ) ) {
 			/* translators: %s: amount */

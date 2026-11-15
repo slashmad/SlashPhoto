@@ -11,6 +11,8 @@
 
 const DATA_ID = 'wp-script-module-data-@slashphoto/shop';
 const CART_KEY = 'slashphoto-cart';
+const COUPON_KEY = 'slashphoto-coupon';
+const MAX_PACKAGE = 500;
 const MAX_LINES = 200;
 const MAX_QTY = 99;
 
@@ -53,12 +55,23 @@ function readCart() {
 			return [];
 		}
 		return value
-			.map( ( item ) => ( {
-				image: parseInt( item.image, 10 ) || 0,
-				product: String( item.product || '' ),
-				qty: Math.min( MAX_QTY, Math.max( 1, parseInt( item.qty, 10 ) || 1 ) ),
-			} ) )
-			.filter( ( item ) => item.image > 0 && /^[a-f0-9]{8}$/.test( item.product ) )
+			.map( ( item ) => {
+				if ( item && item.package ) {
+					return {
+						package: String( item.package ).replace( /[^a-z0-9]/g, '' ).slice( 0, 20 ),
+						product: String( item.product || '' ),
+						gallery: parseInt( item.gallery, 10 ) || 0,
+						count: parseInt( item.count, 10 ) || 0,
+						images: ( Array.isArray( item.images ) ? item.images : [] ).map( Number ).filter( ( id ) => id > 0 ).slice( 0, MAX_PACKAGE ),
+					};
+				}
+				return {
+					image: parseInt( item?.image, 10 ) || 0,
+					product: String( item?.product || '' ),
+					qty: Math.min( MAX_QTY, Math.max( 1, parseInt( item?.qty, 10 ) || 1 ) ),
+				};
+			} )
+			.filter( ( item ) => /^[a-f0-9]{8}$/.test( item.product ) && ( item.package ? item.package.length > 0 : item.image > 0 ) )
 			.slice( 0, MAX_LINES );
 	} catch {
 		return [];
@@ -98,8 +111,64 @@ function addToCart( image, product, qty, kind ) {
 	setCart( items );
 }
 
+/**
+ * Adds a photo to a package: to an unfinished package of that kind, or a
+ * new one. A whole-gallery package (count 0) is added once per gallery.
+ *
+ * @return {{ added: boolean, chosen: number, count: number }} Result.
+ */
+function addToPackage( product, gallery, image ) {
+	const items = getCart();
+	const count = product.count;
+	const mine = items.filter( ( item ) => item.package && item.product === product.id );
+	if ( ! count ) {
+		if ( mine.some( ( item ) => item.gallery === gallery ) ) {
+			return { added: false, chosen: 0, count };
+		}
+		items.push( { package: newId(), product: product.id, gallery, count: 0, images: [] } );
+		setCart( items );
+		return { added: true, chosen: 0, count };
+	}
+	const holding = mine.find( ( item ) => item.images.includes( image ) );
+	if ( holding ) {
+		return { added: false, chosen: holding.images.length, count };
+	}
+	let open = mine.find( ( item ) => item.images.length < count );
+	if ( ! open ) {
+		open = { package: newId(), product: product.id, gallery, count, images: [] };
+		items.push( open );
+	}
+	open.images.push( image );
+	setCart( items );
+	return { added: true, chosen: open.images.length, count };
+}
+
+function newId() {
+	return Math.random().toString( 36 ).slice( 2, 12 ) || 'p' + Date.now();
+}
+
 function cartCount( items = getCart() ) {
-	return items.reduce( ( sum, item ) => sum + item.qty, 0 );
+	return items.reduce( ( sum, item ) => sum + ( item.package ? 1 : item.qty ), 0 );
+}
+
+function getCoupon() {
+	try {
+		return window.localStorage.getItem( COUPON_KEY ) || '';
+	} catch {
+		return '';
+	}
+}
+
+function setCoupon( code ) {
+	try {
+		if ( code ) {
+			window.localStorage.setItem( COUPON_KEY, code );
+		} else {
+			window.localStorage.removeItem( COUPON_KEY );
+		}
+	} catch {
+		// Without storage the code lasts for this page view.
+	}
 }
 
 window.addEventListener( 'storage', ( event ) => {
@@ -227,6 +296,40 @@ function openBuyPanel( dialog, opener, id, products ) {
 		row.querySelector( '.slashphoto-lightbox__product-name' ).textContent = product.name;
 		row.querySelector( '.slashphoto-lightbox__product-price' ).textContent = product.price;
 		const actions = row.querySelector( '.slashphoto-lightbox__product-actions' );
+		if ( 'package' === product.kind ) {
+			const info = document.createElement( 'span' );
+			info.className = 'slashphoto-lightbox__product-info';
+			info.textContent = product.count
+				? format( i18n.packageOf || '%1$d photos you choose, each: %2$s', product.count, product.includes )
+				: format( i18n.packageAll || 'Every photo in this gallery, each: %s', product.includes );
+			row.insertBefore( info, actions );
+			const add = document.createElement( 'button' );
+			add.type = 'button';
+			add.className = 'slashphoto-lightbox__add';
+			add.textContent = product.count ? i18n.addToPackage || 'Add to package' : i18n.add || 'Add';
+			add.setAttribute( 'aria-label', format( product.count ? i18n.addToPackageName || 'Add this photo to %s' : i18n.addProduct || 'Add %s to cart', product.name ) );
+			add.addEventListener( 'click', () => {
+				const result = addToPackage( product, product.gallery, id );
+				let text;
+				if ( ! product.count ) {
+					text = format( result.added ? i18n.added || 'Added: %s.' : i18n.alreadyInCart || '%s is already in your cart.', product.name );
+				} else if ( ! result.added ) {
+					text = format( i18n.alreadyInPackage || 'This photo is already in %s.', product.name );
+				} else {
+					text = format( i18n.addedToPackage || 'Added to %1$s: %2$d of %3$d photos.', product.name, result.chosen, result.count );
+				}
+				status.replaceChildren( document.createTextNode( text + ' ' ) );
+				if ( config.cartUrl ) {
+					const link = document.createElement( 'a' );
+					link.href = config.cartUrl;
+					link.textContent = i18n.goToCart || 'Go to cart';
+					status.append( link );
+				}
+			} );
+			actions.append( add );
+			list.append( row );
+			return;
+		}
 		let qty = null;
 		if ( 'print' === product.kind ) {
 			const label = document.createElement( 'label' );
@@ -298,9 +401,26 @@ class Checkout {
 		this.form = root.querySelector( '[data-slashphoto-checkout-form]' );
 		this.error = root.querySelector( '[data-slashphoto-checkout-error]' );
 		this.address = root.querySelector( '[data-slashphoto-address]' );
+		this.coupon = root.querySelector( '[data-slashphoto-coupon]' );
 		this.quote = null;
 		this.notice = '';
 		this.busy = false;
+
+		if ( this.coupon ) {
+			const input = this.coupon.querySelector( 'input' );
+			input.value = getCoupon();
+			const applyCode = () => {
+				setCoupon( input.value.trim().toUpperCase() );
+				this.refresh();
+			};
+			this.coupon.querySelector( 'button' ).addEventListener( 'click', applyCode );
+			input.addEventListener( 'keydown', ( event ) => {
+				if ( 'Enter' === event.key ) {
+					event.preventDefault();
+					applyCode();
+				}
+			} );
+		}
 
 		this.form?.addEventListener( 'submit', ( event ) => {
 			event.preventDefault();
@@ -319,7 +439,7 @@ class Checkout {
 			return;
 		}
 		try {
-			this.apply( await api( 'quote', { items } ) );
+			this.apply( await api( 'quote', { items, coupon: getCoupon() } ) );
 		} catch ( error ) {
 			this.cart.textContent = error.message;
 		}
@@ -327,11 +447,22 @@ class Checkout {
 
 	apply( quote ) {
 		this.quote = quote;
+		const keyOf = ( item ) => ( item.package ? 'pkg:' + item.package : item.image + ':' + item.product );
 		if ( quote.unavailable?.length ) {
 			const gone = new Set( quote.unavailable );
-			setCart( getCart().filter( ( item ) => ! gone.has( item.image + ':' + item.product ) ) );
+			setCart( getCart().filter( ( item ) => ! gone.has( keyOf( item ) ) ) );
 			this.notice = i18n.unavailable || '';
 			return; // setCart() triggers a new quote.
+		}
+		// Photos the site left out of a package (not visible, not for sale).
+		const chosen = new Map( quote.lines.filter( ( line ) => line.package ).map( ( line ) => [ line.package, line.images.map( ( image ) => image.id ) ] ) );
+		const cart = getCart();
+		const trimmed = cart.filter( ( item ) => item.package && item.images.length && chosen.has( item.package ) && chosen.get( item.package ).length < item.images.length );
+		if ( trimmed.length ) {
+			trimmed.forEach( ( item ) => ( item.images = item.images.filter( ( id ) => chosen.get( item.package ).includes( id ) ) ) );
+			this.notice = i18n.unavailable || '';
+			setCart( cart );
+			return;
 		}
 		this.render();
 	}
@@ -353,7 +484,18 @@ class Checkout {
 			if ( this.form ) {
 				this.form.hidden = true;
 			}
+			if ( this.coupon ) {
+				this.coupon.hidden = true;
+			}
 			return;
+		}
+		if ( this.coupon ) {
+			this.coupon.hidden = false;
+			const message = this.coupon.querySelector( '.slashphoto-coupon__message' );
+			const typed = getCoupon();
+			message.classList.toggle( 'is-error', !! quote.couponError );
+			message.textContent = quote.couponError || ( quote.coupon ? format( i18n.couponApplied || 'Code %s applied.', quote.coupon ) : '' );
+			message.hidden = ! typed;
 		}
 
 		const list = document.createElement( 'ul' );
@@ -374,6 +516,9 @@ class Checkout {
 			totals.append( dt, dd );
 		};
 		row( i18n.subtotal || 'Subtotal', quote.subtotal );
+		if ( quote.discount ) {
+			row( format( i18n.discount || 'Discount (%s)', quote.coupon ), quote.discount );
+		}
 		if ( quote.needsShipping ) {
 			row( i18n.shipping || 'Shipping', quote.shipping );
 		}
@@ -395,7 +540,78 @@ class Checkout {
 		}
 	}
 
+	renderPackage( line ) {
+		const li = document.createElement( 'li' );
+		li.className = 'slashphoto-cart__line slashphoto-cart__line--package';
+		li.dataset.key = line.key;
+		li.innerHTML = `
+			<img class="slashphoto-cart__thumb" alt="" width="64" height="64" loading="lazy">
+			<span class="slashphoto-cart__what"><span class="slashphoto-cart__name"></span><span class="slashphoto-cart__title"></span><span class="slashphoto-cart__progress"></span></span>
+			<span class="slashphoto-cart__qty"></span>
+			<span class="slashphoto-cart__price"></span>
+			<button type="button" class="slashphoto-cart__remove"></button>
+			<ul class="slashphoto-cart__package"></ul>
+		`;
+		const img = li.querySelector( 'img' );
+		if ( line.thumb ) {
+			img.src = line.thumb;
+		} else {
+			img.remove();
+		}
+		li.querySelector( '.slashphoto-cart__name' ).textContent = line.name;
+		li.querySelector( '.slashphoto-cart__title' ).textContent = line.title + ' · ' + line.includes;
+		li.querySelector( '.slashphoto-cart__price' ).textContent = line.total;
+		const cartItem = getCart().find( ( item ) => item.package === line.package );
+		const whole = cartItem && ! cartItem.count;
+		const left = line.count - line.images.length;
+		li.querySelector( '.slashphoto-cart__progress' ).textContent = whole
+			? format( i18n.packageWhole || 'All %d photos', line.images.length )
+			: format( left > 0 ? i18n.packageLeft || '%1$d of %2$d photos chosen. Open more photos to add them.' : i18n.packageFull || '%1$d of %2$d photos chosen.', line.images.length, line.count );
+
+		const strip = li.querySelector( '.slashphoto-cart__package' );
+		line.images.forEach( ( image ) => {
+			const item = document.createElement( 'li' );
+			const thumb = document.createElement( 'img' );
+			thumb.alt = image.title;
+			thumb.width = 48;
+			thumb.height = 48;
+			thumb.loading = 'lazy';
+			if ( image.thumb ) {
+				thumb.src = image.thumb;
+			}
+			item.append( thumb );
+			if ( ! whole ) {
+				const unpick = document.createElement( 'button' );
+				unpick.type = 'button';
+				unpick.className = 'slashphoto-cart__unpick';
+				unpick.textContent = '×';
+				unpick.setAttribute( 'aria-label', format( i18n.removeFromPackage || 'Remove %s from the package', image.title ) );
+				unpick.addEventListener( 'click', () => {
+					setCart(
+						getCart()
+							.map( ( entry ) => ( entry.package === line.package ? { ...entry, images: entry.images.filter( ( id ) => id !== image.id ) } : entry ) )
+							.filter( ( entry ) => ! entry.package || entry.images.length || ! entry.count )
+					);
+				} );
+				item.append( unpick );
+			}
+			strip.append( item );
+		} );
+
+		const remove = li.querySelector( '.slashphoto-cart__remove' );
+		remove.textContent = i18n.remove || 'Remove';
+		remove.setAttribute( 'aria-label', format( i18n.removeLine || 'Remove %s', line.name ) );
+		remove.addEventListener( 'click', () => {
+			this.notice = '';
+			setCart( getCart().filter( ( item ) => item.package !== line.package ) );
+		} );
+		return li;
+	}
+
 	renderLine( line ) {
+		if ( 'package' === line.kind ) {
+			return this.renderPackage( line );
+		}
 		const li = document.createElement( 'li' );
 		li.className = 'slashphoto-cart__line';
 		li.dataset.key = line.key;
@@ -474,6 +690,7 @@ class Checkout {
 			name: value( 'name' ),
 			phone: value( 'phone' ),
 			note: value( 'note' ),
+			coupon: getCoupon(),
 			website: value( 'website' ),
 			gateway: this.form.querySelector( 'input[name="gateway"]:checked' )?.value || '',
 			terms: !! this.form.querySelector( 'input[name="terms"]' )?.checked,
@@ -496,7 +713,10 @@ class Checkout {
 				this.quote = error.data.quote;
 				this.render();
 			}
-			this.showError( error.message, error.data?.field );
+			if ( 'coupon' === error.data?.field ) {
+				this.refresh();
+			}
+			this.showError( error.message, 'coupon' === error.data?.field ? null : error.data?.field );
 		}
 	}
 }

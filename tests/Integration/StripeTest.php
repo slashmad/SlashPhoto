@@ -112,6 +112,9 @@ final class StripeTest extends AccessTestCase {
 				]
 			);
 		}
+		if ( 'POST' === $args['method'] && '/v1/coupons' === $path ) {
+			return $json( 200, [ 'id' => 'coupon_abc' ] );
+		}
 		if ( '/v1/checkout/sessions' === $path ) {
 			return $json( 200, [ 'data' => [] ] );
 		}
@@ -213,6 +216,51 @@ final class StripeTest extends AccessTestCase {
 		$this->assertSame( '6250', $create['body']['line_items'][1]['price_data']['unit_amount'], 'VAT added on top as its own line.' );
 		$this->assertStringContainsString( 'session_id={CHECKOUT_SESSION_ID}', $create['body']['success_url'] );
 		$this->assertStringStartsWith( 'slashphoto-order-' . $order['id'] . '-', $create['headers']['Idempotency-Key'] );
+	}
+
+	public function test_discount_becomes_a_one_time_stripe_coupon(): void {
+		\SlashPhoto\Shop\Coupons::register();
+		$code = self::factory()->post->create(
+			[
+				'post_type'   => \SlashPhoto\Shop\Coupons::POST_TYPE,
+				'post_status' => 'publish',
+				'post_title'  => 'TEN',
+			]
+		);
+		\SlashPhoto\Shop\Coupons::save_rules( $code, [ 'amount' => 10 ] );
+		$this->connect();
+		$items   = [
+			[
+				'image'   => $this->image,
+				'product' => 'cccc0001',
+			],
+		];
+		$quote   = Plugin::instance()->shop()->quote( $items, 'TEN' );
+		$request = new \WP_REST_Request( 'POST', '/slashphoto/v1/shop/orders' );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body(
+			(string) wp_json_encode(
+				[
+					'items'   => $items,
+					'total'   => $quote['total'],
+					'email'   => 'kim@example.org',
+					'name'    => 'Kim',
+					'gateway' => 'stripe',
+					'coupon'  => 'TEN',
+				]
+			)
+		);
+		$this->assertSame( 200, rest_get_server()->dispatch( $request )->get_status() );
+
+		$coupon  = $this->calls[ count( $this->calls ) - 2 ];
+		$session = end( $this->calls );
+		$this->assertStringEndsWith( '/v1/coupons', $coupon['url'] );
+		$this->assertSame( '2500', $coupon['body']['amount_off'] );
+		$this->assertSame( '1', $coupon['body']['max_redemptions'] );
+		$this->assertSame( 'coupon_abc', $session['body']['discounts'][0]['coupon'] );
+		// Lines: 250 kr and VAT 56.25 kr (25 % of the discounted 225 kr); the 25 kr coupon makes 281.25 kr.
+		$this->assertSame( '5625', $session['body']['line_items'][1]['price_data']['unit_amount'] );
+		$this->assertSame( 28125, $quote['total'] );
 	}
 
 	public function test_signed_webhook_marks_the_order_paid(): void {

@@ -9,6 +9,7 @@ namespace SlashPhoto\Shop;
 
 use SlashPhoto\Access\Access;
 use SlashPhoto\Access\Terms;
+use SlashPhoto\Gallery\GalleryRepository;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Proofing\Proofing;
 use SlashPhoto\Settings;
@@ -88,34 +89,63 @@ final class Shop {
 			return [];
 		}
 		$currency = (string) Settings::get( 'currency' );
-		return array_map(
-			static fn( array $product ): array => [
+		$offer    = [];
+		foreach ( PriceLists::products( $list ) as $product ) {
+			$entry = [
 				'id'    => $product['id'],
 				'kind'  => $product['kind'],
 				'name'  => $product['name'],
 				'price' => Money::format( $product['price'], $currency ),
-			],
-			PriceLists::products( $list )
-		);
+			];
+			if ( 'package' === $product['kind'] ) {
+				$includes          = PriceLists::product( $list, $product['includes'] );
+				$entry['count']    = $product['count'];
+				$entry['includes'] = $includes ? $includes['name'] : '';
+				$entry['gallery']  = $gallery->ID;
+			}
+			$offer[] = $entry;
+		}
+		return $offer;
 	}
 
 	/**
 	 * Prices a cart.
 	 *
-	 * @param array $items Raw items: [ { image, product, qty } ].
-	 * @return array{lines: array, unavailable: array, currency: string, subtotal: int, shipping: int, tax: int, total: int, tax_rate: float, prices_include_tax: bool, needs_shipping: bool}
+	 * Items are either single products, { image, product, qty }, or package
+	 * instances, { package: <client ID>, product, images: [ … ], gallery }.
+	 * A package of a whole gallery ("count" 0) needs only the gallery.
+	 *
+	 * @param array  $items  Raw items.
+	 * @param string $coupon Discount code, if any.
+	 * @param string $email  Customer's email, for per-customer code limits.
+	 * @return array{lines: array, unavailable: array, currency: string, subtotal: int, discount: int, coupon: string, coupon_error: string, shipping: int, tax: int, total: int, tax_rate: float, prices_include_tax: bool, needs_shipping: bool}
 	 */
-	public function quote( array $items ): array {
+	public function quote( array $items, string $coupon = '', string $email = '' ): array {
 		$currency = (string) Settings::get( 'currency' );
 		$merged   = [];
+		$packages = [];
 		foreach ( array_slice( $items, 0, self::MAX_LINES ) as $item ) {
 			if ( ! is_array( $item ) ) {
 				continue;
 			}
-			$image   = (int) ( $item['image'] ?? 0 );
 			$product = (string) ( $item['product'] ?? '' );
-			$key     = $image . ':' . $product;
-			if ( $image <= 0 || ! preg_match( '/^[a-f0-9]{8}$/', $product ) ) {
+			if ( ! preg_match( '/^[a-f0-9]{8}$/', $product ) ) {
+				continue;
+			}
+			if ( isset( $item['package'] ) ) {
+				$uid = (string) $item['package'];
+				if ( preg_match( '/^[a-z0-9]{1,20}$/', $uid ) && ! isset( $packages[ $uid ] ) ) {
+					$packages[ $uid ] = [
+						'product' => $product,
+						'gallery' => (int) ( $item['gallery'] ?? 0 ),
+						'images'  => array_slice( array_values( array_unique( array_map( 'intval', (array) ( $item['images'] ?? [] ) ) ) ), 0, PriceLists::MAX_PACKAGE ),
+					];
+				}
+				continue;
+			}
+			$image = (int) ( $item['image'] ?? 0 );
+			$key   = $image . ':' . $product;
+			if ( $image <= 0 ) {
 				continue;
 			}
 			$merged[ $key ] = [
@@ -123,43 +153,151 @@ final class Shop {
 				'product' => $product,
 				'qty'     => ( $merged[ $key ]['qty'] ?? 0 ) + max( 1, (int) ( $item['qty'] ?? 1 ) ),
 			];
-		}
+		}//end foreach
 
 		$lines       = [];
 		$unavailable = [];
-		$subtotal    = 0;
-		$prints      = false;
 		foreach ( $merged as $key => $item ) {
 			$line = $this->line( $item['image'], $item['product'], $item['qty'] );
-			if ( ! $line ) {
+			if ( $line ) {
+				$lines[] = $line;
+			} else {
 				$unavailable[] = $key;
-				continue;
 			}
-			$lines[]   = $line;
-			$subtotal += $line['total'];
-			$prints    = $prints || 'print' === $line['kind'];
+		}
+		foreach ( $packages as $uid => $package ) {
+			$line = $this->package_line( (string) $uid, $package['product'], $package['gallery'], $package['images'] );
+			if ( $line ) {
+				$lines[] = $line;
+			} else {
+				$unavailable[] = 'pkg:' . $uid;
+			}
 		}
 
+		$subtotal = 0;
+		$prints   = false;
+		foreach ( $lines as $line ) {
+			$subtotal += $line['total'];
+			$prints    = $prints || 'print' === ( $line['includes']['kind'] ?? $line['kind'] );
+		}
+
+		$applied = [
+			'code'          => '',
+			'discount'      => 0,
+			'free_shipping' => false,
+			'error'         => '',
+		];
+		if ( '' !== trim( $coupon ) && $lines ) {
+			$applied = Coupons::apply( $coupon, $lines, $subtotal, $email );
+		}
+		$discount = min( $subtotal, $applied['discount'] );
+
 		$shipping = 0;
-		if ( $prints ) {
+		if ( $prints && ! $applied['free_shipping'] ) {
 			$free     = (int) Settings::get( 'free_shipping_over' );
-			$shipping = $free > 0 && $subtotal >= $free ? 0 : (int) Settings::get( 'shipping_flat' );
+			$shipping = $free > 0 && $subtotal - $discount >= $free ? 0 : (int) Settings::get( 'shipping_flat' );
 		}
 		$rate     = (float) Settings::get( 'tax_rate' );
 		$included = (bool) Settings::get( 'prices_include_tax' );
-		$tax      = Money::tax( $subtotal + $shipping, $rate, $included );
+		$taxable  = $subtotal - $discount + $shipping;
+		$tax      = Money::tax( $taxable, $rate, $included );
 
 		return [
 			'lines'              => $lines,
 			'unavailable'        => $unavailable,
 			'currency'           => $currency,
 			'subtotal'           => $subtotal,
+			'discount'           => $discount,
+			'coupon'             => $applied['code'],
+			'coupon_error'       => $applied['error'],
 			'shipping'           => $shipping,
 			'tax'                => $tax,
-			'total'              => $subtotal + $shipping + ( $included ? 0 : $tax ),
+			'total'              => $taxable + ( $included ? 0 : $tax ),
 			'tax_rate'           => $rate,
 			'prices_include_tax' => $included,
 			'needs_shipping'     => $prints,
+		];
+	}
+
+	/**
+	 * Prices a package, or returns null when it is not available.
+	 *
+	 * Every photo must be visible to the visitor and sold through the same
+	 * price list as the package. Extra photos beyond the package size are
+	 * ignored; fewer are allowed (the customer is told how many remain).
+	 *
+	 * @param string $uid        Client's package ID.
+	 * @param string $product_id Package product.
+	 * @param int    $gallery_id Gallery the package was chosen in.
+	 * @param int[]  $image_ids  Chosen photos.
+	 */
+	private function package_line( string $uid, string $product_id, int $gallery_id, array $image_ids ): ?array {
+		$gallery = $gallery_id ? get_post( $gallery_id ) : null;
+		if ( ! $gallery && $image_ids ) {
+			$first   = get_post( $image_ids[0] );
+			$gallery = $first && $first->post_parent ? get_post( $first->post_parent ) : null;
+		}
+		if ( ! $gallery || 'publish' !== $gallery->post_status ) {
+			return null;
+		}
+		$list    = $this->price_list( $gallery );
+		$product = $list ? PriceLists::product( $list, $product_id ) : null;
+		if ( ! $product || 'package' !== $product['kind'] ) {
+			return null;
+		}
+		$includes = PriceLists::product( $list, $product['includes'] );
+		if ( ! $includes ) {
+			return null;
+		}
+
+		if ( 0 === $product['count'] ) {
+			// The whole gallery: every photo in it, whatever the client sent.
+			$image_ids = array_map( static fn( WP_Post $image ): int => $image->ID, ( new GalleryRepository() )->images( $gallery->ID ) );
+		}
+		$images = [];
+		foreach ( $image_ids as $image_id ) {
+			$image  = get_post( $image_id );
+			$parent = $image && 'attachment' === $image->post_type && wp_attachment_is_image( $image ) && $image->post_parent ? get_post( $image->post_parent ) : null;
+			if ( ! $parent || 'publish' !== $parent->post_status || $this->price_list( $parent ) !== $list ) {
+				continue;
+			}
+			$thumb    = wp_get_attachment_image_src( $image_id, 'thumbnail' );
+			$images[] = [
+				'id'      => $image_id,
+				'gallery' => $parent->ID,
+				'title'   => get_the_title( $image ),
+				'file'    => Proofing::file_label( $image_id ),
+				'thumb'   => $thumb ? $thumb[0] : '',
+			];
+			if ( $product['count'] && count( $images ) >= $product['count'] ) {
+				break;
+			}
+		}
+		if ( ! $images ) {
+			return null;
+		}
+
+		return [
+			'key'      => 'pkg:' . $uid,
+			'package'  => $uid,
+			'image'    => 0,
+			'gallery'  => $gallery->ID,
+			'product'  => $product_id,
+			'kind'     => 'package',
+			'name'     => $product['name'],
+			'title'    => get_the_title( $gallery ),
+			'file'     => '',
+			'thumb'    => $images[0]['thumb'],
+			'qty'      => 1,
+			'unit'     => $product['price'],
+			'total'    => $product['price'],
+			'count'    => $product['count'] ? $product['count'] : count( $images ),
+			'images'   => $images,
+			'includes' => [
+				'id'   => $includes['id'],
+				'kind' => $includes['kind'],
+				'name' => $includes['name'],
+			],
 		];
 	}
 

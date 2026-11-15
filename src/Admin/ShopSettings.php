@@ -232,6 +232,26 @@ final class ShopSettings {
 					</tr>
 				</table>
 
+				<h2><?php esc_html_e( 'Receipts and invoices', 'slashphoto' ); ?></h2>
+				<p><?php esc_html_e( 'Customers can open and print a receipt for paid orders, and an invoice while a manual payment is outstanding. Check what your country requires on receipts.', 'slashphoto' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="slashphoto-business-name"><?php esc_html_e( 'Business name', 'slashphoto' ); ?></label></th>
+						<td><input type="text" class="regular-text" id="slashphoto-business-name" maxlength="200" name="<?php echo esc_attr( $field( 'business_name' ) ); ?>" value="<?php echo esc_attr( (string) $s['business_name'] ); ?>" placeholder="<?php echo esc_attr( (string) get_bloginfo( 'name' ) ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="slashphoto-business-details"><?php esc_html_e( 'Address and registration', 'slashphoto' ); ?></label></th>
+						<td>
+							<textarea id="slashphoto-business-details" class="large-text" rows="4" maxlength="1000" name="<?php echo esc_attr( $field( 'business_details' ) ); ?>"><?php echo esc_textarea( (string) $s['business_details'] ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'Address, company registration number, VAT number, contact details. Shown as written.', 'slashphoto' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="slashphoto-receipt-note"><?php esc_html_e( 'Note at the bottom', 'slashphoto' ); ?></label></th>
+						<td><textarea id="slashphoto-receipt-note" class="large-text" rows="2" maxlength="1000" name="<?php echo esc_attr( $field( 'receipt_note' ) ); ?>"><?php echo esc_textarea( (string) $s['receipt_note'] ); ?></textarea></td>
+					</tr>
+				</table>
+
 				<h2><?php esc_html_e( 'Payment and notifications', 'slashphoto' ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
