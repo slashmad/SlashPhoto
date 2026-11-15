@@ -7,9 +7,8 @@
 
 namespace SlashPhoto\Frontend;
 
-use SlashPhoto\Gallery\GalleryRepository;
+use SlashPhoto\Gallery\GalleryRenderer;
 use SlashPhoto\Gallery\PostType;
-use SlashPhoto\Media\Panorama;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -24,41 +23,25 @@ defined( 'ABSPATH' ) || exit;
  * or single-slashphoto_gallery.html through the normal template hierarchy, and
  * can override every partial in a slashphoto/ folder. See
  * docs/theme-compatibility.md.
+ *
+ * Access rules are applied by GalleryRenderer and AccessGuard.
  */
 final class ThemeCompat {
 
 	/**
-	 * Template loader.
+	 * Gallery renderer.
 	 *
-	 * @var TemplateLoader
+	 * @var GalleryRenderer
 	 */
-	private TemplateLoader $templates;
-
-	/**
-	 * Gallery queries.
-	 *
-	 * @var GalleryRepository
-	 */
-	private GalleryRepository $galleries;
-
-	/**
-	 * Panorama detection.
-	 *
-	 * @var Panorama
-	 */
-	private Panorama $panorama;
+	private GalleryRenderer $renderer;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param TemplateLoader    $templates Template loader.
-	 * @param GalleryRepository $galleries Gallery queries.
-	 * @param Panorama          $panorama  Panorama detection.
+	 * @param GalleryRenderer $renderer Gallery renderer.
 	 */
-	public function __construct( TemplateLoader $templates, GalleryRepository $galleries, Panorama $panorama ) {
-		$this->templates = $templates;
-		$this->galleries = $galleries;
-		$this->panorama  = $panorama;
+	public function __construct( GalleryRenderer $renderer ) {
+		$this->renderer = $renderer;
 	}
 
 	/**
@@ -80,37 +63,7 @@ final class ThemeCompat {
 		if ( ! $post || ! $this->should_append( $post ) ) {
 			return $content;
 		}
-
-		$markup = $this->templates->render(
-			'gallery.php',
-			[
-				'gallery'  => $post,
-				'children' => $this->galleries->children( $post->ID ),
-				'items'    => $this->items( $post->ID ),
-				'align'    => $this->alignment( $post ),
-			]
-		);
-
-		return $content . $markup;
-	}
-
-	/**
-	 * Builds the image list for the gallery template.
-	 *
-	 * @param int $gallery_id Gallery post ID.
-	 * @return array<int, array{attachment: \WP_Post, kind: string, panorama: array}>
-	 */
-	public function items( int $gallery_id ): array {
-		$items = [];
-		foreach ( $this->galleries->images( $gallery_id ) as $attachment ) {
-			$kind    = $this->panorama->kind( $attachment->ID );
-			$items[] = [
-				'attachment' => $attachment,
-				'kind'       => $kind,
-				'panorama'   => '360' === $kind ? $this->panorama->pano_data( $attachment->ID ) : [],
-			];
-		}
-		return $items;
+		return $content . $this->renderer->render( $post, $this->alignment( $post ) );
 	}
 
 	/**

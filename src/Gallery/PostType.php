@@ -71,7 +71,7 @@ final class PostType {
 				'slug'       => $slug,
 				'with_front' => false,
 			],
-			'supports'        => [ 'title', 'editor', 'excerpt', 'thumbnail', 'page-attributes', 'revisions', 'author' ],
+			'supports'        => [ 'title', 'editor', 'excerpt', 'thumbnail', 'page-attributes', 'revisions', 'author', 'custom-fields' ],
 		];
 
 		/**

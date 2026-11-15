@@ -18,7 +18,9 @@ require_once ABSPATH . 'wp-admin/includes/file.php';
 require_once ABSPATH . 'wp-admin/includes/media.php';
 require_once dirname( __DIR__ ) . '/tests/Integration/TestImages.php';
 
+use SlashPhoto\Access\Terms;
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Gallery\Uploads;
 use SlashPhoto\Tests\Integration\TestImages;
 
 /**
@@ -48,7 +50,8 @@ function slashphoto_seed_file( string $path, string $name, int $parent_id ): int
 		'name'     => $name,
 		'tmp_name' => $tmp,
 	];
-	$id   = media_handle_sideload( $file, $parent_id, pathinfo( $name, PATHINFO_FILENAME ) );
+	// Store in the gallery's random folder, like uploads in the editor.
+	$id = Uploads::for_gallery( $parent_id, static fn() => media_handle_sideload( $file, $parent_id, pathinfo( $name, PATHINFO_FILENAME ) ) );
 	if ( is_wp_error( $id ) ) {
 		WP_CLI::error( $id->get_error_message() );
 	}
@@ -98,4 +101,30 @@ if ( $slashphoto_photos ) {
 	slashphoto_seed_image( 'sphere-360', 4000, 2000, $slashphoto_parent, TestImages::gpano_xmp( 4000, 2000 ) );
 }
 
+// Protected examples, also used by the browser tests (tests/e2e/access.spec.mjs).
+$slashphoto_password = wp_insert_post(
+	[
+		'post_type'     => PostType::POST_TYPE,
+		'post_status'   => 'publish',
+		'post_title'    => 'Demo: Password',
+		'post_name'     => 'demo-password',
+		'post_password' => 'demo',
+	]
+);
+$slashphoto_terms    = wp_insert_post(
+	[
+		'post_type'   => PostType::POST_TYPE,
+		'post_status' => 'publish',
+		'post_title'  => 'Demo: Terms',
+		'post_name'   => 'demo-terms',
+	]
+);
+update_post_meta( $slashphoto_terms, Terms::META_TERMS, 'Please do not share or edit these photos.' );
+foreach ( [ $slashphoto_password, $slashphoto_terms ] as $slashphoto_protected ) {
+	slashphoto_seed_image( 'protected-1', 1200, 800, $slashphoto_protected );
+	slashphoto_seed_image( 'protected-2', 1200, 800, $slashphoto_protected );
+}
+
 WP_CLI::success( 'Demo gallery: ' . get_permalink( $slashphoto_parent ) );
+WP_CLI::success( 'Password gallery (password "demo"): ' . get_permalink( $slashphoto_password ) );
+WP_CLI::success( 'Terms gallery: ' . get_permalink( $slashphoto_terms ) );

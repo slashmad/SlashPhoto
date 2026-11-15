@@ -75,6 +75,16 @@ Without JavaScript, every image is still a plain link to its full-size file.
 | `slashphoto_image_kind` (filter) | Change how an image is classified (`photo`, `wide`, `360`). |
 | `slashphoto_enable_lightbox` (filter, bool) | Return `false` to keep plain links, for example when the theme has its own lightbox. |
 | `slashphoto_panorama_pano_data` (filter) | Adjust the 360° viewer geometry of an image. |
+| `slashphoto_can_view_gallery` (filter, bool) | Add your own access restrictions (returning true bypasses SlashPhoto's). |
+
+Notices and the terms form are partials too: `access-notice.php` and
+`terms.php`. Keep the form field names in `terms.php`.
+
+## Gallery block
+
+`slashphoto/gallery` shows any gallery (or the current one) anywhere. When a
+gallery's own content contains the block, the automatic output is skipped, so
+the block controls the position. The block supports wide and full alignment.
 
 Body classes on gallery views: `slashphoto-page` plus
 `slashphoto-block-theme` or `slashphoto-classic-theme`.

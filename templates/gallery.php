@@ -10,7 +10,8 @@
  *
  * @var array $args {
  *     @type WP_Post   $gallery  The gallery.
- *     @type WP_Post[] $children Published sub-galleries.
+ *     @type WP_Post[] $children Sub-galleries the visitor may know about.
+ *     @type int[]     $locked_children IDs of sub-galleries that need a password first (no cover shown).
  *     @type array[]   $items    Images: { attachment: WP_Post, kind: "photo"|"wide"|"360", panorama: array }.
  *     @type string    $align    "wide", "full" or "": uses the theme's own wide/full width.
  * }
@@ -19,6 +20,7 @@
 defined( 'ABSPATH' ) || exit;
 
 $slashphoto_children = $args['children'] ?? [];
+$slashphoto_locked   = $args['locked_children'] ?? [];
 $slashphoto_items    = $args['items'] ?? [];
 $slashphoto_align    = $args['align'] ?? '';
 $slashphoto_classes  = 'slashphoto slashphoto-gallery' . ( $slashphoto_align ? ' align' . $slashphoto_align : '' );
@@ -30,7 +32,9 @@ $slashphoto_classes  = 'slashphoto slashphoto-gallery' . ( $slashphoto_align ? '
 				<li class="slashphoto-album">
 					<a class="slashphoto-album-link" href="<?php echo esc_url( get_permalink( $slashphoto_child ) ); ?>">
 						<?php
-						if ( has_post_thumbnail( $slashphoto_child ) ) {
+						if ( in_array( $slashphoto_child->ID, $slashphoto_locked, true ) ) {
+							echo '<span class="slashphoto-album-cover slashphoto-album-cover--locked" aria-hidden="true"></span>';
+						} elseif ( has_post_thumbnail( $slashphoto_child ) ) {
 							echo get_the_post_thumbnail( $slashphoto_child, 'medium_large', [ 'class' => 'slashphoto-album-cover' ] );
 						} else {
 							echo '<span class="slashphoto-album-cover slashphoto-album-cover--empty" aria-hidden="true"></span>';

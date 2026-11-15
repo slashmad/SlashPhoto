@@ -29,14 +29,16 @@ final class Assets {
 	 * Registers hooks.
 	 */
 	public function register_hooks(): void {
+		// Registered early: block.json refers to the stylesheet handle.
+		add_action( 'init', [ $this, 'register_assets' ], 5 );
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_filter( 'script_module_data_' . self::LIGHTBOX_MODULE, [ $this, 'lightbox_data' ] );
 	}
 
 	/**
-	 * Registers assets and enqueues them on gallery views.
+	 * Registers the stylesheet and script modules.
 	 */
-	public function enqueue(): void {
+	public function register_assets(): void {
 		wp_register_style(
 			self::STYLE_HANDLE,
 			SLASHPHOTO_URL . 'assets/css/frontend.css',
@@ -44,6 +46,16 @@ final class Assets {
 			self::version( 'assets/css/frontend.css' )
 		);
 		$this->register_modules();
+	}
+
+	/**
+	 * Enqueues assets on gallery views. The gallery block enqueues them
+	 * itself wherever it is rendered.
+	 */
+	public function enqueue(): void {
+		if ( ! wp_style_is( self::STYLE_HANDLE, 'registered' ) ) {
+			$this->register_assets();
+		}
 
 		$needed = is_singular( PostType::POST_TYPE ) || is_post_type_archive( PostType::POST_TYPE );
 

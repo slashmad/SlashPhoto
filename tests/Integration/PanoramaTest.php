@@ -8,8 +8,6 @@
 namespace SlashPhoto\Tests\Integration;
 
 use SlashPhoto\Frontend\TemplateLoader;
-use SlashPhoto\Frontend\ThemeCompat;
-use SlashPhoto\Gallery\GalleryRepository;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Media\Panorama;
 use WP_UnitTestCase;
@@ -98,12 +96,11 @@ final class PanoramaTest extends WP_UnitTestCase {
 		$gallery_id = self::factory()->post->create( [ 'post_type' => PostType::POST_TYPE ] );
 		$image_id   = self::factory()->attachment->create_upload_object( TestImages::jpeg( 3000, 1500, TestImages::gpano_xmp( 3000, 1500 ) ), $gallery_id );
 
-		$compat = new ThemeCompat( new TemplateLoader(), new GalleryRepository(), new Panorama() );
-		$html   = ( new TemplateLoader() )->render(
+		$html = ( new TemplateLoader() )->render(
 			'gallery.php',
 			[
 				'children' => [],
-				'items'    => $compat->items( $gallery_id ),
+				'items'    => \SlashPhoto\Plugin::instance()->renderer()->items( $gallery_id ),
 			]
 		);
 

@@ -24,18 +24,26 @@ Working now:
   only when a visitor opens one. Partial panoramas cannot be panned past
   their edges, and panoramas that were cropped again after stitching are
   mapped correctly.
+- **Client access.** Password (WordPress' own), selected client accounts,
+  end dates and terms to accept, all inherited by sub-galleries. Protected
+  galleries do not leak through the REST API, attachment pages, sitemaps,
+  search, feeds, caches or oEmbed, and their images get unguessable URLs.
+  See [docs/security-and-privacy.md](docs/security-and-privacy.md).
+- **No visitor logging.** No IP addresses, analytics or third-party requests;
+  terms acceptance is a signed cookie in the visitor's browser only.
+- **Gallery block** for placing any gallery on any page, with the same
+  access rules.
 - **Theme-first styling** that adapts to the theme's colors, fonts and width.
   See [docs/theme-compatibility.md](docs/theme-compatibility.md).
 
 Planned, in order:
 
-1. Gallery block for the block editor
-2. Client access: private galleries, client accounts, watermarked previews
-3. Proofing: favourites and selections without payment
-4. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
+1. Watermarked previews and client log-in links
+2. Proofing: favourites and selections without payment
+3. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
    orders, receipts and secure expiring download links
-5. Import from Sunshine Photo Cart
-6. Licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
+4. Import from Sunshine Photo Cart
+5. Licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
 
 ## Requirements
 
@@ -78,8 +86,12 @@ slashphoto.php          plugin header and autoloader
 src/                    PSR-4 classes (SlashPhoto\)
   Plugin.php            wiring
   Gallery/              post type and queries
+  Access/               access rules, leak guards, terms
+  Admin/                editor access panel
+  Blocks/               gallery block
   Frontend/             theme compatibility, templates, assets
   Media/                panorama and 360° detection
+blocks/                 block.json, render.php and editor script
 templates/              overridable partials (copy to yourtheme/slashphoto/)
 assets/                 CSS, JavaScript modules, bundled vendor libraries
 tests/Integration/      PHPUnit tests against the WordPress test suite

@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "slashphoto/gallery",
+	"version": "0.1.0",
+	"title": "SlashPhoto gallery",
+	"category": "media",
+	"icon": "format-gallery",
+	"description": "Shows a SlashPhoto gallery with its sub-galleries, lightbox and 360° viewer. Access rules of the gallery always apply.",
+	"keywords": [ "photo", "gallery", "panorama", "360" ],
+	"textdomain": "slashphoto",
+	"attributes": {
+		"galleryId": {
+			"type": "integer",
+			"default": 0
+		}
+	},
+	"usesContext": [ "postId", "postType" ],
+	"supports": {
+		"align": [ "wide", "full" ],
+		"anchor": true,
+		"html": false,
+		"spacing": {
+			"margin": true
+		}
+	},
+	"editorScript": "file:./index.js",
+	"style": "slashphoto-frontend",
+	"render": "file:./render.php"
+}
