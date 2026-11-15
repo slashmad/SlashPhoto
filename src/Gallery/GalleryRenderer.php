@@ -8,12 +8,15 @@
 namespace SlashPhoto\Gallery;
 
 use SlashPhoto\Access\Access;
+use SlashPhoto\Access\EmailGate;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Frontend\TemplateLoader;
 use SlashPhoto\Media\Panorama;
 use SlashPhoto\Proofing\Proofing;
+use SlashPhoto\Settings;
 use SlashPhoto\Shop\Shop;
+use SlashPhoto\Visitors\Stats;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -106,19 +109,37 @@ final class GalleryRenderer {
 			return '';
 		}
 
-		if ( $this->terms->needs_acceptance( $gallery ) ) {
+		$step = $this->terms->needs_step( $gallery );
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- display only.
+		if ( 'email' === $step ) {
+			return $this->templates->render(
+				'email-gate.php',
+				[
+					'gallery' => $gallery,
+					'align'   => $align,
+					'action'  => admin_url( 'admin-post.php' ),
+					'nonce'   => wp_create_nonce( EmailGate::ACTION . '_' . $gallery->ID ),
+					'invalid' => isset( $_GET['slashphoto_email'] ),
+					'days'    => (int) Settings::get( 'visitor_retention_days' ),
+				]
+			);
+		}
+		if ( 'terms' === $step ) {
 			$source = Terms::source( $this->access, $gallery );
 			return $this->templates->render(
 				'terms.php',
 				[
-					'gallery' => $gallery,
-					'terms'   => $source ? Terms::text( $source ) : '',
-					'align'   => $align,
-					'action'  => admin_url( 'admin-post.php' ),
-					'nonce'   => wp_create_nonce( Terms::ACTION . '_' . $gallery->ID ),
+					'gallery'   => $gallery,
+					'terms'     => $source ? Terms::text( $source ) : '',
+					'align'     => $align,
+					'action'    => admin_url( 'admin-post.php' ),
+					'nonce'     => wp_create_nonce( Terms::ACTION . '_' . $gallery->ID ),
+					'ask_email' => $this->terms->asks_email( $gallery ),
+					'invalid'   => isset( $_GET['slashphoto_terms'] ),
 				]
 			);
 		}
+		// phpcs:enable
 
 		$children = [];
 		$locked   = [];
@@ -136,6 +157,9 @@ final class GalleryRenderer {
 		$root  = $items ? $this->proofing->root( $gallery ) : null;
 		if ( $root ) {
 			wp_enqueue_script_module( Assets::PROOFING_MODULE );
+		}
+		if ( Stats::enabled() && ! $this->access->is_editor( $gallery ) ) {
+			wp_enqueue_script_module( Stats::MODULE );
 		}
 		$offer = $items ? $this->shop->offer( $gallery ) : [];
 		if ( $offer ) {

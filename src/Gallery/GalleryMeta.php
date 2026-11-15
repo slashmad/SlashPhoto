@@ -8,6 +8,7 @@
 namespace SlashPhoto\Gallery;
 
 use SlashPhoto\Access\Access;
+use SlashPhoto\Access\EmailGate;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Media\Watermark;
 use SlashPhoto\Proofing\Proofing;
@@ -47,12 +48,31 @@ final class GalleryMeta {
 				'type'              => 'string',
 				'single'            => true,
 				'default'           => Access::MODE_PUBLIC,
-				'sanitize_callback' => static fn( $value ): string => in_array( $value, [ Access::MODE_CLIENTS, Access::MODE_LINK ], true ) ? $value : Access::MODE_PUBLIC,
+				'sanitize_callback' => static fn( $value ): string => in_array( $value, [ Access::MODE_CLIENTS, Access::MODE_LINK, Access::MODE_MEMBERS ], true ) ? $value : Access::MODE_PUBLIC,
 				'auth_callback'     => $auth,
 				'show_in_rest'      => [
 					'schema' => [
 						'type' => 'string',
-						'enum' => [ Access::MODE_PUBLIC, Access::MODE_CLIENTS, Access::MODE_LINK ],
+						'enum' => [ Access::MODE_PUBLIC, Access::MODE_CLIENTS, Access::MODE_LINK, Access::MODE_MEMBERS ],
+					],
+				],
+			]
+		);
+
+		register_post_meta(
+			PostType::POST_TYPE,
+			EmailGate::META,
+			[
+				'type'              => 'string',
+				'single'            => true,
+				'default'           => '',
+				'sanitize_callback' => static fn( $value ): string => in_array( $value, [ 'on', 'off' ], true ) ? $value : '',
+				'auth_callback'     => $auth,
+				'show_in_rest'      => [
+					'schema' => [
+						'type'    => 'string',
+						'enum'    => [ '', 'on', 'off' ],
+						'context' => [ 'edit' ],
 					],
 				],
 			]

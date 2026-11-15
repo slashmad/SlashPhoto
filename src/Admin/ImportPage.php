@@ -142,7 +142,7 @@ final class ImportPage {
 			<h2><?php esc_html_e( 'How things are carried over', 'slashphoto' ); ?></h2>
 			<ul class="ul-disc">
 				<li><?php esc_html_e( 'Each price level becomes a price list with the products that have a price at that level; galleries keep their price level. Downloads stay downloads, everything else becomes a print.', 'slashphoto' ); ?></li>
-				<li><?php esc_html_e( 'Galleries keep their title, text, order, sub-galleries, password, private clients, expiry date and terms. Galleries opened with a direct URL get a secret link. SlashPhoto has no “email address” or “any logged-in visitor” gate; such galleries become public and are listed below so you can choose another protection.', 'slashphoto' ); ?></li>
+				<li><?php esc_html_e( 'Galleries keep their title, text, order, sub-galleries, password, private clients, expiry date and terms. Galleries opened with a direct URL get a secret link; “Provide email address” becomes an email request and “Registered and logged in” the logged-in mode. Email addresses visitors gave and terms agreements Sunshine recorded go to SlashPhoto → Visitors.', 'slashphoto' ); ?></li>
 				<li><?php esc_html_e( 'Images are copied: each gets a display copy and its original is stored privately, exactly like new uploads. This needs disk space for a second copy until you remove Sunshine.', 'slashphoto' ); ?></li>
 				<li><?php esc_html_e( 'Orders are copied with their lines and amounts for your records. Customers do not get emails, and their old Sunshine order links do not carry over.', 'slashphoto' ); ?></li>
 			</ul>
@@ -162,8 +162,8 @@ final class ImportPage {
 					}
 					?>
 				</p>
-				<?php /* translators: 1: price lists, 2: galleries, 3: images, 4: orders */ ?>
-				<p data-counts data-template="<?php echo esc_attr( __( 'Imported so far: %1$d price lists, %2$d galleries, %3$d images, %4$d orders.', 'slashphoto' ) ); ?>"><?php echo esc_html( sprintf( __( 'Imported so far: %1$d price lists, %2$d galleries, %3$d images, %4$d orders.', 'slashphoto' ), $state['done']['price_lists'], $state['done']['galleries'], $state['done']['images'], $state['done']['orders'] ) ); ?></p>
+				<?php /* translators: 1: price lists, 2: galleries, 3: images, 4: orders, 5: visitor log entries */ ?>
+				<p data-counts data-template="<?php echo esc_attr( __( 'Imported so far: %1$d price lists, %2$d galleries, %3$d images, %4$d orders, %5$d visitor log entries.', 'slashphoto' ) ); ?>"><?php echo esc_html( sprintf( __( 'Imported so far: %1$d price lists, %2$d galleries, %3$d images, %4$d orders, %5$d visitor log entries.', 'slashphoto' ), $state['done']['price_lists'], $state['done']['galleries'], $state['done']['images'], $state['done']['orders'], $state['done']['visitors'] ) ); ?></p>
 				<div data-notes>
 					<?php if ( $state['notes'] ) : ?>
 						<h2><?php esc_html_e( 'To check', 'slashphoto' ); ?></h2>
@@ -224,7 +224,7 @@ final class ImportPage {
 						break;
 					}
 					status.textContent = steps[ state.step ] || '';
-					counts.textContent = format( counts.dataset.template, [ state.done.price_lists, state.done.galleries, state.done.images, state.done.orders ] );
+					counts.textContent = format( counts.dataset.template, [ state.done.price_lists, state.done.galleries, state.done.images, state.done.orders, state.done.visitors ] );
 					if ( state.notes.length ) {
 						notes.innerHTML = '<h2></h2><ul class="ul-disc"></ul>';
 						notes.querySelector( 'h2' ).textContent = <?php echo wp_json_encode( __( 'To check', 'slashphoto' ) ); ?>;

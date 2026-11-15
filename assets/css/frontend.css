@@ -902,7 +902,7 @@ html.slashphoto-lightbox-open {
 }
 
 /* Light defaults for themes that leave form fields unstyled; zero specificity, so theme styles win. */
-:where(.slashphoto-checkout, .slashphoto-cart) :where(input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select, textarea) {
+:where(.slashphoto-checkout, .slashphoto-cart, .slashphoto-terms) :where(input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select, textarea) {
 	box-sizing: border-box;
 	min-height: 2.5em;
 	padding: 0.4em 0.6em;
@@ -998,4 +998,14 @@ html.slashphoto-lightbox-open {
 .slashphoto-coupon[hidden],
 .slashphoto-coupon__message[hidden] {
 	display: none;
+}
+
+/* Email gate and email field on the terms form. */
+.slashphoto.slashphoto-terms .slashphoto-field input {
+	width: 100%;
+	max-width: 24rem;
+}
+
+:where(.slashphoto-terms__error) {
+	color: #b32d2e;
 }

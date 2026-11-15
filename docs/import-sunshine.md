@@ -27,7 +27,9 @@ that could not be copied.
 | Password | WordPress password on the gallery (hints are listed for you, not imported). |
 | Private (selected users) | Clients mode with the same accounts. |
 | Access type "Direct URL" | Secret link. |
-| Access type "Provide email" or "Registered and logged in" | Public, and listed under "To check": SlashPhoto does not collect visitor emails and has no "any logged-in visitor" gate. |
+| Access type "Provide email" | Email request on the gallery; the addresses Sunshine collected go to the visitor log. |
+| Access type "Registered and logged in" | "Anyone logged in to this site". |
+| Terms agreements | Visitor log entries with the date, email or account and Sunshine's wording version. |
 | Expiration date | End date. |
 | Terms required | The Sunshine terms text on the gallery. |
 | Price level, products disabled | The matching price list, or "Not for sale". |
@@ -42,8 +44,7 @@ and send the customer its link if they need downloads again).
 
 - Images are copied, not moved, so the import needs disk space for a
   second set of originals until you remove Sunshine and its files.
-- Sunshine's download add-ons, packages, gift cards, favourites, comments
-  and terms agreement logs are not imported. Terms agreements are a log of
-  visitors, which SlashPhoto does not keep by design.
+- Sunshine's download add-ons, packages, gift cards, favourites and
+  comments are not imported.
 - VAT rates per order are not stored by Sunshine in a reusable form;
   imported orders keep their VAT amount.

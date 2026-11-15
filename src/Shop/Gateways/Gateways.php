@@ -22,6 +22,8 @@ final class Gateways {
 	public static function all(): array {
 		$gateways = [
 			new StripeGateway(),
+			new PayPalGateway(),
+			new MollieGateway(),
 			new ManualGateway(),
 		];
 

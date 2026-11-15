@@ -182,6 +182,31 @@ final class SettingsPage {
 						<td><input type="number" id="slashphoto-snapotter-min-mp" min="1" max="1000" name="<?php echo esc_attr( $name ); ?>[snapotter_min_mp]" value="<?php echo esc_attr( (string) $settings['snapotter_min_mp'] ); ?>"></td>
 					</tr>
 				</table>
+				<h2><?php esc_html_e( 'Visitors', 'slashphoto' ); ?></h2>
+				<p><?php esc_html_e( 'SlashPhoto never stores IP addresses or browser details. What it can store about visitors is listed here and in the suggested privacy policy text.', 'slashphoto' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Statistics', 'slashphoto' ); ?></th>
+						<td>
+							<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[stats_enabled]" value="1" <?php checked( $settings['stats_enabled'] ); ?>> <?php esc_html_e( 'Count how often galleries and photos are viewed', 'slashphoto' ); ?></label>
+							<p class="description"><?php esc_html_e( 'Anonymous daily totals only: no cookies, no IP addresses, nothing that identifies a visitor. Your own views and those of search robots are not counted.', 'slashphoto' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Terms', 'slashphoto' ); ?></th>
+						<td>
+							<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[terms_ask_email]" value="1" <?php checked( $settings['terms_ask_email'] ); ?>> <?php esc_html_e( 'Ask visitors who are not logged in for their email address when they accept a gallery’s terms', 'slashphoto' ); ?></label>
+							<p class="description"><?php esc_html_e( 'Every acceptance is logged with the date, the wording that was accepted and the account or email address, so you can show who agreed to what.', 'slashphoto' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="slashphoto-retention"><?php esc_html_e( 'Keep the visitor log for (days)', 'slashphoto' ); ?></label></th>
+						<td>
+							<input type="number" id="slashphoto-retention" min="0" max="3650" name="<?php echo esc_attr( $name ); ?>[visitor_retention_days]" value="<?php echo esc_attr( (string) $settings['visitor_retention_days'] ); ?>">
+							<p class="description"><?php esc_html_e( 'Email addresses given to open a gallery and terms acceptances are deleted after this many days; 0 keeps them. View counts contain nothing personal and are kept.', 'slashphoto' ); ?></p>
+						</td>
+					</tr>
+				</table>
 				<?php submit_button(); ?>
 			</form>
 			<?php

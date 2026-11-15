@@ -127,9 +127,22 @@ final class SunshineImportTest extends AccessTestCase {
 			[
 				'access_type'      => 'email',
 				'disable_products' => 1,
+				'emails'           => [ 'Guest@example.org', 'nope' ],
 			]
 		);
 		$url     = $this->post( 'sunshine-gallery', [ 'post_title' => 'Link only' ], [ 'access_type' => 'url' ] );
+		$members = $this->post( 'sunshine-gallery', [ 'post_title' => 'Members' ], [ 'access_type' => 'account' ] );
+		global $wpdb;
+		$wpdb->query( "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}sunshine_terms_agreements ( agreement_id bigint(20) unsigned NOT NULL AUTO_INCREMENT, gallery_id bigint(20) unsigned NOT NULL, user_id bigint(20) unsigned NOT NULL DEFAULT 0, email varchar(254) NOT NULL DEFAULT '', version varchar(32) NOT NULL, time bigint(20) unsigned NOT NULL, PRIMARY KEY (agreement_id) )" );
+		$wpdb->insert(
+			$wpdb->prefix . 'sunshine_terms_agreements',
+			[
+				'gallery_id' => $top,
+				'email'      => 'agreed@example.org',
+				'version'    => 'v2',
+				'time'       => 1735689600,
+			]
+		);
 
 		$a = $this->sunshine_image( $child, 'IMG_0001' );
 		$b = $this->sunshine_image( $child, 'IMG_0002' );
@@ -233,7 +246,7 @@ final class SunshineImportTest extends AccessTestCase {
 		);
 		// End of direct Sunshine table writes.
 
-		$this->ids = compact( 'standard', 'wedding', 'top', 'child', 'priv', 'email', 'url', 'a', 'b', 'c', 'order', 'clients' );
+		$this->ids = compact( 'standard', 'wedding', 'top', 'child', 'priv', 'email', 'url', 'members', 'a', 'b', 'c', 'order', 'clients' );
 	}
 
 	private function sunshine_image( int $gallery, string $name ): int {
@@ -267,14 +280,15 @@ final class SunshineImportTest extends AccessTestCase {
 	public function test_full_import(): void {
 		$this->assertTrue( SunshineImporter::has_data() );
 		$summary = SunshineImporter::summary();
-		$this->assertSame( 5, $summary['galleries'] );
+		$this->assertSame( 6, $summary['galleries'] );
 		$this->assertSame( 2, $summary['levels'] );
 		$this->assertSame( 1, $summary['orders'] );
 
 		$state = SunshineImporter::run( 60 );
 		$this->assertSame( 'done', $state['step'] );
 		$this->assertSame( 2, $state['done']['price_lists'] );
-		$this->assertSame( 5, $state['done']['galleries'] );
+		$this->assertSame( 6, $state['done']['galleries'] );
+		$this->assertSame( 2, $state['done']['visitors'] );
 		$this->assertSame( 3, $state['done']['images'] );
 		$this->assertSame( 1, $state['done']['orders'] );
 
@@ -318,7 +332,14 @@ final class SunshineImportTest extends AccessTestCase {
 		$this->assertSame( Access::MODE_LINK, get_post_meta( $this->ours( PostType::POST_TYPE, $this->ids['url'] ), Access::META_MODE, true ) );
 		$this->assertSame( PriceLists::NONE, get_post_meta( $this->ours( PostType::POST_TYPE, $this->ids['email'] ), PriceLists::GALLERY_META, true ) );
 		$notes = implode( "\n", $state['notes'] );
-		$this->assertStringContainsString( 'Email gate', $notes );
+		$this->assertStringNotContainsString( 'Email gate', $notes, 'Email gates carry over now.' );
+		$this->assertSame( 'on', get_post_meta( $this->ours( PostType::POST_TYPE, $this->ids['email'] ), \SlashPhoto\Access\EmailGate::META, true ) );
+		$this->assertSame( Access::MODE_MEMBERS, get_post_meta( $this->ours( PostType::POST_TYPE, $this->ids['members'] ), Access::META_MODE, true ) );
+		$log = \SlashPhoto\Visitors\VisitorLog::query( [] )['rows'];
+		$this->assertEqualsCanonicalizing( [ 'guest@example.org', 'agreed@example.org' ], array_column( $log, 'email' ) );
+		$terms = array_values( array_filter( $log, static fn( array $row ): bool => 'terms' === $row['type'] ) )[0];
+		$this->assertSame( '2025-01-01 00:00:00', $terms['created_at'] );
+		$this->assertSame( $this->ours( PostType::POST_TYPE, $this->ids['top'] ), (int) $terms['gallery_id'] );
 		$this->assertStringContainsString( 'Our dog', $notes );
 		$this->assertStringContainsString( 'gone.jpg', $notes, 'A missing file is reported.' );
 
@@ -363,8 +384,8 @@ final class SunshineImportTest extends AccessTestCase {
 		SunshineImporter::restart();
 		$state = SunshineImporter::run( 60 );
 		$this->assertSame( 'done', $state['step'] );
-		$this->assertSame( 2 + 5 + 3 + 1, array_sum( $state['done'] ), 'Counts are kept; nothing new was added.' );
-		$this->assertSame( 5, $this->count_ours( PostType::POST_TYPE ) );
+		$this->assertSame( 2 + 6 + 3 + 1 + 2, array_sum( $state['done'] ), 'Counts are kept; nothing new was added.' );
+		$this->assertSame( 6, $this->count_ours( PostType::POST_TYPE ) );
 		$this->assertSame( 3, $this->count_ours( 'attachment' ) );
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared

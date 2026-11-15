@@ -105,7 +105,7 @@ final class Proofing {
 	 * @param WP_Post $gallery Gallery.
 	 */
 	public function can_see( WP_Post $gallery ): bool {
-		return $this->access->can_view( $gallery ) && ! $this->terms->needs_acceptance( $gallery );
+		return $this->access->can_view( $gallery ) && null === $this->terms->needs_step( $gallery );
 	}
 
 	/**

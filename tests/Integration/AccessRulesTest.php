@@ -170,7 +170,7 @@ final class AccessRulesTest extends AccessTestCase {
 		$terms->handle_accept();
 	}
 
-	public function test_accepting_terms_sets_only_a_signed_cookie(): void {
+	public function test_accepting_terms_sets_a_signed_cookie_and_logs_it(): void {
 		$gallery = $this->gallery( [], [ Terms::META_TERMS => 'Terms.' ] );
 		$this->as_anonymous();
 		$meta_before = get_post_meta( $gallery );
@@ -181,19 +181,34 @@ final class AccessRulesTest extends AccessTestCase {
 			}
 		);
 
-		$_POST = [
+		$_POST                  = [
 			'gallery'  => $gallery,
 			'agree'    => '1',
 			'_wpnonce' => wp_create_nonce( Terms::ACTION . '_' . $gallery ),
 		];
-		try {
-			( new Terms( \SlashPhoto\Plugin::instance()->access() ) )->handle_accept();
-		} catch ( \RuntimeException $e ) {
-			unset( $e );
-		}
+		$_SERVER['REMOTE_ADDR'] = '203.0.113.7';
+		$handle                 = static function (): void {
+			try {
+				( new Terms( \SlashPhoto\Plugin::instance()->access() ) )->handle_accept();
+			} catch ( \RuntimeException $e ) {
+				unset( $e );
+			}
+		};
 
+		// Without an email address (asked by default), nothing is accepted.
+		$handle();
+		$this->assertArrayNotHasKey( Terms::COOKIE_PREFIX . $gallery, $_COOKIE );
+
+		$_POST['email'] = 'Kim@Example.org';
+		$handle();
 		$this->assertSame( Terms::token( get_post( $gallery ) ), $_COOKIE[ Terms::COOKIE_PREFIX . $gallery ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- reading the cookie the handler set.
-		$this->assertSame( $meta_before, get_post_meta( $gallery ), 'Nothing about the visitor is stored.' );
+		$this->assertSame( $meta_before, get_post_meta( $gallery ), 'Nothing is added to the gallery.' );
+		$log = \SlashPhoto\Visitors\VisitorLog::query( [ 'gallery' => $gallery ] )['rows'];
+		$this->assertCount( 1, $log );
+		$this->assertSame( 'terms', $log[0]['type'] );
+		$this->assertSame( 'kim@example.org', $log[0]['email'] );
+		$this->assertSame( Terms::fingerprint( get_post( $gallery ) ), $log[0]['detail'] );
+		$this->assertStringNotContainsString( '203.0.113.7', (string) wp_json_encode( $log ), 'No IP address.' );
 	}
 
 	public function tear_down(): void {

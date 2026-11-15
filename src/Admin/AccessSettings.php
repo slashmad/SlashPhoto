@@ -8,6 +8,7 @@
 namespace SlashPhoto\Admin;
 
 use SlashPhoto\Access\Access;
+use SlashPhoto\Access\EmailGate;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Gallery\GalleryMeta;
@@ -108,6 +109,7 @@ final class AccessSettings {
 			<select id="slashphoto-access-mode" name="slashphoto_access" class="widefat">
 				<option value="public" <?php selected( $mode, Access::MODE_PUBLIC ); ?>><?php esc_html_e( 'Everyone with the link', 'slashphoto' ); ?></option>
 				<option value="link" <?php selected( $mode, Access::MODE_LINK ); ?>><?php esc_html_e( 'Only people with the secret link', 'slashphoto' ); ?></option>
+				<option value="members" <?php selected( $mode, Access::MODE_MEMBERS ); ?>><?php esc_html_e( 'Anyone logged in to this site', 'slashphoto' ); ?></option>
 				<option value="clients" <?php selected( $mode, Access::MODE_CLIENTS ); ?>><?php esc_html_e( 'Only selected clients (log-in required)', 'slashphoto' ); ?></option>
 			</select>
 		</p>
@@ -118,6 +120,15 @@ final class AccessSettings {
 				<label><input type="checkbox" name="slashphoto_new_link" value="1"> <?php esc_html_e( 'Create a new link (the current one stops working)', 'slashphoto' ); ?></label>
 			</p>
 		<?php endif; ?>
+		<p>
+			<label for="slashphoto-email-gate"><?php esc_html_e( 'Ask for an email address', 'slashphoto' ); ?></label>
+			<select id="slashphoto-email-gate" name="slashphoto_email_gate" class="widefat">
+				<?php $slashphoto_gate = (string) get_post_meta( $post->ID, EmailGate::META, true ); ?>
+				<option value="" <?php selected( $slashphoto_gate, '' ); ?>><?php esc_html_e( 'No, or as the parent gallery', 'slashphoto' ); ?></option>
+				<option value="on" <?php selected( $slashphoto_gate, 'on' ); ?>><?php esc_html_e( 'Yes', 'slashphoto' ); ?></option>
+				<option value="off" <?php selected( $slashphoto_gate, 'off' ); ?>><?php esc_html_e( 'No, not for this gallery', 'slashphoto' ); ?></option>
+			</select>
+		</p>
 		<p>
 			<label for="slashphoto-watermark"><?php esc_html_e( 'Watermark', 'slashphoto' ); ?></label>
 			<select id="slashphoto-watermark" name="slashphoto_watermark" class="widefat">
@@ -169,11 +180,14 @@ final class AccessSettings {
 		}
 
 		$mode = isset( $_POST['slashphoto_access'] ) ? sanitize_key( wp_unslash( $_POST['slashphoto_access'] ) ) : '';
-		$mode = in_array( $mode, [ Access::MODE_CLIENTS, Access::MODE_LINK ], true ) ? $mode : Access::MODE_PUBLIC;
+		$mode = in_array( $mode, [ Access::MODE_CLIENTS, Access::MODE_LINK, Access::MODE_MEMBERS ], true ) ? $mode : Access::MODE_PUBLIC;
 		update_post_meta( $post_id, Access::META_MODE, $mode );
 		if ( Access::MODE_LINK === $mode && ! empty( $_POST['slashphoto_new_link'] ) ) {
 			Access::rotate_link_key( get_post( $post_id ) );
 		}
+
+		$gate = isset( $_POST['slashphoto_email_gate'] ) ? sanitize_key( wp_unslash( $_POST['slashphoto_email_gate'] ) ) : '';
+		update_post_meta( $post_id, EmailGate::META, in_array( $gate, [ 'on', 'off' ], true ) ? $gate : '' );
 
 		$watermark = isset( $_POST['slashphoto_watermark'] ) ? sanitize_key( wp_unslash( $_POST['slashphoto_watermark'] ) ) : '';
 		update_post_meta( $post_id, Watermark::META, in_array( $watermark, [ 'on', 'off' ], true ) ? $watermark : '' );

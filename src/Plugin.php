@@ -9,6 +9,7 @@ namespace SlashPhoto;
 
 use SlashPhoto\Access\Access;
 use SlashPhoto\Access\AccessGuard;
+use SlashPhoto\Access\EmailGate;
 use SlashPhoto\Access\ShareLinks;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Admin\AccessSettings;
@@ -18,6 +19,7 @@ use SlashPhoto\Admin\SelectionsBox;
 use SlashPhoto\Admin\ShopSettings;
 use SlashPhoto\Admin\SnapOtterSettings;
 use SlashPhoto\Admin\UploadPanel;
+use SlashPhoto\Admin\VisitorsPage;
 use SlashPhoto\Admin\SettingsPage;
 use SlashPhoto\Blocks\GalleryBlock;
 use SlashPhoto\Frontend\Assets;
@@ -42,6 +44,8 @@ use SlashPhoto\Shop\CheckoutRest;
 use SlashPhoto\Shop\Coupons;
 use SlashPhoto\Shop\Downloads;
 use SlashPhoto\Shop\Emails;
+use SlashPhoto\Shop\Gateways\MollieGateway;
+use SlashPhoto\Shop\Gateways\PayPalGateway;
 use SlashPhoto\Shop\Gateways\StripeGateway;
 use SlashPhoto\Shop\Orders;
 use SlashPhoto\Shop\PriceLists;
@@ -49,6 +53,8 @@ use SlashPhoto\Shop\Receipts;
 use SlashPhoto\Shop\Schema;
 use SlashPhoto\Shop\Shop;
 use SlashPhoto\Shop\ShopPage;
+use SlashPhoto\Visitors\Stats;
+use SlashPhoto\Visitors\VisitorLog;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -139,8 +145,11 @@ final class Plugin {
 		$panorama->register_hooks();
 
 		$this->access = new Access();
-		$terms        = new Terms( $this->access );
+		$terms        = new Terms( $this->access, new EmailGate( $this->access ) );
 		$terms->register_hooks();
+		$terms->email_gate()->register_hooks();
+		( new VisitorLog() )->register_hooks();
+		( new Stats( $this->access ) )->register_hooks();
 		( new AccessGuard( $this->access, $this->templates ) )->register_hooks();
 		( new ShareLinks() )->register_hooks();
 		( new DisplayCopy() )->register_hooks();
@@ -169,6 +178,8 @@ final class Plugin {
 		( new Receipts( $this->templates ) )->register_hooks();
 		( new Emails() )->register_hooks();
 		( new StripeGateway() )->register_hooks();
+		( new PayPalGateway() )->register_hooks();
+		( new MollieGateway() )->register_hooks();
 
 		$this->renderer = new GalleryRenderer( $this->templates, new GalleryRepository(), $panorama, $this->access, $terms, $this->proofing, $this->shop );
 		( new ThemeCompat( $this->renderer ) )->register_hooks();
@@ -185,6 +196,7 @@ final class Plugin {
 		( new ShopSettings() )->register_hooks();
 		( new OrdersPage() )->register_hooks();
 		( new ImportPage() )->register_hooks();
+		( new VisitorsPage() )->register_hooks();
 		( new Privacy() )->register_hooks();
 
 		/**
@@ -265,6 +277,7 @@ final class Plugin {
 	public static function deactivate(): void {
 		wp_clear_scheduled_hook( ChunkedUploads::CRON );
 		wp_clear_scheduled_hook( Orders::CRON );
+		wp_clear_scheduled_hook( VisitorLog::CRON );
 		unregister_post_type( PostType::POST_TYPE );
 		flush_rewrite_rules();
 	}

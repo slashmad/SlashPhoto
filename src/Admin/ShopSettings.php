@@ -9,6 +9,8 @@ namespace SlashPhoto\Admin;
 
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Settings;
+use SlashPhoto\Shop\Gateways\MollieGateway;
+use SlashPhoto\Shop\Gateways\PayPalGateway;
 use SlashPhoto\Shop\Gateways\StripeGateway;
 use SlashPhoto\Shop\Money;
 use SlashPhoto\Shop\PriceLists;
@@ -24,6 +26,8 @@ final class ShopSettings {
 
 	public const SLUG   = 'slashphoto-shop';
 	public const STRIPE = 'slashphoto_stripe';
+	public const PAYPAL = 'slashphoto_paypal';
+	public const MOLLIE = 'slashphoto_mollie';
 
 	/**
 	 * Registers hooks.
@@ -31,6 +35,8 @@ final class ShopSettings {
 	public function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'menu' ] );
 		add_action( 'admin_post_' . self::STRIPE, [ $this, 'handle_stripe' ] );
+		add_action( 'admin_post_' . self::PAYPAL, [ $this, 'handle_paypal' ] );
+		add_action( 'admin_post_' . self::MOLLIE, [ $this, 'handle_mollie' ] );
 	}
 
 	/**
@@ -75,6 +81,204 @@ final class ShopSettings {
 		);
 		wp_safe_redirect( Settings::admin_url( 'slashphoto-stripe', self::SLUG ) );
 		exit;
+	}
+
+	/**
+	 * Saves or removes PayPal credentials.
+	 */
+	public function handle_paypal(): void {
+		$this->check();
+		check_admin_referer( self::PAYPAL );
+		$operation = isset( $_POST['operation'] ) ? sanitize_key( wp_unslash( $_POST['operation'] ) ) : '';
+		$result    = true;
+		if ( 'disconnect' === $operation ) {
+			PayPalGateway::disconnect();
+		} else {
+			$result = PayPalGateway::save(
+				isset( $_POST['paypal_client_id'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['paypal_client_id'] ) ) ) : '',
+				isset( $_POST['paypal_secret'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['paypal_secret'] ) ) ) : '',
+				! empty( $_POST['paypal_sandbox'] ),
+				isset( $_POST['paypal_webhook_id'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['paypal_webhook_id'] ) ) ) : ''
+			);
+		}
+		$this->done( self::PAYPAL, $operation, $result );
+	}
+
+	/**
+	 * Saves or removes the Mollie key.
+	 */
+	public function handle_mollie(): void {
+		$this->check();
+		check_admin_referer( self::MOLLIE );
+		$operation = isset( $_POST['operation'] ) ? sanitize_key( wp_unslash( $_POST['operation'] ) ) : '';
+		$result    = true;
+		if ( 'disconnect' === $operation ) {
+			MollieGateway::disconnect();
+		} else {
+			$result = MollieGateway::save( isset( $_POST['mollie_api_key'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['mollie_api_key'] ) ) ) : '' );
+		}
+		$this->done( self::MOLLIE, $operation, $result );
+	}
+
+	/**
+	 * Capability check for the payment forms.
+	 */
+	private function check(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to change these settings.', 'slashphoto' ), '', [ 'response' => 403 ] );
+		}
+	}
+
+	/**
+	 * Remembers the result for the notice and returns to the section.
+	 *
+	 * @param string         $action    Form action (also the section anchor).
+	 * @param string         $operation Operation.
+	 * @param true|\WP_Error $result    Result.
+	 */
+	private function done( string $action, string $operation, $result ): void {
+		set_transient(
+			$action . '_notice_' . get_current_user_id(),
+			[
+				'operation' => $operation,
+				'error'     => is_wp_error( $result ) ? $result->get_error_message() : '',
+			],
+			MINUTE_IN_SECONDS
+		);
+		wp_safe_redirect( Settings::admin_url( str_replace( '_', '-', $action ), self::SLUG ) );
+		exit;
+	}
+
+	/**
+	 * Shows the result of the last save of a payment section.
+	 *
+	 * @param string $action Form action.
+	 * @param string $saved  Message after saving.
+	 * @param string $gone   Message after removing.
+	 */
+	private function notice( string $action, string $saved, string $gone ): void {
+		$notice = get_transient( $action . '_notice_' . get_current_user_id() );
+		delete_transient( $action . '_notice_' . get_current_user_id() );
+		if ( ! is_array( $notice ) ) {
+			return;
+		}
+		$message = '' !== $notice['error'] ? $notice['error'] : ( 'disconnect' === $notice['operation'] ? $gone : $saved );
+		echo '<div class="notice ' . esc_attr( '' === $notice['error'] ? 'notice-success' : 'notice-error' ) . ' inline"><p>' . esc_html( $message ) . '</p></div>';
+	}
+
+	/**
+	 * Renders the PayPal section.
+	 */
+	private function render_paypal(): void {
+		$data    = PayPalGateway::data();
+		$ready   = ( new PayPalGateway() )->available();
+		$sandbox = PayPalGateway::sandbox();
+		?>
+		<h2 id="slashphoto-paypal"><?php esc_html_e( 'PayPal', 'slashphoto' ); ?></h2>
+		<p><?php esc_html_e( 'Customers approve the payment on paypal.com with their PayPal account or a card, then return to your site where the payment is completed. No PayPal script is loaded on your pages.', 'slashphoto' ); ?></p>
+		<?php $this->notice( self::PAYPAL, __( 'Saved. PayPal accepted the credentials.', 'slashphoto' ), __( 'The PayPal credentials were removed.', 'slashphoto' ) ); ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<?php wp_nonce_field( self::PAYPAL ); ?>
+			<input type="hidden" name="action" value="<?php echo esc_attr( self::PAYPAL ); ?>">
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Status', 'slashphoto' ); ?></th>
+					<td>
+						<?php
+						if ( ! $ready ) {
+							esc_html_e( 'Not connected.', 'slashphoto' );
+						} elseif ( $sandbox ) {
+							esc_html_e( 'Connected to the PayPal sandbox: no real money is charged.', 'slashphoto' );
+						} else {
+							esc_html_e( 'Connected, live payments.', 'slashphoto' );
+						}
+						?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="slashphoto-paypal-client"><?php esc_html_e( 'Client ID', 'slashphoto' ); ?></label></th>
+					<td>
+						<input type="text" class="regular-text" id="slashphoto-paypal-client" name="paypal_client_id" autocomplete="off" value="<?php echo esc_attr( (string) ( $data['client_id'] ?? '' ) ); ?>">
+						<p class="description"><?php esc_html_e( 'developer.paypal.com → Apps & Credentials → your REST app.', 'slashphoto' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="slashphoto-paypal-secret"><?php esc_html_e( 'Secret', 'slashphoto' ); ?></label></th>
+					<td><input type="password" class="regular-text" id="slashphoto-paypal-secret" name="paypal_secret" autocomplete="off" placeholder="<?php echo esc_attr( $ready ? __( 'Saved. Enter a new secret to replace it.', 'slashphoto' ) : '' ); ?>"></td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Environment', 'slashphoto' ); ?></th>
+					<td><label><input type="checkbox" name="paypal_sandbox" value="1" <?php checked( $sandbox || ! $ready ); ?>> <?php esc_html_e( 'Sandbox (test payments)', 'slashphoto' ); ?></label></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="slashphoto-paypal-webhook"><?php esc_html_e( 'Webhook ID', 'slashphoto' ); ?></label></th>
+					<td>
+						<input type="text" class="regular-text" id="slashphoto-paypal-webhook" name="paypal_webhook_id" autocomplete="off" value="<?php echo esc_attr( (string) ( $data['webhook_id'] ?? '' ) ); ?>">
+						<p class="description">
+							<?php esc_html_e( 'Recommended. In your PayPal app add a webhook with this address and the events Checkout order approved, Payment capture completed, denied and refunded, then paste its ID:', 'slashphoto' ); ?>
+							<br><code><?php echo esc_html( PayPalGateway::webhook_url() ); ?></code>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<p>
+				<button type="submit" name="operation" value="save" class="button button-primary"><?php esc_html_e( 'Save PayPal settings', 'slashphoto' ); ?></button>
+				<?php if ( $ready ) : ?>
+					<button type="submit" name="operation" value="disconnect" class="button button-link-delete"><?php esc_html_e( 'Remove credentials', 'slashphoto' ); ?></button>
+				<?php endif; ?>
+			</p>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Renders the Mollie section.
+	 */
+	private function render_mollie(): void {
+		$mode = MollieGateway::mode();
+		?>
+		<h2 id="slashphoto-mollie"><?php esc_html_e( 'Mollie', 'slashphoto' ); ?></h2>
+		<p><?php esc_html_e( 'Customers pay on Mollie’s checkout page with the methods you switch on in the Mollie Dashboard: cards, iDEAL, Bancontact, Klarna, PayPal and more. No Mollie script is loaded on your pages.', 'slashphoto' ); ?></p>
+		<?php $this->notice( self::MOLLIE, __( 'Saved. Mollie accepted the key.', 'slashphoto' ), __( 'The Mollie key was removed.', 'slashphoto' ) ); ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<?php wp_nonce_field( self::MOLLIE ); ?>
+			<input type="hidden" name="action" value="<?php echo esc_attr( self::MOLLIE ); ?>">
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Status', 'slashphoto' ); ?></th>
+					<td>
+						<?php
+						if ( 'live' === $mode ) {
+							esc_html_e( 'Connected, live payments.', 'slashphoto' );
+						} elseif ( 'test' === $mode ) {
+							esc_html_e( 'Connected in test mode: no real money is charged.', 'slashphoto' );
+						} else {
+							esc_html_e( 'Not connected.', 'slashphoto' );
+						}
+						?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="slashphoto-mollie-key"><?php esc_html_e( 'API key', 'slashphoto' ); ?></label></th>
+					<td>
+						<input type="password" class="regular-text" id="slashphoto-mollie-key" name="mollie_api_key" autocomplete="off" placeholder="<?php echo esc_attr( $mode ? __( 'Saved. Enter a new key to replace it.', 'slashphoto' ) : 'live_… / test_…' ); ?>">
+						<p class="description">
+							<?php esc_html_e( 'Mollie Dashboard → Developers → API keys. Stored encrypted.', 'slashphoto' ); ?>
+							<?php if ( ! MollieGateway::webhook_reachable() ) : ?>
+								<br><?php esc_html_e( 'This site’s address is not reachable from the internet, so Mollie cannot send payment updates; payments are confirmed when customers return to the site.', 'slashphoto' ); ?>
+							<?php endif; ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<p>
+				<button type="submit" name="operation" value="save" class="button button-primary"><?php esc_html_e( 'Save Mollie key', 'slashphoto' ); ?></button>
+				<?php if ( $mode ) : ?>
+					<button type="submit" name="operation" value="disconnect" class="button button-link-delete"><?php esc_html_e( 'Remove key', 'slashphoto' ); ?></button>
+				<?php endif; ?>
+			</p>
+		</form>
+		<?php
 	}
 
 	/**
@@ -279,7 +483,11 @@ final class ShopSettings {
 				</table>
 				<?php submit_button(); ?>
 			</form>
-			<?php $this->render_stripe(); ?>
+			<?php
+			$this->render_stripe();
+			$this->render_paypal();
+			$this->render_mollie();
+			?>
 		</div>
 		<?php
 	}

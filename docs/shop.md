@@ -127,6 +127,34 @@ Stripe Dashboard.
 
 Refunds are made in the Stripe Dashboard; then set the order to "Refunded".
 
+## PayPal
+
+Customers approve the payment on paypal.com (PayPal balance, cards and
+Pay Later where PayPal offers them) and come back to their order page,
+where the payment is captured. No PayPal script is loaded on your pages.
+
+1. developer.paypal.com → Apps & Credentials: create a REST app and copy
+   its client ID and secret into Shop settings → PayPal. Keep "Sandbox"
+   ticked to test; untick it with live credentials.
+2. Recommended: add a webhook in the app with the address shown in the
+   settings and the events "Checkout order approved", "Payment capture
+   completed", "denied" and "refunded", and paste its webhook ID. Events
+   are verified with PayPal's API before anything changes, and a payment
+   is captured even if the customer closes the window after approving.
+
+The order is sent with its lines, shipping, VAT (when added on top) and
+discount, so PayPal shows the same totals.
+
+## Mollie
+
+Customers pay on Mollie's hosted checkout with the methods switched on in
+the Mollie Dashboard (cards, iDEAL, Bancontact, Klarna, PayPal and more).
+Paste a `test_…` or `live_…` API key in Shop settings → Mollie. Mollie's
+webhook only sends a payment ID; SlashPhoto reads the payment back from
+Mollie with your key, so a forged call changes nothing. On sites Mollie
+cannot reach (localhost) no webhook is sent and payments are confirmed
+when the customer returns.
+
 ## Security
 
 - Prices, names, shipping and VAT are always calculated on the server from
@@ -158,7 +186,8 @@ Refunds are made in the Stripe Dashboard; then set the order to "Refunded".
   are never paid are deleted after a week.
 - Orders are included in WordPress' personal data export. Erasure deletes
   unpaid orders and keeps paid ones, which are bookkeeping records.
-- Stripe receives the customer's email address and the order lines.
+- Stripe receives the customer's email address and the order lines;
+  PayPal and Mollie receive the order lines and amounts.
 
 ## For developers
 

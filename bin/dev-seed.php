@@ -384,6 +384,30 @@ foreach ( range( 1, 3 ) as $slashphoto_n ) {
 }
 slashphoto_seed_image( 'shop-portrait', 1200, 1800, $slashphoto_shop );
 
+// Visitors: an email request followed by terms, and a gallery for any logged-in account.
+$slashphoto_gate = wp_insert_post(
+	[
+		'post_type'   => PostType::POST_TYPE,
+		'post_status' => 'publish',
+		'post_title'  => 'Demo: Email request',
+		'post_name'   => 'demo-email',
+	]
+);
+update_post_meta( $slashphoto_gate, \SlashPhoto\Access\EmailGate::META, 'on' );
+update_post_meta( $slashphoto_gate, Terms::META_TERMS, 'The photos are for personal use only.' );
+slashphoto_seed_image( 'gate-1', 1200, 800, $slashphoto_gate );
+slashphoto_seed_image( 'gate-2', 1200, 800, $slashphoto_gate );
+$slashphoto_members = wp_insert_post(
+	[
+		'post_type'   => PostType::POST_TYPE,
+		'post_status' => 'publish',
+		'post_title'  => 'Demo: Logged-in visitors',
+		'post_name'   => 'demo-members',
+	]
+);
+update_post_meta( $slashphoto_members, Access::META_MODE, Access::MODE_MEMBERS );
+slashphoto_seed_image( 'members-1', 1200, 800, $slashphoto_members );
+
 WP_CLI::success( 'Demo gallery: ' . get_permalink( $slashphoto_parent ) );
 WP_CLI::success( 'Watermarked gallery: ' . get_permalink( $slashphoto_watermarked ) );
 WP_CLI::success( 'Secret link: ' . Access::share_url( get_post( $slashphoto_linked ) ) );
@@ -391,3 +415,4 @@ WP_CLI::success( 'Password gallery (password "demo"): ' . get_permalink( $slashp
 WP_CLI::success( 'Terms gallery: ' . get_permalink( $slashphoto_terms ) );
 WP_CLI::success( 'Proofing gallery (log in as demo-client / demo-client): ' . get_permalink( $slashphoto_proofing ) );
 WP_CLI::success( 'Shop gallery: ' . get_permalink( $slashphoto_shop ) . ' (cart: ' . get_permalink( $slashphoto_cart ) . ')' );
+WP_CLI::success( 'Email request + terms: ' . get_permalink( $slashphoto_gate ) . ' · Logged-in only: ' . get_permalink( $slashphoto_members ) );

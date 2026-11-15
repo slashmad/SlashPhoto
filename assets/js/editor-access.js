@@ -26,6 +26,7 @@
 		proofing: '_slashphoto_proofing',
 		proofingMax: '_slashphoto_proofing_max',
 		priceList: '_slashphoto_price_list',
+		emailGate: '_slashphoto_email_gate',
 	};
 
 	function ShareLink( { postId, savedMode } ) {
@@ -129,6 +130,7 @@
 				options: [
 					{ value: 'public', label: __( 'Everyone with the link', 'slashphoto' ) },
 					{ value: 'link', label: __( 'Only people with the secret link', 'slashphoto' ) },
+					{ value: 'members', label: __( 'Anyone logged in to this site', 'slashphoto' ) },
 					{ value: 'clients', label: __( 'Only selected clients (log-in required)', 'slashphoto' ) },
 				],
 				onChange: ( value ) => update( META.mode, value ),
@@ -160,6 +162,19 @@
 					? __( 'Password protected. Change it under Status → Visibility.', 'slashphoto' )
 					: __( 'No password. You can add one under Status → Visibility.', 'slashphoto' )
 			),
+			el( SelectControl, {
+				label: __( 'Ask for an email address', 'slashphoto' ),
+				help: __( 'Visitors give their email address (with consent) before seeing the photos. You find the addresses under SlashPhoto → Visitors. Logged-in visitors are not asked.', 'slashphoto' ),
+				value: meta[ META.emailGate ] || '',
+				options: [
+					{ value: '', label: parent > 0 ? __( 'Same as parent gallery', 'slashphoto' ) : __( 'No', 'slashphoto' ) },
+					{ value: 'on', label: __( 'Yes', 'slashphoto' ) },
+					{ value: 'off', label: __( 'No, not for this gallery', 'slashphoto' ) },
+				].filter( ( option, index ) => parent > 0 || index < 2 ),
+				onChange: ( value ) => update( META.emailGate, value ),
+				__next40pxDefaultSize: true,
+				__nextHasNoMarginBottom: true,
+			} ),
 			el( TextControl, {
 				type: 'date',
 				label: __( 'Available until', 'slashphoto' ),
@@ -184,13 +199,13 @@
 			} ),
 			el( TextareaControl, {
 				label: __( 'Terms to accept before viewing', 'slashphoto' ),
-				help: __( 'Optional. Acceptance is remembered only in a cookie in the visitor’s browser; nothing is logged.', 'slashphoto' ),
+				help: __( 'Optional. Each acceptance is logged with the date and the visitor’s account or email address (SlashPhoto → Visitors).', 'slashphoto' ),
 				value: meta[ META.terms ] || '',
 				onChange: ( value ) => update( META.terms, value ),
 				__nextHasNoMarginBottom: true,
 			} ),
 			parent > 0 &&
-				el( Notice, { status: 'info', isDismissible: false }, __( 'This is a sub-gallery: the password, client list, secret link, end date and terms of the galleries above it also apply.', 'slashphoto' ) )
+				el( Notice, { status: 'info', isDismissible: false }, __( 'This is a sub-gallery: the password, client list, secret link, email request, end date and terms of the galleries above it also apply.', 'slashphoto' ) )
 		);
 	}
 

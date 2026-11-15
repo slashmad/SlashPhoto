@@ -8,6 +8,7 @@
 namespace SlashPhoto\Import;
 
 use SlashPhoto\Access\Access;
+use SlashPhoto\Access\EmailGate;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Gallery\Importer;
 use SlashPhoto\Gallery\PostType;
@@ -15,6 +16,7 @@ use SlashPhoto\Settings;
 use SlashPhoto\Shop\Money;
 use SlashPhoto\Shop\PriceLists;
 use SlashPhoto\Shop\Schema;
+use SlashPhoto\Visitors\VisitorLog;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -82,6 +84,7 @@ final class SunshineImporter {
 					'galleries'   => 0,
 					'images'      => 0,
 					'orders'      => 0,
+					'visitors'    => 0,
 				],
 				(array) ( $state['done'] ?? [] )
 			),
@@ -322,13 +325,12 @@ final class SunshineImporter {
 				update_post_meta( $id, Access::META_CLIENTS, array_values( array_filter( array_map( 'intval', (array) $meta( 'private_users' ) ) ) ) );
 			} elseif ( 'url' === $access ) {
 				update_post_meta( $id, Access::META_MODE, Access::MODE_LINK );
-			} elseif ( 'account' === $access || 'email' === $access ) {
-				$state['notes'][] = sprintf(
-					/* translators: %s: gallery title */
-					'account' === $access ? __( 'Gallery “%s” was open to any logged-in visitor in Sunshine. SlashPhoto has no such setting: it is public now; choose clients or a secret link if needed.', 'slashphoto' ) : __( 'Gallery “%s” asked visitors for their email address in Sunshine. SlashPhoto does not collect visitor emails: it is public now; choose a password, clients or a secret link if needed.', 'slashphoto' ),
-					$source->post_title
-				);
+			} elseif ( 'account' === $access ) {
+				update_post_meta( $id, Access::META_MODE, Access::MODE_MEMBERS );
+			} elseif ( 'email' === $access ) {
+				update_post_meta( $id, EmailGate::META, 'on' );
 			}
+			self::copy_visitors( $source->ID, (int) $id, $state );
 			if ( 'password' === $status && '' !== (string) $meta( 'password_hint' ) ) {
 				/* translators: 1: gallery title, 2: password hint */
 				$state['notes'][] = sprintf( __( 'Gallery “%1$s” had the password hint “%2$s”, which was not imported.', 'slashphoto' ), $source->post_title, $meta( 'password_hint' ) );
@@ -355,6 +357,52 @@ final class SunshineImporter {
 			}
 		}//end foreach
 		return true;
+	}
+
+	/**
+	 * Copies the email addresses visitors gave and the terms agreements
+	 * Sunshine recorded for a gallery into the visitor log.
+	 *
+	 * @param int   $source  Sunshine gallery.
+	 * @param int   $gallery New gallery.
+	 * @param array $state   Progress.
+	 */
+	private static function copy_visitors( int $source, int $gallery, array &$state ): void {
+		global $wpdb;
+		$now = gmdate( 'Y-m-d H:i:s' );
+		foreach ( array_unique( array_filter( (array) get_post_meta( $source, 'emails', true ), 'is_email' ) ) as $email ) {
+			VisitorLog::insert(
+				[
+					'type'       => 'email',
+					'gallery_id' => $gallery,
+					'email'      => strtolower( (string) $email ),
+					'detail'     => 'sunshine',
+					'created_at' => $now,
+				]
+			);
+			++$state['done']['visitors'];
+		}
+
+		$table = $wpdb->prefix . 'sunshine_terms_agreements';
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Sunshine's table, read only.
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+			return;
+		}
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, email, version, time FROM {$table} WHERE gallery_id = %d ORDER BY agreement_id", $source ), ARRAY_A );
+		// phpcs:enable
+		foreach ( $rows as $row ) {
+			VisitorLog::insert(
+				[
+					'type'       => 'terms',
+					'gallery_id' => $gallery,
+					'user_id'    => (int) $row['user_id'],
+					'email'      => strtolower( sanitize_email( (string) $row['email'] ) ),
+					'detail'     => mb_substr( 'sunshine-' . $row['version'], 0, 64 ),
+					'created_at' => gmdate( 'Y-m-d H:i:s', (int) $row['time'] ),
+				]
+			);
+			++$state['done']['visitors'];
+		}
 	}
 
 	/*

@@ -71,7 +71,7 @@ final class Shop {
 	 * @param WP_Post $gallery Gallery.
 	 */
 	public function price_list( WP_Post $gallery ): int {
-		if ( PostType::POST_TYPE !== $gallery->post_type || ! $this->access->can_view( $gallery ) || $this->terms->needs_acceptance( $gallery ) ) {
+		if ( PostType::POST_TYPE !== $gallery->post_type || ! $this->access->can_view( $gallery ) || null !== $this->terms->needs_step( $gallery ) ) {
 			return 0;
 		}
 		return PriceLists::for_gallery( $gallery, $this->access );

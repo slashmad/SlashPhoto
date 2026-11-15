@@ -10,12 +10,13 @@ namespace SlashPhoto\Shop;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Creates and upgrades the order tables. Tables are never dropped by the
+ * Creates and upgrades SlashPhoto's tables: orders and their lines, the
+ * visitor log and daily view counts. Tables are never dropped by the
  * plugin, not even on uninstall: orders are bookkeeping records.
  */
 final class Schema {
 
-	public const VERSION = 2;
+	public const VERSION = 3;
 	public const OPTION  = 'slashphoto_db_version';
 
 	/**
@@ -51,6 +52,22 @@ final class Schema {
 	}
 
 	/**
+	 * Visitor log table (email gate, terms acceptance).
+	 */
+	public static function visitors(): string {
+		global $wpdb;
+		return $wpdb->prefix . 'slashphoto_visitors';
+	}
+
+	/**
+	 * Daily view counts.
+	 */
+	public static function stats(): string {
+		global $wpdb;
+		return $wpdb->prefix . 'slashphoto_stats';
+	}
+
+	/**
 	 * Creates or updates the tables.
 	 */
 	public static function install(): void {
@@ -59,8 +76,11 @@ final class Schema {
 		$charset = $wpdb->get_charset_collate();
 		$orders  = self::orders();
 		$items   = self::items();
+		$log     = self::visitors();
+		$stats   = self::stats();
 
-		// Version 2 added discount, coupon and parent_id (packages).
+		// Version 2 added discount, coupon and parent_id (packages); version 3
+		// the visitor log and anonymous daily view counts (D-021).
 		// dbDelta needs two spaces after PRIMARY KEY and one field per line.
 		dbDelta(
 			"CREATE TABLE {$orders} (
@@ -112,6 +132,27 @@ CREATE TABLE {$items} (
 	PRIMARY KEY  (id),
 	KEY order_id (order_id),
 	KEY image_id (image_id)
+) {$charset};
+CREATE TABLE {$log} (
+	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	type varchar(10) NOT NULL,
+	gallery_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	user_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	email varchar(200) NOT NULL DEFAULT '',
+	detail varchar(64) NOT NULL DEFAULT '',
+	created_at datetime NOT NULL,
+	PRIMARY KEY  (id),
+	KEY gallery_id (gallery_id),
+	KEY email (email(100)),
+	KEY created_at (created_at)
+) {$charset};
+CREATE TABLE {$stats} (
+	day date NOT NULL,
+	gallery_id bigint(20) unsigned NOT NULL,
+	image_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	views int(10) unsigned NOT NULL DEFAULT 0,
+	PRIMARY KEY  (day,gallery_id,image_id),
+	KEY gallery_id (gallery_id)
 ) {$charset};"
 		);
 		update_option( self::OPTION, self::VERSION, true );

@@ -141,15 +141,29 @@ Known limits:
   attached later) keep their old WordPress paths.
 - Someone with access to the server's file system is outside this model.
 
-## Privacy: no visitor logging
+## Privacy: what is stored about visitors
 
-- No IP addresses, user agents, visit counts or timestamps about visitors are
-  stored, and nothing is sent to third parties (no CDNs, fonts, analytics).
-- Accepting terms sets one cookie, `slashphoto_terms_<gallery ID>`, for 30
-  days (filter `slashphoto_terms_cookie_lifetime`). Its value is an HMAC of
-  the gallery ID and the exact wording, signed with the site's auth salt. It
-  contains nothing about the visitor, and nothing is stored on the server.
-  Changing the wording asks everyone to accept again.
+Changed by D-021 at the user's request (before, nothing was stored); see
+[visitors.md](visitors.md).
+
+- Never stored: IP addresses, user agents, device details, visit logs,
+  sessions. Nothing is loaded from third parties (no CDNs, fonts,
+  analytics).
+- View counts: anonymous daily totals per gallery and photo (day,
+  gallery, photo, count), only when switched on. Editors and obvious
+  robots are not counted; the user agent is read for that check and never
+  stored.
+- Email request: the address a visitor types (with consent), the gallery
+  and the date; a signed cookie `slashphoto_email_<gallery ID>` (log entry
+  ID + HMAC) for 30 days. Logged-in visitors: their account, once per
+  gallery.
+- Terms: the cookie `slashphoto_terms_<gallery ID>` for 30 days (filter
+  `slashphoto_terms_cookie_lifetime`; HMAC of the gallery ID and the exact
+  wording, so changing the wording asks everyone again), and a log entry
+  with the date, a fingerprint of the wording and the account or email
+  address.
+- The visitor log is deleted after the retention period (default 365
+  days) and is covered by the export and erase tools.
 - WordPress' own password cookie (`wp-postpass_…`) is used for passwords.
 - Proofing: favourites of visitors who are not logged in stay in the
   browser's localStorage (`slashphoto-favourites-<gallery ID>`) and are never

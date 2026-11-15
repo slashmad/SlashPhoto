@@ -29,7 +29,7 @@ $slashphoto_proofing = (int) ( $args['proofing'] ?? 0 );
 $slashphoto_shop     = $args['shop'] ?? [];
 $slashphoto_classes  = 'slashphoto slashphoto-gallery' . ( $slashphoto_align ? ' align' . $slashphoto_align : '' );
 ?>
-<div class="<?php echo esc_attr( $slashphoto_classes ); ?>"<?php echo $slashphoto_proofing ? ' data-slashphoto-proofing="' . esc_attr( (string) $slashphoto_proofing ) . '"' : ''; ?><?php echo $slashphoto_shop ? ' data-slashphoto-shop="' . esc_attr( (string) wp_json_encode( $slashphoto_shop ) ) . '"' : ''; ?>>
+<div<?php echo isset( $args['gallery'] ) ? ' data-slashphoto-view="' . esc_attr( (string) $args['gallery']->ID ) . '"' : ''; ?> class="<?php echo esc_attr( $slashphoto_classes ); ?>"<?php echo $slashphoto_proofing ? ' data-slashphoto-proofing="' . esc_attr( (string) $slashphoto_proofing ) . '"' : ''; ?><?php echo $slashphoto_shop ? ' data-slashphoto-shop="' . esc_attr( (string) wp_json_encode( $slashphoto_shop ) ) . '"' : ''; ?>>
 	<?php if ( $slashphoto_children ) : ?>
 		<ul class="slashphoto-albums">
 			<?php foreach ( $slashphoto_children as $slashphoto_child ) : ?>

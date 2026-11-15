@@ -118,7 +118,10 @@ final class ShopPage {
 		$order_id = isset( $_GET['order'] ) ? absint( $_GET['order'] ) : 0;
 		$key      = isset( $_GET['key'] ) ? sanitize_key( wp_unslash( $_GET['key'] ) ) : '';
 		if ( $order_id || '' !== $key ) {
-			$query = [ 'session_id' => isset( $_GET['session_id'] ) ? sanitize_text_field( wp_unslash( $_GET['session_id'] ) ) : '' ];
+			$query = [
+				'session_id' => isset( $_GET['session_id'] ) ? sanitize_text_field( wp_unslash( $_GET['session_id'] ) ) : '',
+				'token'      => isset( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : '',
+			];
 			return $this->order_view( $order_id, $key, $query );
 		}
 		// phpcs:enable

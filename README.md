@@ -53,8 +53,8 @@ Working now:
 - **Shop: downloads and prints.** Price lists with downloads of the original
   and prints in your sizes, chosen per gallery and inherited by
   sub-galleries. Customers add photos from the lightbox, check out as guests
-  and pay manually (invoice, transfer, Swish) or on Stripe's hosted Checkout
-  page (no platform fee). Orders with status emails, an order screen with
+  and pay manually (invoice, transfer, Swish) or online with Stripe
+  Checkout, PayPal or Mollie (no platform fee). Orders with status emails, an order screen with
   file names and originals for printing, and downloads streamed only for
   paid orders through a private link. Packages ("10 downloads", "the
   whole gallery"), discount codes, and printable receipts and invoices.
@@ -62,8 +62,11 @@ Working now:
 - **Import from Sunshine Photo Cart.** Copies galleries with their access
   settings, images, price levels and orders, in repeatable steps, without
   changing Sunshine's data. See [docs/import-sunshine.md](docs/import-sunshine.md).
-- **No visitor logging.** No IP addresses, analytics or third-party requests;
-  terms acceptance is a signed cookie in the visitor's browser only.
+- **Visitors, privacy first.** Galleries for any logged-in account, an
+  email request before the photos, a log of terms acceptances, and
+  anonymous daily view counts. Never IP addresses or browser details, no
+  third-party requests, a retention period and export/erase support.
+  See [docs/visitors.md](docs/visitors.md).
 - **Gallery block** for placing any gallery on any page, with the same
   access rules.
 - **Theme-first styling** that adapts to the theme's colors, fonts and width.

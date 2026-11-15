@@ -7,20 +7,25 @@
 
 namespace SlashPhoto\Access;
 
+use SlashPhoto\Settings;
+use SlashPhoto\Visitors\VisitorLog;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Terms acceptance without server-side logging.
+ * Terms the visitor accepts before seeing a gallery.
  *
- * Acceptance is stored only in a cookie on the visitor's own device: an HMAC
- * of the gallery ID and the exact terms wording, signed with the site's auth
- * salt. Nothing about the visitor (no IP address, user agent, email or time)
- * is stored on the server. Changing the wording invalidates earlier
- * acceptances automatically.
+ * The visitor's browser remembers the acceptance in a cookie: an HMAC of
+ * the gallery ID and the exact terms wording, signed with the site's auth
+ * salt, so changing the wording asks everyone again. Each acceptance is
+ * also logged (D-021): date, a fingerprint of the wording, and the account
+ * or email address when known. Visitors who are not logged in are asked
+ * for their email address when the setting says so. No IP address or user
+ * agent is stored.
  *
- * Sub-galleries use the nearest gallery up the tree that has terms.
+ * Sub-galleries use the nearest gallery up the tree that has terms. The
+ * email gate, when a gallery has one, comes before the terms.
  */
 final class Terms {
 
@@ -36,12 +41,59 @@ final class Terms {
 	private Access $access;
 
 	/**
+	 * Email gate.
+	 *
+	 * @var EmailGate
+	 */
+	private EmailGate $gate;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Access $access Access rules.
+	 * @param Access         $access Access rules.
+	 * @param EmailGate|null $gate   Email gate.
 	 */
-	public function __construct( Access $access ) {
+	public function __construct( Access $access, ?EmailGate $gate = null ) {
 		$this->access = $access;
+		$this->gate   = $gate ?? new EmailGate( $access );
+	}
+
+	/**
+	 * The email gate.
+	 */
+	public function email_gate(): EmailGate {
+		return $this->gate;
+	}
+
+	/**
+	 * The step the visitor must take before seeing the gallery's photos:
+	 * "email", "terms", or null when there is none.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 */
+	public function needs_step( WP_Post $gallery ): ?string {
+		if ( $this->gate->needs_email( $gallery ) ) {
+			return 'email';
+		}
+		return $this->needs_acceptance( $gallery ) ? 'terms' : null;
+	}
+
+	/**
+	 * Whether the terms form should ask for an email address.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 */
+	public function asks_email( WP_Post $gallery ): bool {
+		return Settings::get( 'terms_ask_email' ) && ! is_user_logged_in() && '' === $this->gate->email( $gallery );
+	}
+
+	/**
+	 * Short fingerprint of a wording, stored with each acceptance.
+	 *
+	 * @param WP_Post $source Gallery that owns the terms.
+	 */
+	public static function fingerprint( WP_Post $source ): string {
+		return substr( hash( 'sha256', self::text( $source ) ), 0, 16 );
 	}
 
 	/**
@@ -116,6 +168,15 @@ final class Terms {
 		if ( $this->access->can_view( $gallery ) && ! empty( $_POST['agree'] ) ) {
 			$source = self::source( $this->access, $gallery );
 			if ( $source ) {
+				$user  = wp_get_current_user();
+				$email = $user->exists() ? (string) $user->user_email : $this->gate->email( $gallery );
+				if ( '' === $email && isset( $_POST['email'] ) ) {
+					$email = sanitize_email( wp_unslash( $_POST['email'] ) );
+				}
+				if ( $this->asks_email( $gallery ) && ! is_email( $email ) ) {
+					$this->finish( add_query_arg( 'slashphoto_terms', 'email', (string) get_permalink( $gallery ) ) );
+				}
+				VisitorLog::add( 'terms', $source->ID, is_email( $email ) ? $email : '', self::fingerprint( $source ) );
 				$this->set_cookie( $source );
 			}
 		}

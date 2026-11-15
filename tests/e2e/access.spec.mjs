@@ -22,12 +22,14 @@ test( 'password gallery: no images until the password is entered', async ( { pag
 	await expect( page.locator( '.slashphoto-item img' ).first() ).toHaveAttribute( 'src', /\/uploads\/slashphoto\/[a-f0-9]{24}\/protected-\d-[a-f0-9]{12}/ );
 } );
 
-test( 'terms gallery: images after accepting, remembered only in a signed cookie', async ( { page, context } ) => {
+test( 'terms gallery: images after accepting, remembered in a signed cookie', async ( { page, context } ) => {
 	await page.goto( '/galleries/demo-terms/' );
 	await expect( page.getByText( 'Please do not share or edit these photos.' ) ).toBeVisible();
 	await expect( page.locator( '.slashphoto-item' ) ).toHaveCount( 0 );
 
 	const before = ( await context.cookies() ).map( ( cookie ) => cookie.name );
+	// The acceptance is logged with an email address (asked by default, D-021).
+	await page.getByLabel( 'Your email address' ).fill( 'terms-e2e@example.org' );
 	await page.getByLabel( 'I have read and accept these terms' ).check();
 	await page.getByRole( 'button', { name: 'Show the photos' } ).click();
 	await expect( page.locator( '.slashphoto-item' ) ).toHaveCount( 2 );

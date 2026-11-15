@@ -28,7 +28,7 @@ This is an early development version. Galleries, panoramas, client access, proof
 * Shop: sell downloads of your originals and prints in your own sizes, with price lists per gallery. Guest checkout, manual payment (invoice, transfer, Swish) or Stripe Checkout with no platform fee, order emails, and downloads that open only for paid orders.
 * Packages (a number of photos or the whole gallery for one price), discount codes, and printable receipts and invoices.
 * Import from Sunshine Photo Cart: galleries, access settings, images, prices and orders, without changing Sunshine's data.
-* No visitor logging, no analytics, no third-party requests.
+* Visitors: galleries for any logged-in account, an email request before the photos, a log of terms acceptances and anonymous view statistics. Never IP addresses or browser details, no third-party requests, with a retention period and export/erase support.
 * A gallery block to place any gallery on any page.
 * A lightbox for photos, and an interactive 360° viewer that is only downloaded when a visitor opens a 360° image.
 * Templates can be overridden from your theme.
@@ -46,6 +46,10 @@ SlashPhoto contacts no external service by default.
 
 Stripe (optional): if a site administrator enters Stripe API keys, customers who choose to pay online are sent to Stripe's hosted Checkout page (https://stripe.com). When an order is placed, SlashPhoto sends Stripe the customer's email address, the order number, the order lines with prices and any discount, and later asks Stripe whether that payment was completed; Stripe sends payment notifications back to the site. No Stripe script is loaded on the site's pages. Stripe terms: https://stripe.com/legal/ssa, privacy policy: https://stripe.com/privacy.
 
+PayPal (optional): if a site administrator enters PayPal REST credentials, customers who choose PayPal are sent to paypal.com to approve the payment. SlashPhoto sends PayPal the order number, the order lines with prices, shipping, VAT and discount, and captures the payment; PayPal sends payment notifications back to the site, which are verified with PayPal's API. Terms: https://www.paypal.com/legalhub, privacy: https://www.paypal.com/privacy.
+
+Mollie (optional): if a site administrator enters a Mollie API key, customers who choose Mollie are sent to Mollie's checkout. SlashPhoto sends Mollie the order number, amount and return address, and reads the payment status back from Mollie. Terms: https://www.mollie.com/terms, privacy: https://www.mollie.com/privacy.
+
 SnapOtter (optional): a site administrator can connect a SnapOtter server (https://github.com/snapotter-hq/SnapOtter) that they run themselves. SlashPhoto then sends gallery uploads (the image files) to the address the administrator entered, to make display copies, and downloads the results. Nothing about site visitors is sent. SnapOtter is free software (AGPL-3.0); see its documentation for its own terms and its optional usage statistics.
 
 == Installation ==
@@ -62,7 +66,7 @@ SlashPhoto renders galleries inside your theme's normal post layout, so it works
 
 = What does SlashPhoto store about visitors? =
 
-Nothing. It does not log IP addresses or visits and makes no requests to other sites. Accepting a gallery's terms sets one cookie in the visitor's own browser; nothing is stored on the server. The shopping cart is kept in the visitor's browser; only an order stores what the customer types in.
+Never IP addresses, browser details or visit logs, and it makes no requests to other sites. It counts views as anonymous daily totals (can be switched off). When a gallery asks for an email address or has terms, the address or account and the date are logged and deleted after the retention period you set. The shopping cart stays in the visitor's browser; an order stores what the customer types in.
 
 = Does uninstalling delete my galleries? =
 
@@ -81,6 +85,8 @@ No. Galleries, images and orders are kept when the plugin is removed.
 * Proofing: favourites, notes, selections sent to the photographer.
 * Chunked uploads of full-size originals, display copies for every gallery image, deny rules for originals folders.
 * Optional SnapOtter integration.
+* Visitors: logged-in mode, email request, terms acceptance log, anonymous view statistics, visitor log with CSV export and retention.
+* PayPal and Mollie payments.
 * Shop: packages, discount codes, receipts and invoices.
 * Import from Sunshine Photo Cart.
 * Shop: price lists with downloads and prints, cart, guest checkout, manual payment and Stripe Checkout, orders with status emails, protected downloads of originals, privacy export and erasure of orders.

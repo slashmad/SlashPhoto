@@ -41,6 +41,7 @@ final class Access {
 	public const MODE_PUBLIC  = 'public';
 	public const MODE_CLIENTS = 'clients';
 	public const MODE_LINK    = 'link';
+	public const MODE_MEMBERS = 'members';
 
 	public const META_LINK_KEY      = '_slashphoto_link_key';
 	public const LINK_COOKIE_PREFIX = 'slashphoto_link_';
@@ -161,7 +162,7 @@ final class Access {
 	 */
 	public static function mode( WP_Post $gallery ): string {
 		$mode = (string) get_post_meta( $gallery->ID, self::META_MODE, true );
-		return in_array( $mode, [ self::MODE_CLIENTS, self::MODE_LINK ], true ) ? $mode : self::MODE_PUBLIC;
+		return in_array( $mode, [ self::MODE_CLIENTS, self::MODE_LINK, self::MODE_MEMBERS ], true ) ? $mode : self::MODE_PUBLIC;
 	}
 
 	/**
@@ -182,7 +183,7 @@ final class Access {
 	 */
 	public function clients_only( WP_Post $gallery ): bool {
 		foreach ( $this->chain( $gallery ) as $post ) {
-			if ( self::MODE_CLIENTS === self::mode( $post ) ) {
+			if ( in_array( self::mode( $post ), [ self::MODE_CLIENTS, self::MODE_MEMBERS ], true ) ) {
 				return true;
 			}
 		}
@@ -200,6 +201,13 @@ final class Access {
 		}
 		$user_id = get_current_user_id();
 		foreach ( $this->chain( $gallery ) as $post ) {
+			if ( self::MODE_MEMBERS === self::mode( $post ) ) {
+				// Any account on the site.
+				if ( ! $user_id ) {
+					return false;
+				}
+				continue;
+			}
 			if ( self::MODE_CLIENTS !== self::mode( $post ) ) {
 				continue;
 			}
@@ -395,7 +403,8 @@ final class Access {
 			|| $this->clients_only( $gallery )
 			|| $this->link_only( $gallery )
 			|| null !== $this->expires_at( $gallery )
-			|| null !== Terms::source( $this, $gallery );
+			|| null !== Terms::source( $this, $gallery )
+			|| null !== EmailGate::source( $this, $gallery );
 	}
 
 	/**
@@ -475,7 +484,7 @@ final class Access {
 				"SELECT DISTINCT p.ID FROM {$wpdb->posts} p
 				LEFT JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key IN ( %s, %s, %s )
 				WHERE p.post_type = %s
-				AND ( p.post_password <> '' OR ( m.meta_key = %s AND m.meta_value IN ( %s, %s ) ) OR ( m.meta_key IN ( %s, %s ) AND m.meta_value <> '' ) )",
+				AND ( p.post_password <> '' OR ( m.meta_key = %s AND m.meta_value IN ( %s, %s, %s ) ) OR ( m.meta_key IN ( %s, %s ) AND m.meta_value <> '' ) )",
 				self::META_MODE,
 				self::META_EXPIRES,
 				Terms::META_TERMS,
@@ -483,6 +492,7 @@ final class Access {
 				self::META_MODE,
 				self::MODE_CLIENTS,
 				self::MODE_LINK,
+				self::MODE_MEMBERS,
 				self::META_EXPIRES,
 				Terms::META_TERMS
 			)
