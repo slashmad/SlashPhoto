@@ -74,6 +74,9 @@ final class ProofingTest extends AccessTestCase {
 	public function test_file_label_strips_random_suffix_and_scaled_marker(): void {
 		$gallery = $this->gallery();
 		$image   = $this->image( $gallery );
+		$meta    = wp_get_attachment_metadata( $image );
+		unset( $meta['original_image'] );
+		wp_update_attachment_metadata( $image, $meta );
 		update_attached_file( $image, '/tmp/x/DSC_1234-0123456789ab.jpg' );
 		$this->assertSame( 'DSC_1234', Proofing::file_label( $image ) );
 

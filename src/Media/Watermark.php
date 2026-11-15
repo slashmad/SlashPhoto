@@ -15,9 +15,9 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Stamps a watermark on every web copy of images uploaded to galleries that
- * have watermarks switched on. The original is never touched: for these
- * galleries WordPress is made to create a separate "-scaled" display copy
- * even for small images, and Originals moves the original out of reach.
+ * have watermarks switched on. The original is never touched: DisplayCopy
+ * makes WordPress create a separate display copy for every gallery image,
+ * and Originals moves the original out of reach.
  *
  * 360° panoramas are not watermarked: a flat stamp would be distorted on
  * the sphere.
@@ -48,7 +48,6 @@ final class Watermark {
 	 * Registers hooks.
 	 */
 	public function register_hooks(): void {
-		add_filter( 'big_image_size_threshold', [ $this, 'force_display_copy' ], 20, 4 );
 		add_filter( 'wp_generate_attachment_metadata', [ $this, 'stamp_sizes' ], 20, 2 );
 	}
 
@@ -80,31 +79,6 @@ final class Watermark {
 		$id   = (int) Settings::get( 'watermark_id' );
 		$file = $id ? get_attached_file( $id ) : '';
 		return $file && is_readable( $file ) ? $file : null;
-	}
-
-	/**
-	 * Makes WordPress create a separate "-scaled" display copy for images in
-	 * watermarked galleries, even when they are smaller than the usual limit,
-	 * so the watermark never lands on the original.
-	 *
-	 * @param int|false $threshold     Longest side in pixels, or false.
-	 * @param array     $imagesize     Width and height of the original.
-	 * @param string    $file          Path of the original.
-	 * @param int       $attachment_id Attachment ID.
-	 * @return int|false
-	 */
-	public function force_display_copy( $threshold, $imagesize, $file, $attachment_id = 0 ) {
-		$parent = (int) wp_get_post_parent_id( (int) $attachment_id );
-		if ( ! $parent || ! $this->enabled_for( $parent ) || ! is_string( $file ) || null !== Panorama::detect_file( $file ) ) {
-			return $threshold;
-		}
-		$longest = max( (int) ( $imagesize[0] ?? 0 ), (int) ( $imagesize[1] ?? 0 ) );
-		if ( $longest < 3 ) {
-			return $threshold;
-		}
-		// Two pixels smaller: WordPress skips resizes that differ by only one
-		// pixel (wp_fuzzy_number_match), and then no copy would be made.
-		return false === $threshold ? $longest - 2 : min( (int) $threshold, $longest - 2 );
 	}
 
 	/**

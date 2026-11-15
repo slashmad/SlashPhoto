@@ -46,8 +46,9 @@ final class PanoramaTest extends WP_UnitTestCase {
 		$this->assertSame( '360', $panorama->kind( $image_id ) );
 		$this->assertSame( 3000, $panorama->detected( $image_id )['full_width'] );
 		$this->assertSame( 3000, $panorama->detected( $image_id )['image_width'] );
-		$this->assertSame( 3000, $meta['width'], '360° images must not be downscaled to 2560 px.' );
-		$this->assertArrayNotHasKey( 'original_image', $meta );
+		// A separate display copy (2 px smaller, see DisplayCopy), not 2560 px.
+		$this->assertSame( 2998, $meta['width'], '360° images must not be downscaled to 2560 px.' );
+		$this->assertStringStartsWith( 'o', $meta['original_image'], 'The original is stored separately.' );
 	}
 
 	public function test_flat_images_are_still_downscaled(): void {
@@ -106,7 +107,7 @@ final class PanoramaTest extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( 'slashphoto-item--360', $html );
 		$this->assertStringContainsString( 'data-slashphoto-id="' . $image_id . '"', $html );
-		$this->assertStringContainsString( 'data-slashphoto-panorama="{&quot;fullWidth&quot;:3000,&quot;fullHeight&quot;:1500', $html );
+		$this->assertStringContainsString( 'data-slashphoto-panorama="{&quot;fullWidth&quot;:2998,&quot;fullHeight&quot;:1499', $html );
 		$this->assertStringContainsString( 'slashphoto-badge', $html );
 	}
 

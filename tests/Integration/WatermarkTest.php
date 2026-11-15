@@ -79,7 +79,7 @@ final class WatermarkTest extends AccessTestCase {
 		$gallery = $this->gallery();
 		$id      = $this->upload( $gallery );
 
-		$this->assertArrayNotHasKey( 'original_image', wp_get_attachment_metadata( $id ), 'No forced copy without a watermark.' );
+		$this->assertEmpty( wp_get_attachment_metadata( $id )['slashphoto_watermarked'] ?? null );
 		$this->assertEqualsWithDelta( 140, self::centre_blue( get_attached_file( $id ) ), 6 );
 	}
 

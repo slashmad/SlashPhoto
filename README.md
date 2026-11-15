@@ -4,7 +4,8 @@ Open-source photography galleries, client proofing and photo sales for
 WordPress. No subscriptions, no paid add-ons, no locked features.
 
 > **Status: early development (0.1.0-dev).** Galleries, panoramas, client
-> access and proofing work; the shop is not built yet. Not ready for production.
+> access, proofing and full-size uploads work; the shop is not built yet. Not
+> ready for production.
 
 ## Features
 
@@ -30,6 +31,15 @@ Working now:
   galleries do not leak through the REST API, attachment pages, sitemaps,
   search, feeds, caches or oEmbed, and their images get unguessable URLs.
   See [docs/security-and-privacy.md](docs/security-and-privacy.md).
+- **Full-size originals.** Upload one full-resolution file per image through
+  the gallery editor's "Upload photos" panel; files are sent in pieces, so
+  PHP's upload limit does not apply. Every image gets a display copy (2560 px
+  by default) and the original is stored privately for later delivery.
+- **Optional SnapOtter processing.** Connect your own
+  [SnapOtter](https://github.com/snapotter-hq/SnapOtter) server (address and
+  login, or an API key) to import RAW, HEIC, TIFF and PSD files and to make
+  display copies of very large images off your web host.
+  See [docs/snapotter.md](docs/snapotter.md).
 - **Watermarked previews** with protected originals: the full-resolution
   file cannot be derived from a preview URL.
 - **Proofing.** Clients mark favourites (in the grid or the lightbox), add a
@@ -48,13 +58,10 @@ Working now:
 
 Planned, in order:
 
-1. Full-size originals from the start: chunked uploads that are not capped
-   by PHP's upload limit, a display copy for every image, and originals
-   delivered only through signed download links
-2. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
+1. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
    orders, receipts and secure expiring download links
-3. Import from Sunshine Photo Cart
-4. Client invitations by email, licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
+2. Import from Sunshine Photo Cart
+3. Client invitations by email, licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
 
 ## Requirements
 

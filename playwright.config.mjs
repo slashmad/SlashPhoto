@@ -13,6 +13,8 @@ export default defineConfig( {
 	testDir: 'tests/e2e',
 	timeout: 60_000,
 	retries: process.env.CI ? 1 : 0,
+	// One worker: tests share the site's state (active theme, selections, uploads).
+	workers: 1,
 	reporter: process.env.CI ? 'github' : 'list',
 	outputDir: 'tests/e2e/.results',
 	use: {

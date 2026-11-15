@@ -21,6 +21,8 @@ This is an early development version. Galleries, panoramas, client access and pr
 * 360° panoramas are detected automatically from camera and stitcher metadata, and are kept at high resolution.
 * Wide panoramas are shown across the full gallery width.
 * Client galleries: password, secret share links, selected client accounts, end dates and terms to accept, inherited by sub-galleries. Protected galleries and their images do not leak through the REST API, attachment pages, sitemaps, search or caches, and images get unguessable addresses.
+* Upload full-size originals of any size from the gallery editor (sent in pieces, so the server's upload limit does not apply). Every image gets a display copy; originals are stored privately.
+* Optional: connect your own SnapOtter server to import RAW, HEIC, TIFF and PSD files and to process very large images.
 * Watermarked previews; originals are kept where preview addresses cannot lead to them.
 * Proofing: clients mark favourites, add notes and send their selection; you get an email and a list with file names for Lightroom. Visitors without an account keep favourites in their own browser only.
 * No visitor logging, no analytics, no third-party requests.
@@ -34,6 +36,10 @@ SlashPhoto bundles these libraries; nothing is loaded from external servers.
 
 * three.js 0.185.1, MIT License, https://threejs.org/
 * Photo Sphere Viewer 5.15.1 (core and visible range plugin), MIT License, https://photo-sphere-viewer.js.org/
+
+= External services =
+
+SlashPhoto contacts no external service by default. Optionally, a site administrator can connect a SnapOtter server (https://github.com/snapotter-hq/SnapOtter) that they run themselves. SlashPhoto then sends gallery uploads (the image files) to the address the administrator entered, to make display copies, and downloads the results. Nothing about site visitors is sent. SnapOtter is free software (AGPL-3.0); see its documentation for its own terms and its optional usage statistics.
 
 == Installation ==
 
@@ -66,3 +72,5 @@ No. Galleries, images and orders are kept when the plugin is removed.
 * Gallery block.
 * Secret share links, watermarks, protected originals.
 * Proofing: favourites, notes, selections sent to the photographer.
+* Chunked uploads of full-size originals, display copies for every gallery image, deny rules for originals folders.
+* Optional SnapOtter integration.

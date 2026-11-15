@@ -18,8 +18,9 @@ defined( 'ABSPATH' ) || exit;
  * "photo.jpg". Anyone who sees the web copy can therefore fetch the
  * full-resolution original by removing "-scaled", which also defeats
  * watermarks. SlashPhoto stores the original as "o<96-bit random>/photo.jpg"
- * instead. WordPress resolves original_image relative to the attached file,
- * so editing, regenerating and deleting keep working.
+ * instead, with deny rules for servers that read .htaccess. WordPress
+ * resolves original_image relative to the attached file, so editing,
+ * regenerating and deleting keep working.
  */
 final class Originals {
 
@@ -53,19 +54,49 @@ final class Originals {
 			return $metadata;
 		}
 
-		$folder = 'o' . bin2hex( random_bytes( 12 ) );
-		if ( ! wp_mkdir_p( $dir . '/' . $folder ) ) {
-			return $metadata;
-		}
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- tiny static file.
-		file_put_contents( $dir . '/' . $folder . '/index.php', "<?php\n// Silence is golden.\n" );
-
-		$target = $dir . '/' . $folder . '/' . $metadata['original_image'];
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- same file system, atomic move.
-		if ( rename( $source, $target ) ) {
-			$metadata['original_image'] = $folder . '/' . $metadata['original_image'];
+		$relative = self::store( $source, $dir, (string) $metadata['original_image'] );
+		if ( null !== $relative ) {
+			$metadata['original_image'] = $relative;
 		}
 		return $metadata;
+	}
+
+	/**
+	 * Moves a file into a new random originals folder next to the display
+	 * copy and returns its path relative to that copy's folder.
+	 *
+	 * @param string $source File to move.
+	 * @param string $dir    Folder of the display copy.
+	 * @param string $name   File name to use.
+	 */
+	public static function store( string $source, string $dir, string $name ): ?string {
+		$folder = 'o' . bin2hex( random_bytes( 12 ) );
+		if ( ! wp_mkdir_p( $dir . '/' . $folder ) ) {
+			return null;
+		}
+		self::protect( $dir . '/' . $folder );
+
+		$name = sanitize_file_name( wp_basename( $name ) );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- same file system, atomic move.
+		return rename( $source, $dir . '/' . $folder . '/' . $name ) ? $folder . '/' . $name : null;
+	}
+
+	/**
+	 * Blocks direct web access to an originals folder where the server reads
+	 * .htaccess (Apache, LiteSpeed). Other servers need the rule from
+	 * docs/security-and-privacy.md; the random folder name protects them
+	 * meanwhile.
+	 *
+	 * @param string $folder Absolute path.
+	 */
+	public static function protect( string $folder ): void {
+		// phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- tiny static files.
+		file_put_contents( $folder . '/index.php', "<?php\n// Silence is golden.\n" );
+		file_put_contents(
+			$folder . '/.htaccess',
+			"# SlashPhoto: originals are never served directly.\n<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tDeny from all\n</IfModule>\n"
+		);
+		// phpcs:enable
 	}
 
 	/**

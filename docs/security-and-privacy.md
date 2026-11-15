@@ -72,6 +72,41 @@ full-resolution original could be fetched by removing "-scaled" from any
 preview URL. WordPress still finds the original for editing and deletes it
 with the attachment.
 
+Every gallery image gets a separate display copy (longest side set under
+SlashPhoto → Settings, 2560 px by default; 360° panoramas up to 8192 px),
+so the original is never the file shown on the site, also for small images.
+Originals folders contain a `.htaccess` that denies web access on Apache
+and LiteSpeed. On nginx, add a rule like this to the server block:
+
+```nginx
+location ~ ^/wp-content/uploads/slashphoto/(.+/)?(o[a-f0-9]{24}|tmp)/ {
+    deny all;
+}
+```
+
+Without it the random folder names still protect the originals. Signed
+download links for sold or delivered originals are planned with the shop.
+
+## Uploads of full-size originals
+
+The "Upload photos" panel in the gallery editor sends files in pieces
+(chunks of at most 8 MB, smaller if the server's `post_max_size` is lower),
+so the size of an original is not limited by PHP's upload settings. Parts
+are stored in `uploads/slashphoto/tmp/` with deny rules and random names,
+only the user who started an upload can continue it, and abandoned parts
+are deleted after a day. The file type is checked by extension when the
+upload starts and by content when it is imported.
+
+## SnapOtter
+
+When a [SnapOtter](https://github.com/snapotter-hq/SnapOtter) server is
+connected (see [snapotter.md](snapotter.md)), originals are sent to the
+address the administrator entered, and nowhere else. SlashPhoto stores only
+an API key, encrypted with a key derived from the site's salts; passwords
+entered to connect are used once and discarded. SnapOtter itself sends
+anonymous usage statistics to its developers by default, which can be
+switched off in SnapOtter.
+
 ## Watermarks
 
 With a watermark PNG set under SlashPhoto → Settings and watermarks switched

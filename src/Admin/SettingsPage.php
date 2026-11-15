@@ -130,8 +130,65 @@ final class SettingsPage {
 						<td><input type="number" id="slashphoto-watermark-opacity" min="5" max="100" name="<?php echo esc_attr( $name ); ?>[watermark_opacity]" value="<?php echo esc_attr( (string) $settings['watermark_opacity'] ); ?>"></td>
 					</tr>
 				</table>
+
+				<h2><?php esc_html_e( 'Display copies', 'slashphoto' ); ?></h2>
+				<p><?php esc_html_e( 'Upload one full-size original per image. Visitors see a display copy; the original is stored privately for downloads and sales. Changes apply to images uploaded afterwards.', 'slashphoto' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="slashphoto-display-size"><?php esc_html_e( 'Longest side (pixels)', 'slashphoto' ); ?></label></th>
+						<td>
+							<input type="number" id="slashphoto-display-size" min="1024" max="8192" step="1" name="<?php echo esc_attr( $name ); ?>[display_size]" value="<?php echo esc_attr( (string) $settings['display_size'] ); ?>">
+							<p class="description"><?php esc_html_e( '2560 suits most screens. 360° panoramas keep up to 8192 pixels.', 'slashphoto' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="slashphoto-display-quality"><?php esc_html_e( 'JPEG quality', 'slashphoto' ); ?></label></th>
+						<td><input type="number" id="slashphoto-display-quality" min="60" max="100" name="<?php echo esc_attr( $name ); ?>[display_quality]" value="<?php echo esc_attr( (string) $settings['display_quality'] ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Upload size', 'slashphoto' ); ?></th>
+						<td>
+							<p class="description">
+								<?php
+								echo esc_html(
+									sprintf(
+										/* translators: %s: size such as "8 MB" */
+										__( 'The “Upload photos” panel in the gallery editor sends files in pieces, so originals of any size work, even though this server’s normal upload limit is %s. The WordPress media library keeps that limit.', 'slashphoto' ),
+										size_format( wp_max_upload_size() )
+									)
+								);
+								?>
+							</p>
+						</td>
+					</tr>
+				</table>
+
+				<h2><?php esc_html_e( 'Image processing with SnapOtter', 'slashphoto' ); ?></h2>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="slashphoto-snapotter-mode"><?php esc_html_e( 'Use SnapOtter for', 'slashphoto' ); ?></label></th>
+						<td>
+							<select id="slashphoto-snapotter-mode" name="<?php echo esc_attr( $name ); ?>[snapotter_mode]">
+								<option value="heavy" <?php selected( $settings['snapotter_mode'], 'heavy' ); ?>><?php esc_html_e( 'RAW, HEIC, TIFF, PSD and very large images', 'slashphoto' ); ?></option>
+								<option value="all" <?php selected( $settings['snapotter_mode'], 'all' ); ?>><?php esc_html_e( 'All gallery uploads', 'slashphoto' ); ?></option>
+								<option value="off" <?php selected( $settings['snapotter_mode'], 'off' ); ?>><?php esc_html_e( 'Nothing (WordPress makes all display copies)', 'slashphoto' ); ?></option>
+							</select>
+							<p class="description"><?php esc_html_e( 'Only applies when a SnapOtter server is connected below. If SnapOtter cannot be reached, WordPress makes the copy itself for JPEG, PNG, WebP and AVIF.', 'slashphoto' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="slashphoto-snapotter-min-mp"><?php esc_html_e( '“Very large” from (megapixels)', 'slashphoto' ); ?></label></th>
+						<td><input type="number" id="slashphoto-snapotter-min-mp" min="1" max="1000" name="<?php echo esc_attr( $name ); ?>[snapotter_min_mp]" value="<?php echo esc_attr( (string) $settings['snapotter_min_mp'] ); ?>"></td>
+					</tr>
+				</table>
 				<?php submit_button(); ?>
 			</form>
+			<?php
+			/**
+			 * Fires below the SlashPhoto settings form (for sections with their own forms).
+			 */
+			do_action( 'slashphoto_settings_after_form' );
+			?>
 		</div>
 		<?php
 	}

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-15T17:01:47+00:00\n"
+"POT-Creation-Date: 2026-11-15T17:26:34+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: slashphoto\n"
@@ -251,6 +251,175 @@ msgstr ""
 msgid "Opacity (%)"
 msgstr ""
 
+#: src/Admin/SettingsPage.php:134
+msgid "Display copies"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:135
+msgid "Upload one full-size original per image. Visitors see a display copy; the original is stored privately for downloads and sales. Changes apply to images uploaded afterwards."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:138
+msgid "Longest side (pixels)"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:141
+msgid "2560 suits most screens. 360° panoramas keep up to 8192 pixels."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:145
+msgid "JPEG quality"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:149
+msgid "Upload size"
+msgstr ""
+
+#. translators: %s: size such as "8 MB"
+#: src/Admin/SettingsPage.php:156
+#, php-format
+msgid "The “Upload photos” panel in the gallery editor sends files in pieces, so originals of any size work, even though this server’s normal upload limit is %s. The WordPress media library keeps that limit."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:166
+msgid "Image processing with SnapOtter"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:169
+msgid "Use SnapOtter for"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:172
+msgid "RAW, HEIC, TIFF, PSD and very large images"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:173
+msgid "All gallery uploads"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:174
+msgid "Nothing (WordPress makes all display copies)"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:176
+msgid "Only applies when a SnapOtter server is connected below. If SnapOtter cannot be reached, WordPress makes the copy itself for JPEG, PNG, WebP and AVIF."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:180
+msgid "“Very large” from (megapixels)"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:36
+msgid "You are not allowed to change these settings."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:94
+msgid "SnapOtter connection"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:98
+msgid "<a href=\"https://github.com/snapotter-hq/SnapOtter\">SnapOtter</a> is a free image toolkit you run on your own server or computer. When it is connected, SlashPhoto sends originals there to make display copies, so RAW, HEIC, TIFF and PSD files work and very large images do not strain your web host. Images are sent only to the address you enter here."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:109
+msgid "SnapOtter was disconnected."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:111
+msgid "SnapOtter is connected and working."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:120
+msgid "Server"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:124
+msgid "Status"
+msgstr ""
+
+#. translators: 1: SnapOtter version, 2: date and time
+#: src/Admin/SnapOtterSettings.php:130
+#, php-format
+msgid "Connected (SnapOtter %1$s), last checked %2$s"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:136
+msgid "Uses the API key you entered."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:136
+msgid "Uses an API key SlashPhoto created; it is deleted from SnapOtter when you disconnect."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:144
+msgid "Test connection"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:150
+msgid "Disconnect"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:158
+msgid "Server address"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:161
+msgid "The address your web server uses to reach SnapOtter. Use https:// when the traffic crosses the internet."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:165
+msgid "Sign in"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:169
+msgid "User name"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:173
+msgid "Password"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:176
+msgid "Used once to create an API key named “SlashPhoto”. The password is not stored."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:177
+msgid "Connect with user name and password"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:182
+msgid "Or an API key"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:185
+msgid "Create one in SnapOtter under Settings → API Keys. You can limit it to using tools."
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:186
+msgid "Connect with API key"
+msgstr ""
+
+#: src/Admin/SnapOtterSettings.php:193
+msgid "Privacy: SnapOtter sends anonymous usage statistics (which tools ran, never files or file names) to its developers unless you switch this off in SnapOtter under Settings → System Settings. Processed files stay on your SnapOtter server until its regular clean-up."
+msgstr ""
+
+#: src/Admin/UploadPanel.php:106
+#: assets/js/editor-upload.js:53
+msgid "Upload photos"
+msgstr ""
+
+#: src/Admin/UploadPanel.php:128
+msgid "Full-size originals, also RAW, HEIC, TIFF and PSD. SnapOtter makes the display copies."
+msgstr ""
+
+#: src/Admin/UploadPanel.php:129
+msgid "Full-size originals (JPEG, PNG, WebP, AVIF). Display copies are made automatically."
+msgstr ""
+
+#: src/Admin/UploadPanel.php:133
+msgid "Choose photos to upload"
+msgstr ""
+
 #: src/Frontend/Assets.php:138
 msgid "Image viewer"
 msgstr ""
@@ -369,8 +538,59 @@ msgstr ""
 msgid "Your selection"
 msgstr ""
 
+#: src/Gallery/ChunkedUploads.php:142
+msgid "Upload not found."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:160
+#: src/Gallery/Importer.php:99
+msgid "RAW, HEIC, TIFF and PSD files need a SnapOtter server. Connect one under SlashPhoto → Settings, or upload JPEG files."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:161
+#: src/Gallery/Importer.php:100
+msgid "This file type cannot be added to a gallery."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:172
+msgid "The file is larger than this site accepts."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:177
+msgid "The upload folder could not be created."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:182
+msgid "There is not enough free disk space for this file."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:226
+msgid "The upload is out of step. Resume from the size given."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:235
+msgid "Invalid upload chunk."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:246
+msgid "The chunk could not be saved."
+msgstr ""
+
+#: src/Gallery/ChunkedUploads.php:263
+msgid "The upload is not complete."
+msgstr ""
+
 #: src/Gallery/GalleryMeta.php:202
 msgid "Photo client"
+msgstr ""
+
+#: src/Gallery/Importer.php:138
+msgid "The file is not an image WordPress can read."
+msgstr ""
+
+#: src/Gallery/Importer.php:152
+#: src/SnapOtter/Connection.php:167
+msgid "SnapOtter is not connected."
 msgstr ""
 
 #: src/Gallery/PostType.php:45
@@ -557,6 +777,65 @@ msgstr ""
 msgid "Your selection has been sent. Ask the photographer if you want to change it."
 msgstr ""
 
+#: src/SnapOtter/Client.php:69
+msgid "SnapOtter did not accept the user name or password."
+msgstr ""
+
+#: src/SnapOtter/Client.php:73
+msgid "This SnapOtter account uses two-factor sign-in. Create an API key in SnapOtter (Settings → API Keys) and connect with the key instead."
+msgstr ""
+
+#: src/SnapOtter/Client.php:76
+#: src/SnapOtter/Client.php:192
+msgid "SnapOtter answered in an unexpected way."
+msgstr ""
+
+#: src/SnapOtter/Client.php:100
+msgid "SnapOtter did not return an API key."
+msgstr ""
+
+#: src/SnapOtter/Client.php:128
+msgid "SnapOtter reports that it is not healthy."
+msgstr ""
+
+#: src/SnapOtter/Client.php:134
+msgid "SnapOtter did not accept the API key, or the key may not run tools."
+msgstr ""
+
+#: src/SnapOtter/Client.php:222
+msgid "SnapOtter did not finish the image."
+msgstr ""
+
+#. translators: %d: HTTP status code
+#: src/SnapOtter/Client.php:250
+#, php-format
+msgid "Could not download the result from SnapOtter (HTTP %d)."
+msgstr ""
+
+#: src/SnapOtter/Client.php:267
+msgid "The uploaded file could not be read."
+msgstr ""
+
+#. translators: %s: error message
+#: src/SnapOtter/Client.php:351
+#, php-format
+msgid "Could not reach SnapOtter: %s"
+msgstr ""
+
+#. translators: 1: HTTP status code, 2: message from SnapOtter
+#: src/SnapOtter/Client.php:361
+#, php-format
+msgid "SnapOtter answered with an error (HTTP %1$d). %2$s"
+msgstr ""
+
+#: src/SnapOtter/Connection.php:79
+msgid "Enter the full address of your SnapOtter server, for example http://192.168.1.10:1349."
+msgstr ""
+
+#: src/SnapOtter/Connection.php:126
+msgid "That does not look like a SnapOtter API key."
+msgstr ""
+
 #: templates/access-notice.php:22
 msgid "This gallery is only available to invited clients."
 msgstr ""
@@ -688,6 +967,54 @@ msgstr ""
 
 #: assets/js/editor-access.js:235
 msgid "Sent selections appear in the “Client selections” box at the bottom of the editor (Meta Boxes). You also get an email."
+msgstr ""
+
+#: assets/js/editor-upload.js:48
+msgid "Upload full-size originals, also RAW, HEIC, TIFF and PSD. SnapOtter makes the display copies; originals are kept private."
+msgstr ""
+
+#: assets/js/editor-upload.js:49
+msgid "Upload full-size originals (JPEG, PNG, WebP, AVIF). Display copies are made automatically; originals are kept private."
+msgstr ""
+
+#: assets/js/editor-upload.js:65
+msgid "Choose files…"
+msgstr ""
+
+#. translators: %d: number of images
+#: assets/js/editor-upload.js:88
+#, js-format
+msgid "%d image added. It shows on the gallery page."
+msgid_plural "%d images added. They show on the gallery page."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: file name
+#: assets/js/uploader.js:88
+#, js-format
+msgid "%s: this file type cannot be added."
+msgstr ""
+
+#: assets/js/uploader.js:95
+msgid "Upload failed."
+msgstr ""
+
+#: assets/js/uploader.js:105
+msgid "Added"
+msgstr ""
+
+#: assets/js/uploader.js:108
+msgid "Making the display copy…"
+msgstr ""
+
+#. translators: %d: percentage uploaded
+#: assets/js/uploader.js:112
+#, js-format
+msgid "Uploading %d%%"
+msgstr ""
+
+#: assets/js/uploader.js:114
+msgid "Waiting"
 msgstr ""
 
 #: blocks/gallery/index.js:36

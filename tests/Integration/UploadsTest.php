@@ -30,7 +30,7 @@ final class UploadsTest extends AccessTestCase {
 
 		$this->assertMatchesRegularExpression( '/^[a-f0-9]{24}$/', $key );
 		$this->assertStringContainsString( '/slashphoto/' . $key . '/', $path );
-		$this->assertMatchesRegularExpression( '#/DSC6751-[a-f0-9]{12}\.jpg$#', $path );
+		$this->assertMatchesRegularExpression( '#/DSC6751-[a-f0-9]{12}-scaled\.jpg$#', $path );
 		$this->assertFileExists( dirname( $path ) . '/index.php' );
 		$this->assertFileExists( dirname( $path, 2 ) . '/index.php' );
 	}

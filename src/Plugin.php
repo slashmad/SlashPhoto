@@ -13,6 +13,8 @@ use SlashPhoto\Access\ShareLinks;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Admin\AccessSettings;
 use SlashPhoto\Admin\SelectionsBox;
+use SlashPhoto\Admin\SnapOtterSettings;
+use SlashPhoto\Admin\UploadPanel;
 use SlashPhoto\Admin\SettingsPage;
 use SlashPhoto\Blocks\GalleryBlock;
 use SlashPhoto\Frontend\Assets;
@@ -22,7 +24,10 @@ use SlashPhoto\Gallery\GalleryMeta;
 use SlashPhoto\Gallery\GalleryRenderer;
 use SlashPhoto\Gallery\GalleryRepository;
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Gallery\ChunkedUploads;
+use SlashPhoto\Gallery\Importer;
 use SlashPhoto\Gallery\Uploads;
+use SlashPhoto\Media\DisplayCopy;
 use SlashPhoto\Media\Originals;
 use SlashPhoto\Media\Panorama;
 use SlashPhoto\Media\Watermark;
@@ -117,6 +122,7 @@ final class Plugin {
 		$terms->register_hooks();
 		( new AccessGuard( $this->access, $this->templates ) )->register_hooks();
 		( new ShareLinks() )->register_hooks();
+		( new DisplayCopy() )->register_hooks();
 		( new Originals() )->register_hooks();
 		( new Watermark( $this->access ) )->register_hooks();
 
@@ -128,6 +134,8 @@ final class Plugin {
 		( new PostType() )->register_hooks();
 		( new GalleryMeta() )->register_hooks();
 		( new Uploads() )->register_hooks();
+		( new Importer() )->register_hooks();
+		( new ChunkedUploads() )->register_hooks();
 
 		$this->renderer = new GalleryRenderer( $this->templates, new GalleryRepository(), $panorama, $this->access, $terms, $this->proofing );
 		( new ThemeCompat( $this->renderer ) )->register_hooks();
@@ -138,6 +146,8 @@ final class Plugin {
 
 		( new AccessSettings() )->register_hooks();
 		( new SelectionsBox( $this->proofing ) )->register_hooks();
+		( new UploadPanel() )->register_hooks();
+		( new SnapOtterSettings() )->register_hooks();
 		( new SettingsPage() )->register_hooks();
 		( new Privacy() )->register_hooks();
 
@@ -207,6 +217,7 @@ final class Plugin {
 	 * Deactivation: remove our rewrite rules. Content is never deleted here.
 	 */
 	public static function deactivate(): void {
+		wp_clear_scheduled_hook( ChunkedUploads::CRON );
 		unregister_post_type( PostType::POST_TYPE );
 		flush_rewrite_rules();
 	}
