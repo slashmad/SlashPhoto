@@ -12,6 +12,7 @@ use SlashPhoto\Access\Terms;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Gallery\GalleryMeta;
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Media\Watermark;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -44,7 +45,7 @@ final class AccessSettings {
 		wp_enqueue_script(
 			self::SCRIPT,
 			SLASHPHOTO_URL . 'assets/js/editor-access.js',
-			[ 'wp-components', 'wp-core-data', 'wp-data', 'wp-edit-post', 'wp-editor', 'wp-element', 'wp-i18n', 'wp-plugins' ],
+			[ 'wp-api-fetch', 'wp-components', 'wp-core-data', 'wp-data', 'wp-edit-post', 'wp-editor', 'wp-element', 'wp-i18n', 'wp-plugins' ],
 			Assets::version( 'assets/js/editor-access.js' ),
 			true
 		);
@@ -81,7 +82,24 @@ final class AccessSettings {
 			<label for="slashphoto-access-mode"><?php esc_html_e( 'Who can view this gallery', 'slashphoto' ); ?></label>
 			<select id="slashphoto-access-mode" name="slashphoto_access" class="widefat">
 				<option value="public" <?php selected( $mode, Access::MODE_PUBLIC ); ?>><?php esc_html_e( 'Everyone with the link', 'slashphoto' ); ?></option>
+				<option value="link" <?php selected( $mode, Access::MODE_LINK ); ?>><?php esc_html_e( 'Only people with the secret link', 'slashphoto' ); ?></option>
 				<option value="clients" <?php selected( $mode, Access::MODE_CLIENTS ); ?>><?php esc_html_e( 'Only selected clients (log-in required)', 'slashphoto' ); ?></option>
+			</select>
+		</p>
+		<?php if ( Access::MODE_LINK === $mode ) : ?>
+			<p>
+				<label for="slashphoto-share-url"><?php esc_html_e( 'Secret link', 'slashphoto' ); ?></label>
+				<input type="text" id="slashphoto-share-url" class="widefat" readonly value="<?php echo esc_attr( Access::share_url( $post ) ); ?>" onfocus="this.select()">
+				<label><input type="checkbox" name="slashphoto_new_link" value="1"> <?php esc_html_e( 'Create a new link (the current one stops working)', 'slashphoto' ); ?></label>
+			</p>
+		<?php endif; ?>
+		<p>
+			<label for="slashphoto-watermark"><?php esc_html_e( 'Watermark', 'slashphoto' ); ?></label>
+			<select id="slashphoto-watermark" name="slashphoto_watermark" class="widefat">
+				<?php $slashphoto_wm = (string) get_post_meta( $post->ID, Watermark::META, true ); ?>
+				<option value="" <?php selected( $slashphoto_wm, '' ); ?>><?php esc_html_e( 'Site default or parent gallery', 'slashphoto' ); ?></option>
+				<option value="on" <?php selected( $slashphoto_wm, 'on' ); ?>><?php esc_html_e( 'On', 'slashphoto' ); ?></option>
+				<option value="off" <?php selected( $slashphoto_wm, 'off' ); ?>><?php esc_html_e( 'Off', 'slashphoto' ); ?></option>
 			</select>
 		</p>
 		<p>
@@ -115,7 +133,14 @@ final class AccessSettings {
 		}
 
 		$mode = isset( $_POST['slashphoto_access'] ) ? sanitize_key( wp_unslash( $_POST['slashphoto_access'] ) ) : '';
-		update_post_meta( $post_id, Access::META_MODE, Access::MODE_CLIENTS === $mode ? Access::MODE_CLIENTS : Access::MODE_PUBLIC );
+		$mode = in_array( $mode, [ Access::MODE_CLIENTS, Access::MODE_LINK ], true ) ? $mode : Access::MODE_PUBLIC;
+		update_post_meta( $post_id, Access::META_MODE, $mode );
+		if ( Access::MODE_LINK === $mode && ! empty( $_POST['slashphoto_new_link'] ) ) {
+			Access::rotate_link_key( get_post( $post_id ) );
+		}
+
+		$watermark = isset( $_POST['slashphoto_watermark'] ) ? sanitize_key( wp_unslash( $_POST['slashphoto_watermark'] ) ) : '';
+		update_post_meta( $post_id, Watermark::META, in_array( $watermark, [ 'on', 'off' ], true ) ? $watermark : '' );
 
 		$ids = [];
 		$raw = isset( $_POST['slashphoto_clients'] ) ? sanitize_text_field( wp_unslash( $_POST['slashphoto_clients'] ) ) : '';

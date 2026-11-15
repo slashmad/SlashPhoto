@@ -148,11 +148,14 @@ final class AccessGuard {
 	 * Which notice replaces the content, or null when the visitor may see it.
 	 *
 	 * @param WP_Post $gallery Gallery.
-	 * @return string|null "login", "denied" or "expired".
+	 * @return string|null "login", "denied", "link" or "expired".
 	 */
 	public function notice_type( WP_Post $gallery ): ?string {
 		if ( ! $this->access->client_allowed( $gallery ) ) {
 			return is_user_logged_in() ? 'denied' : 'login';
+		}
+		if ( ! $this->access->link_unlocked( $gallery ) ) {
+			return 'link';
 		}
 		if ( $this->access->expired( $gallery ) ) {
 			return 'expired';
@@ -186,11 +189,63 @@ final class AccessGuard {
 		if ( ! $post instanceof WP_Post ) {
 			return;
 		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the key itself is the credential.
+		if ( PostType::POST_TYPE === $post->post_type && isset( $_GET['key'] ) ) {
+			$this->open_share_link( $post, sanitize_text_field( wp_unslash( $_GET['key'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
 		if ( PostType::POST_TYPE === $post->post_type && $this->access->is_protected( $post ) ) {
 			$this->no_cache();
 		} elseif ( $this->embeds_protected_gallery( $post ) ) {
 			$this->no_cache();
 		}
+	}
+
+	/**
+	 * Handles ?key= on a gallery: sets the share-link cookies and redirects
+	 * to the address without the key, so it does not stay in the history,
+	 * bookmarks or Referer headers.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 * @param string  $key     Key from the URL.
+	 */
+	private function open_share_link( WP_Post $gallery, string $key ): void {
+		/**
+		 * Filters how long an opened share link is remembered, in seconds.
+		 *
+		 * @param int $lifetime Default 30 days.
+		 */
+		$lifetime = (int) apply_filters( 'slashphoto_link_cookie_lifetime', 30 * DAY_IN_SECONDS );
+		foreach ( $this->access->galleries_for_key( $gallery, $key ) as $owner ) {
+			$name             = Access::LINK_COOKIE_PREFIX . $owner->ID;
+			$value            = Access::link_token( $owner );
+			$_COOKIE[ $name ] = $value;
+			if ( ! headers_sent() ) {
+				setcookie(
+					$name,
+					$value,
+					[
+						'expires'  => time() + $lifetime,
+						'path'     => COOKIEPATH ? COOKIEPATH : '/',
+						'domain'   => COOKIE_DOMAIN ? COOKIE_DOMAIN : '',
+						'secure'   => is_ssl(),
+						'httponly' => true,
+						'samesite' => 'Lax',
+					]
+				);
+			}
+		}
+		$this->access->flush();
+		$this->no_cache();
+
+		/**
+		 * Fires before a share link redirects; tests stop here.
+		 *
+		 * @param WP_Post $gallery Gallery.
+		 */
+		do_action( 'slashphoto_share_link_opened', $gallery );
+		wp_safe_redirect( remove_query_arg( 'key', get_permalink( $gallery ) ), 303 );
+		exit;
 	}
 
 	/**
@@ -215,6 +270,10 @@ final class AccessGuard {
 	 */
 	public function exclude_hidden_galleries( $query ): void {
 		if ( $this->in_query_filter || $query->get( 'slashphoto_unfiltered' ) || ( is_admin() && ! wp_doing_ajax() ) ) {
+			return;
+		}
+		// WP-CLI needs server access, so it is an administrative context.
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			return;
 		}
 		$types = (array) $query->get( 'post_type' );
@@ -322,7 +381,7 @@ final class AccessGuard {
 	 *
 	 * WP_Query ignores "*__not_in" whenever the matching "*__in" is set (it
 	 * uses if/elseif), so in that case the IDs are removed from the "in" list
-	 * instead, and a list that becomes empty is replaced by [0] (no match).
+	 * instead; when nothing is left the query is made to match no posts.
 	 *
 	 * @param array  $args       Query arguments.
 	 * @param string $in_key     For example "post__in" or "post_parent__in".
@@ -336,8 +395,15 @@ final class AccessGuard {
 		}
 		$in = array_filter( array_map( 'intval', (array) ( $args[ $in_key ] ?? [] ) ) );
 		if ( $in ) {
-			$left            = array_values( array_diff( $in, $ids ) );
-			$args[ $in_key ] = $left ? $left : [ 0 ];
+			$left = array_values( array_diff( $in, $ids ) );
+			if ( $left ) {
+				$args[ $in_key ] = $left;
+			} else {
+				// Nothing left: match no posts. Using [0] here would mean "no
+				// parent" for post_parent__in and return every unattached file.
+				$args[ $in_key ]  = [];
+				$args['post__in'] = [ 0 ];
+			}
 		} else {
 			$current             = array_map( 'intval', (array) ( $args[ $not_in_key ] ?? [] ) );
 			$args[ $not_in_key ] = array_values( array_unique( array_merge( $current, $ids ) ) );

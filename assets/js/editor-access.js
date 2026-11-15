@@ -10,8 +10,9 @@
 	const { registerPlugin } = wp.plugins;
 	const PluginDocumentSettingPanel = ( wp.editor && wp.editor.PluginDocumentSettingPanel ) || wp.editPost.PluginDocumentSettingPanel;
 	const { createElement: el, useState } = wp.element;
-	const { SelectControl, FormTokenField, TextControl, TextareaControl, Notice } = wp.components;
+	const { SelectControl, FormTokenField, TextControl, TextareaControl, Notice, Button, Flex } = wp.components;
 	const { useSelect } = wp.data;
+	const apiFetch = wp.apiFetch;
 	const { useEntityProp } = wp.coreData;
 	const { __, sprintf } = wp.i18n;
 
@@ -21,7 +22,57 @@
 		clients: '_slashphoto_clients',
 		expires: '_slashphoto_expires',
 		terms: '_slashphoto_terms',
+		watermark: '_slashphoto_watermark',
 	};
+
+	function ShareLink( { postId, savedMode } ) {
+		const [ busy, setBusy ] = useState( false );
+		const [ copied, setCopied ] = useState( false );
+		const [ renewed, setRenewed ] = useState( '' );
+		const saved = useSelect( ( select ) => select( 'core' ).getEditedEntityRecord( 'postType', POST_TYPE, postId )?.slashphoto_share_url || '', [ postId ] );
+		const url = renewed || saved;
+
+		if ( 'link' !== savedMode || ! url ) {
+			return el( 'p', { className: 'components-base-control__help' }, __( 'Save the gallery to create its secret link.', 'slashphoto' ) );
+		}
+
+		const copy = () => {
+			window.navigator.clipboard.writeText( url ).then( () => {
+				setCopied( true );
+				window.setTimeout( () => setCopied( false ), 2000 );
+			} );
+		};
+		const renew = () => {
+			// eslint-disable-next-line no-alert
+			if ( ! window.confirm( __( 'Create a new link? The current link stops working, also for everyone who already opened it.', 'slashphoto' ) ) ) {
+				return;
+			}
+			setBusy( true );
+			apiFetch( { path: `/slashphoto/v1/galleries/${ postId }/share-link`, method: 'POST' } )
+				.then( ( response ) => setRenewed( response.url ) )
+				.finally( () => setBusy( false ) );
+		};
+
+		return el(
+			'div',
+			{ className: 'slashphoto-share-link' },
+			el( TextControl, {
+				label: __( 'Secret link', 'slashphoto' ),
+				value: url,
+				readOnly: true,
+				onFocus: ( event ) => event.target.select(),
+				onChange: () => {},
+				__next40pxDefaultSize: true,
+				__nextHasNoMarginBottom: true,
+			} ),
+			el(
+				Flex,
+				{ justify: 'flex-start', style: { marginTop: '8px' } },
+				el( Button, { variant: 'secondary', onClick: copy }, copied ? __( 'Copied', 'slashphoto' ) : __( 'Copy link', 'slashphoto' ) ),
+				el( Button, { variant: 'tertiary', isDestructive: true, isBusy: busy, disabled: busy, onClick: renew }, __( 'New link', 'slashphoto' ) )
+			)
+		);
+	}
 
 	function userLabel( user ) {
 		return sprintf( '%1$s (%2$s)', user.name, user.slug );
@@ -32,9 +83,15 @@
 		const [ meta, setMeta ] = useEntityProp( 'postType', POST_TYPE, 'meta' );
 		const [ search, setSearch ] = useState( '' );
 
-		const { password, parent } = useSelect( ( select ) => {
+		const { password, parent, postId, savedMode } = useSelect( ( select ) => {
 			const editor = select( 'core/editor' );
-			return { password: editor.getEditedPostAttribute( 'password' ), parent: editor.getEditedPostAttribute( 'parent' ) };
+			const saved = editor.getCurrentPostAttribute( 'meta' );
+			return {
+				password: editor.getEditedPostAttribute( 'password' ),
+				parent: editor.getEditedPostAttribute( 'parent' ),
+				postId: editor.getCurrentPostId(),
+				savedMode: saved ? saved[ META.mode ] : '',
+			};
 		}, [] );
 
 		const clientIds = ( meta && meta[ META.clients ] ) || [];
@@ -68,12 +125,14 @@
 				value: meta[ META.mode ] || 'public',
 				options: [
 					{ value: 'public', label: __( 'Everyone with the link', 'slashphoto' ) },
+					{ value: 'link', label: __( 'Only people with the secret link', 'slashphoto' ) },
 					{ value: 'clients', label: __( 'Only selected clients (log-in required)', 'slashphoto' ) },
 				],
 				onChange: ( value ) => update( META.mode, value ),
 				__next40pxDefaultSize: true,
 				__nextHasNoMarginBottom: true,
 			} ),
+			'link' === meta[ META.mode ] && el( ShareLink, { postId, savedMode } ),
 			'clients' === meta[ META.mode ] &&
 				el( FormTokenField, {
 					label: __( 'Clients', 'slashphoto' ),
@@ -107,6 +166,19 @@
 				__next40pxDefaultSize: true,
 				__nextHasNoMarginBottom: true,
 			} ),
+			el( SelectControl, {
+				label: __( 'Watermark', 'slashphoto' ),
+				help: __( 'Applies to images uploaded after the change. Originals are never changed.', 'slashphoto' ),
+				value: meta[ META.watermark ] || '',
+				options: [
+					{ value: '', label: __( 'Site default or parent gallery', 'slashphoto' ) },
+					{ value: 'on', label: __( 'On', 'slashphoto' ) },
+					{ value: 'off', label: __( 'Off', 'slashphoto' ) },
+				],
+				onChange: ( value ) => update( META.watermark, value ),
+				__next40pxDefaultSize: true,
+				__nextHasNoMarginBottom: true,
+			} ),
 			el( TextareaControl, {
 				label: __( 'Terms to accept before viewing', 'slashphoto' ),
 				help: __( 'Optional. Acceptance is remembered only in a cookie in the visitor’s browser; nothing is logged.', 'slashphoto' ),
@@ -115,7 +187,7 @@
 				__nextHasNoMarginBottom: true,
 			} ),
 			parent > 0 &&
-				el( Notice, { status: 'info', isDismissible: false }, __( 'This is a sub-gallery: the password, client list, end date and terms of the galleries above it also apply.', 'slashphoto' ) )
+				el( Notice, { status: 'info', isDismissible: false }, __( 'This is a sub-gallery: the password, client list, secret link, end date and terms of the galleries above it also apply.', 'slashphoto' ) )
 		);
 	}
 

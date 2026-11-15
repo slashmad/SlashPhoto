@@ -33,6 +33,7 @@ final class Privacy {
 		$text .= '<p>' . esc_html__( 'Our photo galleries do not log visits, IP addresses or browser details, do not use analytics or tracking, and do not load anything from other websites.', 'slashphoto' ) . '</p>';
 		$text .= '<p>' . esc_html__( 'When you open a password-protected gallery, WordPress stores a cookie (wp-postpass) containing a scrambled form of the password, for up to 10 days.', 'slashphoto' ) . '</p>';
 		$text .= '<p>' . esc_html__( 'When you accept a gallery’s terms, a cookie (slashphoto_terms_…) remembers this in your browser for 30 days. It contains only a signature of the gallery and the terms wording; nothing about you is stored on our server.', 'slashphoto' ) . '</p>';
+		$text .= '<p>' . esc_html__( 'When you open a gallery through a private link, a cookie (slashphoto_link_…) remembers this in your browser for 30 days. It contains only a signature of the gallery and the link; nothing about you is stored on our server.', 'slashphoto' ) . '</p>';
 		$text .= '<p>' . esc_html__( 'If we give you a client account, your name, email address and the galleries you may see are stored in that account until you ask us to delete it.', 'slashphoto' ) . '</p>';
 		wp_add_privacy_policy_content( 'SlashPhoto', wp_kses_post( $text ) );
 	}

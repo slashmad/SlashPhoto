@@ -1,4 +1,9 @@
+import { execFileSync } from 'node:child_process';
 import { expect, test } from '@playwright/test';
+
+function wpEval( code ) {
+	return execFileSync( 'npx', [ 'wp-env', 'run', 'cli', 'wp', 'eval', code ], { encoding: 'utf8', stdio: [ 'ignore', 'pipe', 'ignore' ] } ).trim().split( '\n' ).pop();
+}
 
 // Uses the protected demo galleries created by `npm run seed`.
 
@@ -35,8 +40,37 @@ test( 'terms gallery: images after accepting, remembered only in a signed cookie
 	expect( added[ 0 ].sameSite ).toBe( 'Lax' );
 } );
 
+test( 'secret link: closed without it, opens with it and drops the key from the address', async ( { page, context } ) => {
+	await page.goto( '/galleries/demo-secret-link/' );
+	await expect( page.locator( '.slashphoto-notice--link' ) ).toBeVisible();
+	await expect( page.locator( '.slashphoto-item' ) ).toHaveCount( 0 );
+
+	const url = wpEval( 'echo SlashPhoto\\Access\\Access::share_url( get_page_by_path( "demo-secret-link", OBJECT, "slashphoto_gallery" ) );' );
+	expect( url ).toMatch( /[?&]key=[a-f0-9]{32}$/ );
+
+	await page.goto( url );
+	expect( page.url() ).not.toContain( 'key=' );
+	await expect( page.locator( '.slashphoto-item' ) ).toHaveCount( 2 );
+	const cookie = ( await context.cookies() ).find( ( c ) => c.name.startsWith( 'slashphoto_link_' ) );
+	expect( cookie.httpOnly ).toBe( true );
+	expect( cookie.value ).toMatch( /^[a-f0-9]{64}$/ );
+} );
+
+test( 'watermarked gallery: previews are stamped, the original cannot be derived', async ( { page, request }, testInfo ) => {
+	await page.goto( '/galleries/demo-watermark/' );
+	const link = page.locator( '.slashphoto-item .slashphoto-link' ).first();
+	const href = await link.getAttribute( 'href' );
+	expect( href ).toMatch( /-scaled\.jpg$/ );
+	expect( ( await request.get( href.replace( '-scaled.jpg', '.jpg' ) ) ).status() ).toBe( 404 );
+
+	await link.click();
+	const image = page.locator( 'dialog.slashphoto-lightbox .slashphoto-lightbox__image' );
+	await expect.poll( () => image.evaluate( ( img ) => img.complete && img.naturalWidth ) ).toBeGreaterThan( 0 );
+	await page.screenshot( { path: testInfo.outputPath( 'watermark.png' ) } );
+} );
+
 test( 'protected pages are not cached or indexed', async ( { request } ) => {
-	for ( const path of [ '/galleries/demo-password/', '/galleries/demo-terms/' ] ) {
+	for ( const path of [ '/galleries/demo-password/', '/galleries/demo-terms/', '/galleries/demo-secret-link/' ] ) {
 		const response = await request.get( path );
 		expect( response.headers()[ 'cache-control' ] ).toContain( 'no-store' );
 		expect( await response.text() ).toMatch( /<meta name='robots' content='[^']*noindex/ );
@@ -81,7 +115,7 @@ test.describe( 'editor', () => {
 		const panel = page.locator( '.slashphoto-access-panel' );
 		await expect( panel ).toBeVisible();
 		await panel.getByRole( 'button', { name: 'Access' } ).click();
-		await panel.locator( 'select' ).selectOption( 'clients' );
+		await panel.getByLabel( 'Who can view this gallery' ).selectOption( 'clients' );
 		await expect( panel.getByText( 'Clients', { exact: true } ) ).toBeVisible();
 		await page.locator( '.slashphoto-access-panel' ).screenshot( { path: testInfo.outputPath( 'access-panel.png' ) } );
 		await page.evaluate( () => {

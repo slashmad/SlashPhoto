@@ -20,7 +20,8 @@ This is an early development version. Galleries and panorama support work; clien
 * Galleries and sub-galleries that use your theme's own layout, colors and fonts, in both block themes and classic themes.
 * 360° panoramas are detected automatically from camera and stitcher metadata, and are kept at high resolution.
 * Wide panoramas are shown across the full gallery width.
-* Client galleries: password, selected client accounts, end dates and terms to accept, inherited by sub-galleries. Protected galleries and their images do not leak through the REST API, attachment pages, sitemaps, search or caches, and images get unguessable addresses.
+* Client galleries: password, secret share links, selected client accounts, end dates and terms to accept, inherited by sub-galleries. Protected galleries and their images do not leak through the REST API, attachment pages, sitemaps, search or caches, and images get unguessable addresses.
+* Watermarked previews; originals are kept where preview addresses cannot lead to them.
 * No visitor logging, no analytics, no third-party requests.
 * A gallery block to place any gallery on any page.
 * A lightbox for photos, and an interactive 360° viewer that is only downloaded when a visitor opens a 360° image.
@@ -62,3 +63,4 @@ No. Galleries, images and orders are kept when the plugin is removed.
 * Lightbox and 360° viewer.
 * Client access (password, clients, end date, terms) with leak protection.
 * Gallery block.
+* Secret share links, watermarks, protected originals.

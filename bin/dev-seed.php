@@ -18,9 +18,12 @@ require_once ABSPATH . 'wp-admin/includes/file.php';
 require_once ABSPATH . 'wp-admin/includes/media.php';
 require_once dirname( __DIR__ ) . '/tests/Integration/TestImages.php';
 
+use SlashPhoto\Access\Access;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Gallery\Uploads;
+use SlashPhoto\Media\Watermark;
+use SlashPhoto\Settings;
 use SlashPhoto\Tests\Integration\TestImages;
 
 /**
@@ -125,6 +128,59 @@ foreach ( [ $slashphoto_password, $slashphoto_terms ] as $slashphoto_protected )
 	slashphoto_seed_image( 'protected-2', 1200, 800, $slashphoto_protected );
 }
 
+// Watermark: the demo PNG becomes the site watermark (not attached to a gallery).
+$slashphoto_mark_tmp = wp_tempnam( 'demo-watermark.png' );
+copy( __DIR__ . '/demo-watermark.png', $slashphoto_mark_tmp );
+$slashphoto_mark = media_handle_sideload(
+	[
+		'name'     => 'slashphoto-demo-watermark.png',
+		'tmp_name' => $slashphoto_mark_tmp,
+	],
+	0,
+	'SlashPhoto demo watermark'
+);
+update_option(
+	Settings::OPTION,
+	array_merge(
+		Settings::all(),
+		[
+			'watermark_id'      => (int) $slashphoto_mark,
+			'watermark_scale'   => 35,
+			'watermark_opacity' => 45,
+		]
+	)
+);
+$slashphoto_watermarked = wp_insert_post(
+	[
+		'post_type'   => PostType::POST_TYPE,
+		'post_status' => 'publish',
+		'post_title'  => 'Demo: Watermark',
+		'post_name'   => 'demo-watermark',
+	]
+);
+update_post_meta( $slashphoto_watermarked, Watermark::META, 'on' );
+foreach ( array_slice( $slashphoto_photos, 0, 3 ) as $slashphoto_photo ) {
+	slashphoto_seed_file( $slashphoto_photo, basename( $slashphoto_photo ), $slashphoto_watermarked );
+}
+if ( ! $slashphoto_photos ) {
+	slashphoto_seed_image( 'watermarked', 1600, 1067, $slashphoto_watermarked );
+}
+
+// Secret link.
+$slashphoto_linked = wp_insert_post(
+	[
+		'post_type'   => PostType::POST_TYPE,
+		'post_status' => 'publish',
+		'post_title'  => 'Demo: Secret link',
+		'post_name'   => 'demo-secret-link',
+	]
+);
+update_post_meta( $slashphoto_linked, Access::META_MODE, Access::MODE_LINK );
+slashphoto_seed_image( 'linked-1', 1200, 800, $slashphoto_linked );
+slashphoto_seed_image( 'linked-2', 1200, 800, $slashphoto_linked );
+
 WP_CLI::success( 'Demo gallery: ' . get_permalink( $slashphoto_parent ) );
+WP_CLI::success( 'Watermarked gallery: ' . get_permalink( $slashphoto_watermarked ) );
+WP_CLI::success( 'Secret link: ' . Access::share_url( get_post( $slashphoto_linked ) ) );
 WP_CLI::success( 'Password gallery (password "demo"): ' . get_permalink( $slashphoto_password ) );
 WP_CLI::success( 'Terms gallery: ' . get_permalink( $slashphoto_terms ) );

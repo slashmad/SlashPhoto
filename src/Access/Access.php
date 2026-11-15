@@ -21,6 +21,9 @@ defined( 'ABSPATH' ) || exit;
  *    password uses the nearest ancestor's password.
  *  - Clients: only selected user accounts (plus editors) may view. Every
  *    ancestor in "clients" mode must allow the user.
+ *  - Secret link: only visitors who opened the gallery's share link (kept
+ *    as a signed cookie on their device) may view. Creating a new link
+ *    locks out everyone who used the old one.
  *  - Expiry: after the end date only editors may view.
  * Users who can edit the gallery always pass.
  *
@@ -37,6 +40,10 @@ final class Access {
 
 	public const MODE_PUBLIC  = 'public';
 	public const MODE_CLIENTS = 'clients';
+	public const MODE_LINK    = 'link';
+
+	public const META_LINK_KEY      = '_slashphoto_link_key';
+	public const LINK_COOKIE_PREFIX = 'slashphoto_link_';
 
 	/** Maximum ancestor depth followed; guards against corrupt parent loops. */
 	private const MAX_DEPTH = 20;
@@ -154,7 +161,7 @@ final class Access {
 	 */
 	public static function mode( WP_Post $gallery ): string {
 		$mode = (string) get_post_meta( $gallery->ID, self::META_MODE, true );
-		return self::MODE_CLIENTS === $mode ? self::MODE_CLIENTS : self::MODE_PUBLIC;
+		return in_array( $mode, [ self::MODE_CLIENTS, self::MODE_LINK ], true ) ? $mode : self::MODE_PUBLIC;
 	}
 
 	/**
@@ -201,6 +208,111 @@ final class Access {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Whether $gallery or an ancestor is only open to holders of a share link.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 */
+	public function link_only( WP_Post $gallery ): bool {
+		foreach ( $this->chain( $gallery ) as $post ) {
+			if ( self::MODE_LINK === self::mode( $post ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns the share-link key of one gallery, creating it when asked.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 * @param bool    $create  Create a key when there is none.
+	 */
+	public static function link_key( WP_Post $gallery, bool $create = false ): string {
+		$key = (string) get_post_meta( $gallery->ID, self::META_LINK_KEY, true );
+		if ( ! preg_match( '/^[a-f0-9]{32}$/', $key ) ) {
+			$key = $create ? self::rotate_link_key( $gallery ) : '';
+		}
+		return $key;
+	}
+
+	/**
+	 * Replaces the share-link key; old links and cookies stop working.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 */
+	public static function rotate_link_key( WP_Post $gallery ): string {
+		$key = bin2hex( random_bytes( 16 ) );
+		update_post_meta( $gallery->ID, self::META_LINK_KEY, $key );
+		return $key;
+	}
+
+	/**
+	 * Returns the share link of a gallery in link mode, or ''.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 */
+	public static function share_url( WP_Post $gallery ): string {
+		if ( self::MODE_LINK !== self::mode( $gallery ) ) {
+			return '';
+		}
+		return add_query_arg( 'key', self::link_key( $gallery, true ), get_permalink( $gallery ) );
+	}
+
+	/**
+	 * Cookie value proving that the visitor opened the current share link.
+	 *
+	 * @param WP_Post $gallery Gallery that owns the link.
+	 */
+	public static function link_token( WP_Post $gallery ): string {
+		return hash_hmac( 'sha256', $gallery->ID . '|link|' . self::link_key( $gallery ), wp_salt( 'auth' ) );
+	}
+
+	/**
+	 * Whether the visitor holds a valid share-link cookie for every
+	 * link-only gallery in the chain.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 */
+	public function link_unlocked( WP_Post $gallery ): bool {
+		if ( $this->is_editor( $gallery ) ) {
+			return true;
+		}
+		foreach ( $this->chain( $gallery ) as $post ) {
+			if ( self::MODE_LINK !== self::mode( $post ) ) {
+				continue;
+			}
+			$name  = self::LINK_COOKIE_PREFIX . $post->ID;
+			$value = isset( $_COOKIE[ $name ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ $name ] ) ) : '';
+			if ( '' === self::link_key( $post ) || ! hash_equals( self::link_token( $post ), $value ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Unlocks link-only galleries in the chain whose key matches $key.
+	 * Returns the galleries that were unlocked; the caller sets the cookies.
+	 *
+	 * @param WP_Post $gallery Gallery being opened.
+	 * @param string  $key     Key from the URL.
+	 * @return WP_Post[]
+	 */
+	public function galleries_for_key( WP_Post $gallery, string $key ): array {
+		$unlocked = [];
+		if ( ! preg_match( '/^[a-f0-9]{32}$/', $key ) ) {
+			return $unlocked;
+		}
+		foreach ( $this->chain( $gallery ) as $post ) {
+			$own = self::link_key( $post );
+			if ( self::MODE_LINK === self::mode( $post ) && '' !== $own && hash_equals( $own, $key ) ) {
+				$unlocked[] = $post;
+			}
+		}
+		return $unlocked;
 	}
 
 	/**
@@ -257,6 +369,7 @@ final class Access {
 		}
 		$allowed = ! $this->password_required( $gallery )
 			&& $this->client_allowed( $gallery )
+			&& $this->link_unlocked( $gallery )
 			&& ! $this->expired( $gallery );
 
 		/**
@@ -280,14 +393,15 @@ final class Access {
 	public function is_protected( WP_Post $gallery ): bool {
 		return null !== $this->password_source( $gallery )
 			|| $this->clients_only( $gallery )
+			|| $this->link_only( $gallery )
 			|| null !== $this->expires_at( $gallery )
 			|| null !== Terms::source( $this, $gallery );
 	}
 
 	/**
 	 * Whether the gallery should be hidden from listings, search, feeds and
-	 * REST collections for the current user: client-only or expired
-	 * galleries the user cannot view. Password galleries stay listed (title
+	 * REST collections for the current user: client-only, link-only or
+	 * expired galleries the user cannot view. Password galleries stay listed (title
 	 * only), as WordPress does for password-protected posts.
 	 *
 	 * @param WP_Post $gallery Gallery.
@@ -296,7 +410,7 @@ final class Access {
 		if ( $this->is_editor( $gallery ) ) {
 			return false;
 		}
-		return ! $this->client_allowed( $gallery ) || $this->expired( $gallery );
+		return ! $this->client_allowed( $gallery ) || ! $this->link_unlocked( $gallery ) || $this->expired( $gallery );
 	}
 
 	/**
@@ -361,13 +475,14 @@ final class Access {
 				"SELECT DISTINCT p.ID FROM {$wpdb->posts} p
 				LEFT JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key IN ( %s, %s, %s )
 				WHERE p.post_type = %s
-				AND ( p.post_password <> '' OR ( m.meta_key = %s AND m.meta_value = %s ) OR ( m.meta_key IN ( %s, %s ) AND m.meta_value <> '' ) )",
+				AND ( p.post_password <> '' OR ( m.meta_key = %s AND m.meta_value IN ( %s, %s ) ) OR ( m.meta_key IN ( %s, %s ) AND m.meta_value <> '' ) )",
 				self::META_MODE,
 				self::META_EXPIRES,
 				Terms::META_TERMS,
 				PostType::POST_TYPE,
 				self::META_MODE,
 				self::MODE_CLIENTS,
+				self::MODE_LINK,
 				self::META_EXPIRES,
 				Terms::META_TERMS
 			)

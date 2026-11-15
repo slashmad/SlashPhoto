@@ -28,10 +28,12 @@ final class AccessLeakTest extends AccessTestCase {
 		$public_image = $this->image( $public );
 		$this->as_anonymous();
 
-		$this->assertSame( [], $this->rest( '/wp/v2/media', [ 'parent' => $protected ] )->get_data() );
+		$unattached = self::factory()->attachment->create_upload_object( TestImages::jpeg( 10, 10 ) );
+		$this->assertSame( [], $this->rest( '/wp/v2/media', [ 'parent' => $protected ] )->get_data(), 'Not even unattached files (regression).' );
 		$this->assertSame( [], $this->rest( '/wp/v2/media', [ 'parent' => $child ] )->get_data(), 'Inherited protection.' );
 		$all = wp_list_pluck( $this->rest( '/wp/v2/media', [ 'per_page' => 100 ] )->get_data(), 'id' );
-		$this->assertSame( [ $public_image ], $all );
+		sort( $all );
+		$this->assertSame( [ $public_image, $unattached ], $all );
 
 		$this->enter_password( 'secret' );
 		Plugin::instance()->access()->flush();

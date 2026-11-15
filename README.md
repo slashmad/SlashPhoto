@@ -24,11 +24,14 @@ Working now:
   only when a visitor opens one. Partial panoramas cannot be panned past
   their edges, and panoramas that were cropped again after stitching are
   mapped correctly.
-- **Client access.** Password (WordPress' own), selected client accounts,
-  end dates and terms to accept, all inherited by sub-galleries. Protected
+- **Client access.** Password (WordPress' own), secret share links,
+  selected client accounts, end dates and terms to accept, all inherited by
+  sub-galleries. Protected
   galleries do not leak through the REST API, attachment pages, sitemaps,
   search, feeds, caches or oEmbed, and their images get unguessable URLs.
   See [docs/security-and-privacy.md](docs/security-and-privacy.md).
+- **Watermarked previews** with protected originals: the full-resolution
+  file cannot be derived from a preview URL.
 - **No visitor logging.** No IP addresses, analytics or third-party requests;
   terms acceptance is a signed cookie in the visitor's browser only.
 - **Gallery block** for placing any gallery on any page, with the same
@@ -38,12 +41,11 @@ Working now:
 
 Planned, in order:
 
-1. Watermarked previews and client log-in links
-2. Proofing: favourites and selections without payment
-3. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
+1. Proofing: favourites and selections without payment
+2. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
    orders, receipts and secure expiring download links
-4. Import from Sunshine Photo Cart
-5. Licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
+3. Import from Sunshine Photo Cart
+4. Client invitations by email, licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
 
 ## Requirements
 

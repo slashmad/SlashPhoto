@@ -8,7 +8,7 @@
  *
  * @var array $args {
  *     @type WP_Post $gallery The gallery.
- *     @type string  $type    "login", "denied", "expired" or "password" (block on another page).
+ *     @type string  $type    "login", "denied", "link", "expired" or "password" (block on another page).
  * }
  */
 
@@ -21,6 +21,8 @@ $slashphoto_type    = $args['type'] ?? 'denied';
 	<?php if ( 'login' === $slashphoto_type ) : ?>
 		<p><?php esc_html_e( 'This gallery is only available to invited clients.', 'slashphoto' ); ?></p>
 		<p><a class="slashphoto-notice__action wp-element-button" href="<?php echo esc_url( wp_login_url( get_permalink( $slashphoto_gallery ) ) ); ?>"><?php esc_html_e( 'Log in to view the gallery', 'slashphoto' ); ?></a></p>
+	<?php elseif ( 'link' === $slashphoto_type ) : ?>
+		<p><?php esc_html_e( 'This gallery is private. Please use the link you received from the photographer.', 'slashphoto' ); ?></p>
 	<?php elseif ( 'password' === $slashphoto_type ) : ?>
 		<p><?php esc_html_e( 'This gallery is password protected.', 'slashphoto' ); ?></p>
 		<p><a class="slashphoto-notice__action wp-element-button" href="<?php echo esc_url( get_permalink( $slashphoto_gallery ) ); ?>"><?php esc_html_e( 'Open the gallery', 'slashphoto' ); ?></a></p>

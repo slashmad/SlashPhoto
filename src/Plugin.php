@@ -9,8 +9,10 @@ namespace SlashPhoto;
 
 use SlashPhoto\Access\Access;
 use SlashPhoto\Access\AccessGuard;
+use SlashPhoto\Access\ShareLinks;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Admin\AccessSettings;
+use SlashPhoto\Admin\SettingsPage;
 use SlashPhoto\Blocks\GalleryBlock;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Frontend\TemplateLoader;
@@ -20,7 +22,9 @@ use SlashPhoto\Gallery\GalleryRenderer;
 use SlashPhoto\Gallery\GalleryRepository;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Gallery\Uploads;
+use SlashPhoto\Media\Originals;
 use SlashPhoto\Media\Panorama;
+use SlashPhoto\Media\Watermark;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -100,6 +104,9 @@ final class Plugin {
 		$terms        = new Terms( $this->access );
 		$terms->register_hooks();
 		( new AccessGuard( $this->access, $this->templates ) )->register_hooks();
+		( new ShareLinks() )->register_hooks();
+		( new Originals() )->register_hooks();
+		( new Watermark( $this->access ) )->register_hooks();
 
 		( new PostType() )->register_hooks();
 		( new GalleryMeta() )->register_hooks();
@@ -113,6 +120,7 @@ final class Plugin {
 		$this->gallery_block->register_hooks();
 
 		( new AccessSettings() )->register_hooks();
+		( new SettingsPage() )->register_hooks();
 		( new Privacy() )->register_hooks();
 
 		/**
