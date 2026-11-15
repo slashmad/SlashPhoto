@@ -13,6 +13,7 @@ use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Gallery\GalleryMeta;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Media\Watermark;
+use SlashPhoto\Proofing\Proofing;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -103,6 +104,17 @@ final class AccessSettings {
 			</select>
 		</p>
 		<p>
+			<label for="slashphoto-proofing"><?php esc_html_e( 'Client selections (proofing)', 'slashphoto' ); ?></label>
+			<select id="slashphoto-proofing" name="slashphoto_proofing" class="widefat">
+				<?php $slashphoto_pf = (string) get_post_meta( $post->ID, Proofing::META, true ); ?>
+				<option value="" <?php selected( $slashphoto_pf, '' ); ?>><?php esc_html_e( 'Same as parent gallery (off at the top level)', 'slashphoto' ); ?></option>
+				<option value="on" <?php selected( $slashphoto_pf, 'on' ); ?>><?php esc_html_e( 'On', 'slashphoto' ); ?></option>
+				<option value="off" <?php selected( $slashphoto_pf, 'off' ); ?>><?php esc_html_e( 'Off', 'slashphoto' ); ?></option>
+			</select>
+			<label for="slashphoto-proofing-max"><?php esc_html_e( 'Maximum images per selection (0 = no limit)', 'slashphoto' ); ?></label>
+			<input type="number" min="0" id="slashphoto-proofing-max" name="slashphoto_proofing_max" class="small-text" value="<?php echo esc_attr( (string) (int) get_post_meta( $post->ID, Proofing::META_MAX, true ) ); ?>">
+		</p>
+		<p>
 			<label for="slashphoto-clients"><?php esc_html_e( 'Clients (user names or emails, comma separated)', 'slashphoto' ); ?></label>
 			<input type="text" id="slashphoto-clients" name="slashphoto_clients" class="widefat" value="<?php echo esc_attr( $logins ); ?>">
 		</p>
@@ -141,6 +153,10 @@ final class AccessSettings {
 
 		$watermark = isset( $_POST['slashphoto_watermark'] ) ? sanitize_key( wp_unslash( $_POST['slashphoto_watermark'] ) ) : '';
 		update_post_meta( $post_id, Watermark::META, in_array( $watermark, [ 'on', 'off' ], true ) ? $watermark : '' );
+
+		$proofing = isset( $_POST['slashphoto_proofing'] ) ? sanitize_key( wp_unslash( $_POST['slashphoto_proofing'] ) ) : '';
+		update_post_meta( $post_id, Proofing::META, in_array( $proofing, [ 'on', 'off' ], true ) ? $proofing : '' );
+		update_post_meta( $post_id, Proofing::META_MAX, isset( $_POST['slashphoto_proofing_max'] ) ? min( 100000, absint( $_POST['slashphoto_proofing_max'] ) ) : 0 );
 
 		$ids = [];
 		$raw = isset( $_POST['slashphoto_clients'] ) ? sanitize_text_field( wp_unslash( $_POST['slashphoto_clients'] ) ) : '';

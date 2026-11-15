@@ -76,7 +76,8 @@ function icon( path ) {
  * @return {Object[]} Items.
  */
 function readItems( gallery ) {
-	return [ ...gallery.querySelectorAll( '.slashphoto-item' ) ].map( ( li ) => {
+	// Items hidden by a filter (for example "show only selected") are skipped.
+	return [ ...gallery.querySelectorAll( '.slashphoto-item:not([hidden])' ) ].map( ( li ) => {
 		const link = li.querySelector( '.slashphoto-link' );
 		const img = li.querySelector( 'img' );
 		let panorama = null;
@@ -122,6 +123,7 @@ class Lightbox {
 		dialog.innerHTML = `
 			<div class="slashphoto-lightbox__bar">
 				<span class="slashphoto-lightbox__counter" aria-live="polite"></span>
+				<div class="slashphoto-lightbox__tools"></div>
 				<button type="button" class="slashphoto-lightbox__button slashphoto-lightbox__close">${ icon( 'M6 6l12 12M18 6L6 18' ) }</button>
 			</div>
 			<div class="slashphoto-lightbox__stage"></div>
@@ -134,6 +136,7 @@ class Lightbox {
 		this.stage = dialog.querySelector( '.slashphoto-lightbox__stage' );
 		this.counter = dialog.querySelector( '.slashphoto-lightbox__counter' );
 		this.caption = dialog.querySelector( '.slashphoto-lightbox__caption' );
+		this.tools = dialog.querySelector( '.slashphoto-lightbox__tools' );
 		this.prevButton = dialog.querySelector( '.slashphoto-lightbox__prev' );
 		this.nextButton = dialog.querySelector( '.slashphoto-lightbox__next' );
 		const closeButton = dialog.querySelector( '.slashphoto-lightbox__close' );
@@ -197,6 +200,14 @@ class Lightbox {
 		this.counter.textContent = many ? format( i18n.counter || '%1$d of %2$d', index + 1, this.items.length ) : '';
 		this.caption.textContent = item.caption;
 		this.caption.hidden = ! item.caption;
+
+		// Lets other modules (proofing) add buttons for this image to the bar.
+		this.tools.replaceChildren();
+		document.dispatchEvent(
+			new CustomEvent( 'slashphoto:lightbox-show', {
+				detail: { element: item.element, tools: this.tools, dialog: this.dialog },
+			} )
+		);
 
 		if ( '360' === item.kind && hasWebGL() ) {
 			await this.showPanorama( item, token );
@@ -287,6 +298,9 @@ class Lightbox {
 		if ( document.fullscreenElement ) {
 			return; // The 360° viewer uses the arrow keys in fullscreen.
 		}
+		if ( event.target.closest?.( 'textarea, input, select' ) ) {
+			return; // Typing a note.
+		}
 		if ( 'ArrowLeft' === event.key ) {
 			event.preventDefault();
 			this.step( -1 );
@@ -320,6 +334,8 @@ class Lightbox {
 
 	onClose() {
 		this.token++;
+		this.tools.replaceChildren();
+		this.dialog.querySelector( '.slashphoto-lightbox__note' )?.remove();
 		this.destroyViewer();
 		this.stage.replaceChildren();
 		document.documentElement.classList.remove( 'slashphoto-lightbox-open' );

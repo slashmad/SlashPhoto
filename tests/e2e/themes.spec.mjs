@@ -40,3 +40,24 @@ for ( const theme of THEMES ) {
 		await page.screenshot( { path: testInfo.outputPath( `${ theme }.png` ) } );
 	} );
 }
+
+for ( const theme of THEMES ) {
+	test( `proofing controls are intact in ${ theme }`, async ( { page }, testInfo ) => {
+		activate( theme );
+		await page.goto( '/galleries/demo-proofing/' );
+		const hearts = page.locator( '.slashphoto-gallery[data-slashphoto-proofing-ready] .slashphoto-pick' );
+		await hearts.first().click();
+		await expect( hearts.first() ).toHaveAttribute( 'aria-pressed', 'true' );
+
+		// Round 40 px buttons despite theme button styles, inside the image.
+		const box = await hearts.first().boundingBox();
+		expect( Math.round( box.width ) ).toBe( 40 );
+		expect( Math.round( box.height ) ).toBe( 40 );
+		const image = await page.locator( '.slashphoto-item' ).first().locator( 'img' ).boundingBox();
+		expect( box.x ).toBeGreaterThanOrEqual( image.x );
+		expect( box.y ).toBeGreaterThanOrEqual( image.y );
+
+		await expect( page.locator( '.slashphoto-proofing' ) ).toBeVisible();
+		await page.screenshot( { path: testInfo.outputPath( `${ theme }-proofing.png` ), fullPage: true } );
+	} );
+}

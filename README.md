@@ -3,8 +3,8 @@
 Open-source photography galleries, client proofing and photo sales for
 WordPress. No subscriptions, no paid add-ons, no locked features.
 
-> **Status: early development (0.1.0-dev).** Galleries and panorama support
-> work; proofing and the shop are not built yet. Not ready for production.
+> **Status: early development (0.1.0-dev).** Galleries, panoramas, client
+> access and proofing work; the shop is not built yet. Not ready for production.
 
 ## Features
 
@@ -32,6 +32,13 @@ Working now:
   See [docs/security-and-privacy.md](docs/security-and-privacy.md).
 - **Watermarked previews** with protected originals: the full-resolution
   file cannot be derived from a preview URL.
+- **Proofing.** Clients mark favourites (in the grid or the lightbox), add a
+  note per image and send their selection with a message. One selection
+  covers a gallery and its sub-galleries, with an optional maximum. The
+  photographer gets an email and sees every selection with thumbnails, notes
+  and the file names to paste into Lightroom, and can reopen or delete it.
+  Visitors without an account keep favourites in their own browser only.
+  See [docs/proofing.md](docs/proofing.md).
 - **No visitor logging.** No IP addresses, analytics or third-party requests;
   terms acceptance is a signed cookie in the visitor's browser only.
 - **Gallery block** for placing any gallery on any page, with the same
@@ -41,7 +48,9 @@ Working now:
 
 Planned, in order:
 
-1. Proofing: favourites and selections without payment
+1. Full-size originals from the start: chunked uploads that are not capped
+   by PHP's upload limit, a display copy for every image, and originals
+   delivered only through signed download links
 2. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
    orders, receipts and secure expiring download links
 3. Import from Sunshine Photo Cart

@@ -15,13 +15,14 @@ Open-source photography galleries, client proofing and photo sales. No subscript
 
 SlashPhoto is a free, open-source plugin for photographers who want to show and sell their work from their own WordPress site.
 
-This is an early development version. Galleries and panorama support work; client proofing and the shop are in development.
+This is an early development version. Galleries, panoramas, client access and proofing work; the shop is in development.
 
 * Galleries and sub-galleries that use your theme's own layout, colors and fonts, in both block themes and classic themes.
 * 360° panoramas are detected automatically from camera and stitcher metadata, and are kept at high resolution.
 * Wide panoramas are shown across the full gallery width.
 * Client galleries: password, secret share links, selected client accounts, end dates and terms to accept, inherited by sub-galleries. Protected galleries and their images do not leak through the REST API, attachment pages, sitemaps, search or caches, and images get unguessable addresses.
 * Watermarked previews; originals are kept where preview addresses cannot lead to them.
+* Proofing: clients mark favourites, add notes and send their selection; you get an email and a list with file names for Lightroom. Visitors without an account keep favourites in their own browser only.
 * No visitor logging, no analytics, no third-party requests.
 * A gallery block to place any gallery on any page.
 * A lightbox for photos, and an interactive 360° viewer that is only downloaded when a visitor opens a 360° image.
@@ -64,3 +65,4 @@ No. Galleries, images and orders are kept when the plugin is removed.
 * Client access (password, clients, end date, terms) with leak protection.
 * Gallery block.
 * Secret share links, watermarks, protected originals.
+* Proofing: favourites, notes, selections sent to the photographer.

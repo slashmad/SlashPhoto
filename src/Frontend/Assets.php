@@ -24,6 +24,7 @@ final class Assets {
 	public const STYLE_HANDLE    = 'slashphoto-frontend';
 	public const LIGHTBOX_MODULE = '@slashphoto/lightbox';
 	public const VIEWER_MODULE   = '@slashphoto/panorama-viewer';
+	public const PROOFING_MODULE = '@slashphoto/proofing';
 
 	/**
 	 * Registers hooks.
@@ -33,6 +34,7 @@ final class Assets {
 		add_action( 'init', [ $this, 'register_assets' ], 5 );
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_filter( 'script_module_data_' . self::LIGHTBOX_MODULE, [ $this, 'lightbox_data' ] );
+		add_filter( 'script_module_data_' . self::PROOFING_MODULE, [ $this, 'proofing_data' ] );
 	}
 
 	/**
@@ -99,6 +101,13 @@ final class Assets {
 		);
 
 		wp_register_script_module(
+			self::PROOFING_MODULE,
+			SLASHPHOTO_URL . 'assets/js/proofing.js',
+			[],
+			self::version( 'assets/js/proofing.js' )
+		);
+
+		wp_register_script_module(
 			self::LIGHTBOX_MODULE,
 			SLASHPHOTO_URL . 'assets/js/lightbox.js',
 			[
@@ -136,6 +145,50 @@ final class Assets {
 					'viewer360'  => __( '360° panorama. Drag to look around.', 'slashphoto' ),
 					'noWebGL'    => __( 'Your browser cannot show 360° images. Showing the flat image instead.', 'slashphoto' ),
 					'fullscreen' => __( 'Fullscreen', 'slashphoto' ),
+				],
+			]
+		);
+	}
+
+	/**
+	 * Data passed to the proofing module. The REST nonce is only useful to
+	 * the logged-in user it was made for.
+	 *
+	 * @param array $data Existing data.
+	 * @return array
+	 */
+	public function proofing_data( $data ) {
+		$logged_in = is_user_logged_in();
+		return array_merge(
+			(array) $data,
+			[
+				'restUrl'  => esc_url_raw( rest_url( 'slashphoto/v1/selections/' ) ),
+				'nonce'    => $logged_in ? wp_create_nonce( 'wp_rest' ) : '',
+				'loggedIn' => $logged_in,
+				'loginUrl' => wp_login_url(),
+				'i18n'     => [
+					'select'        => __( 'Add to selection', 'slashphoto' ),
+					'deselect'      => __( 'Remove from selection', 'slashphoto' ),
+					/* translators: %d: number of selected images */
+					'count'         => __( '%d selected', 'slashphoto' ),
+					/* translators: 1: number of selected images, 2: maximum */
+					'countMax'      => __( '%1$d of %2$d selected', 'slashphoto' ),
+					/* translators: %d: number of favourites */
+					'localCount'    => __( 'Favourites: %d, saved in this browser only.', 'slashphoto' ),
+					'logIn'         => __( 'Log in to send them to the photographer', 'slashphoto' ),
+					'showSelected'  => __( 'Show only selected', 'slashphoto' ),
+					'send'          => __( 'Send selection…', 'slashphoto' ),
+					'sendNow'       => __( 'Send to the photographer', 'slashphoto' ),
+					'cancel'        => __( 'Cancel', 'slashphoto' ),
+					'message'       => __( 'Message to the photographer (optional)', 'slashphoto' ),
+					'sendHelp'      => __( 'After sending, the selection is locked. The photographer can open it again if you need to change it.', 'slashphoto' ),
+					/* translators: 1: number of images, 2: date */
+					'sent'          => __( 'Selection sent on %2$s (%1$d selected).', 'slashphoto' ),
+					'note'          => __( 'Note', 'slashphoto' ),
+					'noteLabel'     => __( 'Note for the photographer about this image', 'slashphoto' ),
+					'save'          => __( 'Save', 'slashphoto' ),
+					'error'         => __( 'Your selection could not be saved. Check your connection and try again.', 'slashphoto' ),
+					'selectionName' => __( 'Your selection', 'slashphoto' ),
 				],
 			]
 		);

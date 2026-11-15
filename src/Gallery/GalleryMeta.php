@@ -10,6 +10,7 @@ namespace SlashPhoto\Gallery;
 use SlashPhoto\Access\Access;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Media\Watermark;
+use SlashPhoto\Proofing\Proofing;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -69,6 +70,44 @@ final class GalleryMeta {
 					'schema' => [
 						'type'    => 'string',
 						'enum'    => [ '', 'on', 'off' ],
+						'context' => [ 'edit' ],
+					],
+				],
+			]
+		);
+
+		register_post_meta(
+			PostType::POST_TYPE,
+			Proofing::META,
+			[
+				'type'              => 'string',
+				'single'            => true,
+				'default'           => '',
+				'sanitize_callback' => static fn( $value ): string => in_array( $value, [ 'on', 'off' ], true ) ? $value : '',
+				'auth_callback'     => $auth,
+				'show_in_rest'      => [
+					'schema' => [
+						'type'    => 'string',
+						'enum'    => [ '', 'on', 'off' ],
+						'context' => [ 'edit' ],
+					],
+				],
+			]
+		);
+
+		register_post_meta(
+			PostType::POST_TYPE,
+			Proofing::META_MAX,
+			[
+				'type'              => 'integer',
+				'single'            => true,
+				'default'           => 0,
+				'sanitize_callback' => static fn( $value ): int => min( 100000, absint( $value ) ),
+				'auth_callback'     => $auth,
+				'show_in_rest'      => [
+					'schema' => [
+						'type'    => 'integer',
+						'minimum' => 0,
 						'context' => [ 'edit' ],
 					],
 				],

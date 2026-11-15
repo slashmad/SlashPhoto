@@ -23,6 +23,7 @@ use SlashPhoto\Access\Terms;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Gallery\Uploads;
 use SlashPhoto\Media\Watermark;
+use SlashPhoto\Proofing\Proofing;
 use SlashPhoto\Settings;
 use SlashPhoto\Tests\Integration\TestImages;
 
@@ -59,6 +60,56 @@ function slashphoto_seed_file( string $path, string $name, int $parent_id ): int
 		WP_CLI::error( $id->get_error_message() );
 	}
 	return (int) $id;
+}
+
+/**
+ * Deletes a gallery, its sub-galleries and their images.
+ *
+ * @param int $gallery_id Gallery ID.
+ */
+function slashphoto_seed_delete_gallery( int $gallery_id ): void {
+	$children = get_posts(
+		[
+			'post_type'   => [ PostType::POST_TYPE, 'attachment' ],
+			'post_status' => 'any',
+			'post_parent' => $gallery_id,
+			'numberposts' => -1,
+			'fields'      => 'ids',
+		]
+	);
+	foreach ( $children as $child_id ) {
+		if ( 'attachment' === get_post_type( $child_id ) ) {
+			wp_delete_attachment( $child_id, true );
+		} else {
+			slashphoto_seed_delete_gallery( $child_id );
+		}
+	}
+	wp_delete_post( $gallery_id, true );
+}
+
+// Re-running the seed replaces the demo content instead of duplicating it.
+foreach ( get_posts(
+	[
+		'post_type'   => PostType::POST_TYPE,
+		'post_status' => 'any',
+		'post_parent' => 0,
+		'numberposts' => -1,
+	]
+) as $slashphoto_old ) {
+	if ( str_starts_with( $slashphoto_old->post_name, 'demo-' ) ) {
+		slashphoto_seed_delete_gallery( $slashphoto_old->ID );
+	}
+}
+foreach ( get_posts(
+	[
+		'post_type'   => 'attachment',
+		'post_status' => 'any',
+		'title'       => 'SlashPhoto demo watermark',
+		'numberposts' => -1,
+		'fields'      => 'ids',
+	]
+) as $slashphoto_old ) {
+	wp_delete_attachment( $slashphoto_old, true );
 }
 
 $slashphoto_parent = wp_insert_post(
@@ -179,8 +230,46 @@ update_post_meta( $slashphoto_linked, Access::META_MODE, Access::MODE_LINK );
 slashphoto_seed_image( 'linked-1', 1200, 800, $slashphoto_linked );
 slashphoto_seed_image( 'linked-2', 1200, 800, $slashphoto_linked );
 
+// Proofing, with a sub-gallery sharing one selection. Development-only
+// client account: demo-client / demo-client.
+$slashphoto_client   = get_user_by( 'login', 'demo-client' );
+$slashphoto_client   = $slashphoto_client ? $slashphoto_client->ID : wp_insert_user(
+	[
+		'user_login'   => 'demo-client',
+		'user_pass'    => 'demo-client',
+		'user_email'   => 'demo-client@example.org',
+		'display_name' => 'Demo Client',
+		'role'         => 'slashphoto_client',
+	]
+);
+$slashphoto_proofing = wp_insert_post(
+	[
+		'post_type'    => PostType::POST_TYPE,
+		'post_status'  => 'publish',
+		'post_title'   => 'Demo: Choose your favourites',
+		'post_name'    => 'demo-proofing',
+		'post_content' => '<!-- wp:paragraph --><p>Mark the photos you want and send your selection.</p><!-- /wp:paragraph -->',
+	]
+);
+update_post_meta( $slashphoto_proofing, Proofing::META, 'on' );
+$slashphoto_proofing_child = wp_insert_post(
+	[
+		'post_type'   => PostType::POST_TYPE,
+		'post_status' => 'publish',
+		'post_title'  => 'Getting ready',
+		'post_name'   => 'getting-ready',
+		'post_parent' => $slashphoto_proofing,
+	]
+);
+foreach ( range( 1, 4 ) as $slashphoto_n ) {
+	slashphoto_seed_image( "proof-{$slashphoto_n}", 1200, 800, $slashphoto_proofing );
+}
+slashphoto_seed_image( 'ready-1', 1200, 800, $slashphoto_proofing_child );
+slashphoto_seed_image( 'ready-2', 800, 1200, $slashphoto_proofing_child );
+
 WP_CLI::success( 'Demo gallery: ' . get_permalink( $slashphoto_parent ) );
 WP_CLI::success( 'Watermarked gallery: ' . get_permalink( $slashphoto_watermarked ) );
 WP_CLI::success( 'Secret link: ' . Access::share_url( get_post( $slashphoto_linked ) ) );
 WP_CLI::success( 'Password gallery (password "demo"): ' . get_permalink( $slashphoto_password ) );
 WP_CLI::success( 'Terms gallery: ' . get_permalink( $slashphoto_terms ) );
+WP_CLI::success( 'Proofing gallery (log in as demo-client / demo-client): ' . get_permalink( $slashphoto_proofing ) );

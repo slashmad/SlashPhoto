@@ -27,6 +27,8 @@
 	--slashphoto-placeholder: color-mix(in srgb, currentColor 8%, transparent);
 	--slashphoto-badge-bg: rgb(0 0 0 / 0.65);
 	--slashphoto-badge-fg: #fff;
+	--slashphoto-accent: #e0245e;
+	--slashphoto-surface: var(--wp--preset--color--base, Canvas);
 
 	margin-block: var(--wp--style--block-gap, 1.5rem);
 }
@@ -57,6 +59,7 @@
 }
 
 .slashphoto .slashphoto-figure {
+	position: relative;
 	max-width: none;
 	margin: 0;
 }
@@ -136,6 +139,158 @@
 }
 
 /*
+ * Proofing: favourite buttons on the images and the selection bar.
+ * Buttons that send something carry the theme's .wp-element-button class.
+ */
+
+.slashphoto .slashphoto-item[hidden] {
+	display: none;
+}
+
+.slashphoto .slashphoto-pick {
+	position: absolute;
+	inset-block-start: 0.5rem;
+	inset-inline-start: 0.5rem;
+	z-index: 1;
+	display: inline-grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	min-width: 0;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	box-shadow: none;
+	line-height: 1;
+	cursor: pointer;
+}
+
+/* Colors at layout specificity: most themes style every <button>. Tune with the custom properties. */
+.slashphoto .slashphoto-pick,
+.slashphoto .slashphoto-pick:hover,
+.slashphoto .slashphoto-pick:focus {
+	background: var(--slashphoto-badge-bg);
+	color: var(--slashphoto-badge-fg);
+}
+
+.slashphoto .slashphoto-pick[aria-pressed="true"],
+.slashphoto .slashphoto-pick[aria-pressed="true"]:hover,
+.slashphoto .slashphoto-pick[aria-pressed="true"]:focus {
+	color: var(--slashphoto-accent);
+}
+
+/* Some themes draw focus rings on :focus, also after taps and clicks. */
+.slashphoto .slashphoto-pick:focus:not(:focus-visible) {
+	outline: none;
+}
+
+.slashphoto-pick path,
+.slashphoto-lightbox__pick path {
+	fill: none;
+}
+
+.slashphoto-pick[aria-pressed="true"] path,
+.slashphoto-lightbox__pick[aria-pressed="true"] path {
+	fill: currentColor;
+}
+
+:where(.slashphoto-pick:disabled) {
+	cursor: default;
+}
+
+:where(.slashphoto-pick:focus-visible) {
+	outline: 2px solid var(--slashphoto-badge-fg);
+	outline-offset: 2px;
+}
+
+:where(.slashphoto-item.is-selected .slashphoto-image) {
+	outline: 3px solid var(--slashphoto-accent);
+	outline-offset: -3px;
+}
+
+/* With a mouse, unselected hearts appear on hover; touch screens always show them. */
+@media (hover: hover) {
+	:where(.slashphoto-item:not(.is-selected) .slashphoto-pick:not(:focus-visible)) {
+		opacity: 0;
+	}
+
+	:where(.slashphoto-item:hover .slashphoto-pick, .slashphoto-gallery[data-slashphoto-proofing-ready="local"] .slashphoto-pick) {
+		opacity: 1;
+	}
+}
+
+.slashphoto .slashphoto-proofing {
+	position: sticky;
+	inset-block-end: 0;
+	z-index: 5;
+	margin: 0 0 var(--slashphoto-gap);
+	padding: 0.75rem 1rem;
+}
+
+.slashphoto .slashphoto-proofing.is-empty {
+	position: static;
+}
+
+:where(.slashphoto-proofing) {
+	border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+	border-radius: var(--slashphoto-radius);
+	background: var(--slashphoto-surface);
+}
+
+.slashphoto .slashphoto-proofing__row,
+.slashphoto .slashphoto-proofing__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+}
+
+.slashphoto .slashphoto-proofing__row {
+	justify-content: space-between;
+}
+
+.slashphoto .slashphoto-proofing__status,
+.slashphoto .slashphoto-proofing__help,
+.slashphoto .slashphoto-proofing__error {
+	margin: 0;
+}
+
+.slashphoto .slashphoto-proofing [hidden] {
+	display: none;
+}
+
+.slashphoto .slashphoto-proofing__form {
+	display: grid;
+	gap: 0.5rem;
+	margin-block-start: 0.75rem;
+}
+
+.slashphoto .slashphoto-proofing__message {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: none;
+}
+
+:where(.slashphoto-proofing__help, .slashphoto-proofing__status) {
+	font-size: var(--slashphoto-caption-size);
+}
+
+:where(.slashphoto-proofing__help) {
+	color: var(--slashphoto-muted);
+}
+
+:where(.slashphoto-proofing__error) {
+	margin-block-start: 0.5rem;
+	color: #b32d2e;
+}
+
+:where(.slashphoto-proofing__filter[aria-pressed="true"]) {
+	text-decoration: underline;
+}
+
+/*
  * Lightbox.
  *
  * The dialog lives in the browser's top layer, outside the theme's layout,
@@ -186,6 +341,69 @@ html.slashphoto-lightbox-open {
 	gap: 1rem;
 	padding: 0.5rem 0.5rem 0.5rem 1rem;
 	z-index: 2;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__tools {
+	display: flex;
+	gap: 0.25rem;
+	margin-inline-start: auto;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__note {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-end: 4.5rem;
+	z-index: 4;
+	display: grid;
+	gap: 0.5rem;
+	width: min(32rem, calc(100% - 2rem));
+	margin: 0 auto;
+	padding: 1rem;
+	border-radius: 8px;
+	background: rgb(32 32 32);
+	color: var(--slashphoto-lightbox-fg);
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__note textarea {
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0;
+	padding: 0.5rem;
+	border: 1px solid rgb(255 255 255 / 0.3);
+	border-radius: 4px;
+	background: rgb(12 12 12);
+	color: inherit;
+	font: inherit;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__note-actions {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__note-actions button {
+	margin: 0;
+	padding: 0.4rem 0.9rem;
+	border: 1px solid rgb(255 255 255 / 0.4);
+	border-radius: 4px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__note-actions .slashphoto-lightbox__note-save {
+	background: var(--slashphoto-lightbox-fg);
+	color: var(--slashphoto-lightbox-bg);
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__pick[aria-pressed="true"] {
+	color: #ff4d7d;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__button:disabled {
+	opacity: 0.5;
+	cursor: default;
 }
 
 .slashphoto-lightbox .slashphoto-lightbox__counter {

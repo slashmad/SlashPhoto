@@ -101,6 +101,12 @@ Known limits:
   contains nothing about the visitor, and nothing is stored on the server.
   Changing the wording asks everyone to accept again.
 - WordPress' own password cookie (`wp-postpass_…`) is used for passwords.
+- Proofing: favourites of visitors who are not logged in stay in the
+  browser's localStorage (`slashphoto-favourites-<gallery ID>`) and are never
+  sent. Logged-in clients' selections store only what they choose (images,
+  notes, a message, the time they sent it) in a private post owned by their
+  account. They are deleted with the account or the gallery and covered by
+  the export and erase tools. See [proofing.md](proofing.md).
 - Client accounts are ordinary WordPress users; WordPress' personal data
   export and erase tools apply to them.
 - SlashPhoto adds suggested text for the site's privacy policy under

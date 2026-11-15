@@ -12,6 +12,7 @@ use SlashPhoto\Access\AccessGuard;
 use SlashPhoto\Access\ShareLinks;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Admin\AccessSettings;
+use SlashPhoto\Admin\SelectionsBox;
 use SlashPhoto\Admin\SettingsPage;
 use SlashPhoto\Blocks\GalleryBlock;
 use SlashPhoto\Frontend\Assets;
@@ -25,6 +26,10 @@ use SlashPhoto\Gallery\Uploads;
 use SlashPhoto\Media\Originals;
 use SlashPhoto\Media\Panorama;
 use SlashPhoto\Media\Watermark;
+use SlashPhoto\Proofing\Notifications;
+use SlashPhoto\Proofing\Proofing;
+use SlashPhoto\Proofing\Selections;
+use SlashPhoto\Proofing\SelectionsRest;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -60,6 +65,13 @@ final class Plugin {
 	 * @var Access
 	 */
 	private Access $access;
+
+	/**
+	 * Proofing rules.
+	 *
+	 * @var Proofing
+	 */
+	private Proofing $proofing;
 
 	/**
 	 * Gallery renderer.
@@ -108,11 +120,16 @@ final class Plugin {
 		( new Originals() )->register_hooks();
 		( new Watermark( $this->access ) )->register_hooks();
 
+		$this->proofing = new Proofing( $this->access, $terms );
+		( new Selections() )->register_hooks();
+		( new SelectionsRest( $this->proofing ) )->register_hooks();
+		( new Notifications() )->register_hooks();
+
 		( new PostType() )->register_hooks();
 		( new GalleryMeta() )->register_hooks();
 		( new Uploads() )->register_hooks();
 
-		$this->renderer = new GalleryRenderer( $this->templates, new GalleryRepository(), $panorama, $this->access, $terms );
+		$this->renderer = new GalleryRenderer( $this->templates, new GalleryRepository(), $panorama, $this->access, $terms, $this->proofing );
 		( new ThemeCompat( $this->renderer ) )->register_hooks();
 		( new Assets() )->register_hooks();
 
@@ -120,6 +137,7 @@ final class Plugin {
 		$this->gallery_block->register_hooks();
 
 		( new AccessSettings() )->register_hooks();
+		( new SelectionsBox( $this->proofing ) )->register_hooks();
 		( new SettingsPage() )->register_hooks();
 		( new Privacy() )->register_hooks();
 
@@ -145,6 +163,13 @@ final class Plugin {
 	 */
 	public function access(): Access {
 		return $this->access;
+	}
+
+	/**
+	 * Returns the proofing rules.
+	 */
+	public function proofing(): Proofing {
+		return $this->proofing;
 	}
 
 	/**

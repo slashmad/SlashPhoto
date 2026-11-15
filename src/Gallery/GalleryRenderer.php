@@ -9,8 +9,10 @@ namespace SlashPhoto\Gallery;
 
 use SlashPhoto\Access\Access;
 use SlashPhoto\Access\Terms;
+use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Frontend\TemplateLoader;
 use SlashPhoto\Media\Panorama;
+use SlashPhoto\Proofing\Proofing;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -57,6 +59,13 @@ final class GalleryRenderer {
 	private Terms $terms;
 
 	/**
+	 * Proofing rules.
+	 *
+	 * @var Proofing
+	 */
+	private Proofing $proofing;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param TemplateLoader    $templates Template loader.
@@ -64,13 +73,15 @@ final class GalleryRenderer {
 	 * @param Panorama          $panorama  Panorama detection.
 	 * @param Access            $access    Access rules.
 	 * @param Terms             $terms     Terms gate.
+	 * @param Proofing          $proofing  Proofing rules.
 	 */
-	public function __construct( TemplateLoader $templates, GalleryRepository $galleries, Panorama $panorama, Access $access, Terms $terms ) {
+	public function __construct( TemplateLoader $templates, GalleryRepository $galleries, Panorama $panorama, Access $access, Terms $terms, Proofing $proofing ) {
 		$this->templates = $templates;
 		$this->galleries = $galleries;
 		$this->panorama  = $panorama;
 		$this->access    = $access;
 		$this->terms     = $terms;
+		$this->proofing  = $proofing;
 	}
 
 	/**
@@ -111,14 +122,21 @@ final class GalleryRenderer {
 			}
 		}
 
+		$items = $this->items( $gallery->ID );
+		$root  = $items ? $this->proofing->root( $gallery ) : null;
+		if ( $root ) {
+			wp_enqueue_script_module( Assets::PROOFING_MODULE );
+		}
+
 		return $this->templates->render(
 			'gallery.php',
 			[
 				'gallery'         => $gallery,
 				'children'        => $children,
 				'locked_children' => $locked,
-				'items'           => $this->items( $gallery->ID ),
+				'items'           => $items,
 				'align'           => $align,
+				'proofing'        => $root ? $root->ID : 0,
 			]
 		);
 	}

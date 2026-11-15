@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-15T13:00:59+00:00\n"
+"POT-Creation-Date: 2026-11-15T17:01:47+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: slashphoto\n"
@@ -43,77 +43,143 @@ msgstr ""
 msgid "The form has expired. Please go back, reload the page and try again."
 msgstr ""
 
-#: src/Admin/AccessSettings.php:61
-#: assets/js/editor-access.js:122
+#: src/Admin/AccessSettings.php:62
+#: assets/js/editor-access.js:124
 msgid "Access"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:82
-#: assets/js/editor-access.js:124
+#: src/Admin/AccessSettings.php:83
+#: assets/js/editor-access.js:126
 msgid "Who can view this gallery"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:84
-#: assets/js/editor-access.js:127
+#: src/Admin/AccessSettings.php:85
+#: assets/js/editor-access.js:129
 msgid "Everyone with the link"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:85
-#: assets/js/editor-access.js:128
+#: src/Admin/AccessSettings.php:86
+#: assets/js/editor-access.js:130
 msgid "Only people with the secret link"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:86
-#: assets/js/editor-access.js:129
+#: src/Admin/AccessSettings.php:87
+#: assets/js/editor-access.js:131
 msgid "Only selected clients (log-in required)"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:91
-#: assets/js/editor-access.js:60
+#: src/Admin/AccessSettings.php:92
+#: assets/js/editor-access.js:62
 msgid "Secret link"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:93
+#: src/Admin/AccessSettings.php:94
 msgid "Create a new link (the current one stops working)"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:97
+#: src/Admin/AccessSettings.php:98
 #: src/Admin/SettingsPage.php:92
-#: assets/js/editor-access.js:170
+#: assets/js/editor-access.js:172
 msgid "Watermark"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:100
-#: assets/js/editor-access.js:174
+#: src/Admin/AccessSettings.php:101
+#: assets/js/editor-access.js:176
 msgid "Site default or parent gallery"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:101
-#: assets/js/editor-access.js:175
+#: src/Admin/AccessSettings.php:102
+#: src/Admin/AccessSettings.php:111
+#: assets/js/editor-access.js:177
+#: assets/js/editor-access.js:216
 msgid "On"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:102
-#: assets/js/editor-access.js:176
+#: src/Admin/AccessSettings.php:103
+#: src/Admin/AccessSettings.php:112
+#: assets/js/editor-access.js:178
+#: assets/js/editor-access.js:215
 msgid "Off"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:106
-msgid "Clients (user names or emails, comma separated)"
+#: src/Admin/AccessSettings.php:107
+msgid "Client selections (proofing)"
 msgstr ""
 
 #: src/Admin/AccessSettings.php:110
-#: assets/js/editor-access.js:162
-msgid "Available until"
+msgid "Same as parent gallery (off at the top level)"
 msgstr ""
 
 #: src/Admin/AccessSettings.php:114
-#: assets/js/editor-access.js:183
+msgid "Maximum images per selection (0 = no limit)"
+msgstr ""
+
+#: src/Admin/AccessSettings.php:118
+msgid "Clients (user names or emails, comma separated)"
+msgstr ""
+
+#: src/Admin/AccessSettings.php:122
+#: assets/js/editor-access.js:164
+msgid "Available until"
+msgstr ""
+
+#: src/Admin/AccessSettings.php:126
+#: assets/js/editor-access.js:185
 msgid "Terms to accept before viewing"
 msgstr ""
 
-#: src/Admin/AccessSettings.php:117
+#: src/Admin/AccessSettings.php:129
 msgid "Set a password under Visibility. Sub-galleries also follow the rules of the galleries above them."
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:59
+#: src/Proofing/Selections.php:56
+#: assets/js/editor-access.js:209
+msgid "Client selections"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:70
+msgid "No client has chosen any images yet. Clients choose favourites while logged in and send them to you from the gallery page."
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:83
+msgid "Deleted user"
+msgstr ""
+
+#. translators: 1: number of images, 2: date and time
+#: src/Admin/SelectionsBox.php:93
+#, php-format
+msgid "%1$d image, sent %2$s"
+msgid_plural "%1$d images, sent %2$s"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of images
+#: src/Admin/SelectionsBox.php:95
+#, php-format
+msgid "%d image, still choosing"
+msgid_plural "%d images, still choosing"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Admin/SelectionsBox.php:115
+msgid "File names (for a catalogue filter such as Lightroom):"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:121
+msgid "Let the client change it"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:123
+msgid "Delete this selection? This cannot be undone."
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:123
+msgid "Delete selection"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:160
+msgid "You are not allowed to change this selection."
 msgstr ""
 
 #: src/Admin/SettingsPage.php:37
@@ -185,45 +251,125 @@ msgstr ""
 msgid "Opacity (%)"
 msgstr ""
 
-#: src/Frontend/Assets.php:129
+#: src/Frontend/Assets.php:138
 msgid "Image viewer"
 msgstr ""
 
-#: src/Frontend/Assets.php:130
+#: src/Frontend/Assets.php:139
 msgid "Close"
 msgstr ""
 
-#: src/Frontend/Assets.php:131
+#: src/Frontend/Assets.php:140
 msgid "Previous image"
 msgstr ""
 
-#: src/Frontend/Assets.php:132
+#: src/Frontend/Assets.php:141
 msgid "Next image"
 msgstr ""
 
 #. translators: 1: current image number, 2: total number of images
-#: src/Frontend/Assets.php:134
+#: src/Frontend/Assets.php:143
 #, php-format
 msgid "%1$d of %2$d"
 msgstr ""
 
-#: src/Frontend/Assets.php:135
+#: src/Frontend/Assets.php:144
 msgid "Loading…"
 msgstr ""
 
-#: src/Frontend/Assets.php:136
+#: src/Frontend/Assets.php:145
 msgid "360° panorama. Drag to look around."
 msgstr ""
 
-#: src/Frontend/Assets.php:137
+#: src/Frontend/Assets.php:146
 msgid "Your browser cannot show 360° images. Showing the flat image instead."
 msgstr ""
 
-#: src/Frontend/Assets.php:138
+#: src/Frontend/Assets.php:147
 msgid "Fullscreen"
 msgstr ""
 
-#: src/Gallery/GalleryMeta.php:163
+#: src/Frontend/Assets.php:170
+msgid "Add to selection"
+msgstr ""
+
+#: src/Frontend/Assets.php:171
+msgid "Remove from selection"
+msgstr ""
+
+#. translators: %d: number of selected images
+#: src/Frontend/Assets.php:173
+#, php-format
+msgid "%d selected"
+msgstr ""
+
+#. translators: 1: number of selected images, 2: maximum
+#: src/Frontend/Assets.php:175
+#, php-format
+msgid "%1$d of %2$d selected"
+msgstr ""
+
+#. translators: %d: number of favourites
+#: src/Frontend/Assets.php:177
+#, php-format
+msgid "Favourites: %d, saved in this browser only."
+msgstr ""
+
+#: src/Frontend/Assets.php:178
+msgid "Log in to send them to the photographer"
+msgstr ""
+
+#: src/Frontend/Assets.php:179
+msgid "Show only selected"
+msgstr ""
+
+#: src/Frontend/Assets.php:180
+msgid "Send selection…"
+msgstr ""
+
+#: src/Frontend/Assets.php:181
+msgid "Send to the photographer"
+msgstr ""
+
+#: src/Frontend/Assets.php:182
+msgid "Cancel"
+msgstr ""
+
+#: src/Frontend/Assets.php:183
+msgid "Message to the photographer (optional)"
+msgstr ""
+
+#: src/Frontend/Assets.php:184
+msgid "After sending, the selection is locked. The photographer can open it again if you need to change it."
+msgstr ""
+
+#. translators: 1: number of images, 2: date
+#: src/Frontend/Assets.php:186
+#, php-format
+msgid "Selection sent on %2$s (%1$d selected)."
+msgstr ""
+
+#: src/Frontend/Assets.php:187
+msgid "Note"
+msgstr ""
+
+#: src/Frontend/Assets.php:188
+msgid "Note for the photographer about this image"
+msgstr ""
+
+#: src/Frontend/Assets.php:189
+msgid "Save"
+msgstr ""
+
+#: src/Frontend/Assets.php:190
+msgid "Your selection could not be saved. Check your connection and try again."
+msgstr ""
+
+#: src/Frontend/Assets.php:191
+msgid "Your selection"
+msgstr ""
+
+#: src/Gallery/GalleryMeta.php:202
 msgid "Photo client"
 msgstr ""
 
@@ -237,6 +383,7 @@ msgid "Galleries"
 msgstr ""
 
 #: src/Gallery/PostType.php:50
+#: src/Privacy.php:99
 #: blocks/gallery/index.js:46
 #: blocks/gallery/index.js:71
 msgid "Gallery"
@@ -305,28 +452,109 @@ msgstr ""
 msgid "Panorama"
 msgstr ""
 
-#: src/Privacy.php:32
+#: src/Privacy.php:39
 msgid "Suggested text from SlashPhoto. It describes the plugin as shipped; review it if you add other plugins."
 msgstr ""
 
-#: src/Privacy.php:33
+#: src/Privacy.php:40
 msgid "Our photo galleries do not log visits, IP addresses or browser details, do not use analytics or tracking, and do not load anything from other websites."
 msgstr ""
 
-#: src/Privacy.php:34
+#: src/Privacy.php:41
 msgid "When you open a password-protected gallery, WordPress stores a cookie (wp-postpass) containing a scrambled form of the password, for up to 10 days."
 msgstr ""
 
-#: src/Privacy.php:35
+#: src/Privacy.php:42
 msgid "When you accept a gallery’s terms, a cookie (slashphoto_terms_…) remembers this in your browser for 30 days. It contains only a signature of the gallery and the terms wording; nothing about you is stored on our server."
 msgstr ""
 
-#: src/Privacy.php:36
+#: src/Privacy.php:43
 msgid "When you open a gallery through a private link, a cookie (slashphoto_link_…) remembers this in your browser for 30 days. It contains only a signature of the gallery and the link; nothing about you is stored on our server."
 msgstr ""
 
-#: src/Privacy.php:37
+#: src/Privacy.php:44
+msgid "If you mark favourites without being logged in, they are kept only in your own browser (local storage) and never sent to us."
+msgstr ""
+
+#: src/Privacy.php:45
+msgid "If you choose images while logged in, we store your choice, any notes you write and the message you send with it, together with your account, so we can deliver your photos. It is deleted with your account or when we delete the gallery, and you can ask for a copy or for it to be erased."
+msgstr ""
+
+#: src/Privacy.php:46
 msgid "If we give you a client account, your name, email address and the galleries you may see are stored in that account until you ask us to delete it."
+msgstr ""
+
+#: src/Privacy.php:58
+#: src/Privacy.php:72
+#: src/Privacy.php:95
+msgid "Photo selections"
+msgstr ""
+
+#: src/Privacy.php:103
+msgid "Images"
+msgstr ""
+
+#: src/Privacy.php:107
+msgid "Message"
+msgstr ""
+
+#: src/Privacy.php:111
+msgid "Sent"
+msgstr ""
+
+#: src/Proofing/Notifications.php:52
+msgid "A client"
+msgstr ""
+
+#. translators: 1: site name, 2: gallery title
+#: src/Proofing/Notifications.php:59
+#, php-format
+msgid "[%1$s] New selection for %2$s"
+msgstr ""
+
+#. translators: 1: client name, 2: number of images, 3: gallery title
+#: src/Proofing/Notifications.php:63
+#, php-format
+msgid "%1$s has sent a selection of %2$d image from \"%3$s\"."
+msgid_plural "%1$s has sent a selection of %2$d images from \"%3$s\"."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Proofing/Notifications.php:69
+msgid "Message:"
+msgstr ""
+
+#: src/Proofing/Notifications.php:71
+msgid "See the selection and the file names:"
+msgstr ""
+
+#: src/Proofing/SelectionsRest.php:139
+msgid "Log in to save your selection."
+msgstr ""
+
+#: src/Proofing/SelectionsRest.php:174
+#: src/Proofing/SelectionsRest.php:223
+msgid "Your selection could not be saved."
+msgstr ""
+
+#. translators: %d: maximum number of images
+#: src/Proofing/SelectionsRest.php:187
+#, php-format
+msgid "You can choose at most %d image."
+msgid_plural "You can choose at most %d images."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Proofing/SelectionsRest.php:248
+msgid "Choose at least one image first."
+msgstr ""
+
+#: src/Proofing/SelectionsRest.php:314
+msgid "Gallery not found."
+msgstr ""
+
+#: src/Proofing/SelectionsRest.php:321
+msgid "Your selection has been sent. Ask the photographer if you want to change it."
 msgstr ""
 
 #: templates/access-notice.php:22
@@ -357,12 +585,12 @@ msgstr ""
 msgid "Your account does not have access to this gallery. Please contact the photographer if you think this is a mistake."
 msgstr ""
 
-#: templates/gallery.php:81
+#: templates/gallery.php:83
 msgctxt "panorama badge"
 msgid "360°"
 msgstr ""
 
-#: templates/gallery.php:92
+#: templates/gallery.php:94
 msgid "This gallery has no images yet."
 msgstr ""
 
@@ -382,52 +610,84 @@ msgstr ""
 msgid "Your acceptance is remembered only in a cookie in this browser. Nothing about you is stored on this site."
 msgstr ""
 
-#: assets/js/editor-access.js:36
+#: assets/js/editor-access.js:38
 msgid "Save the gallery to create its secret link."
 msgstr ""
 
-#: assets/js/editor-access.js:47
+#: assets/js/editor-access.js:49
 msgid "Create a new link? The current link stops working, also for everyone who already opened it."
 msgstr ""
 
-#: assets/js/editor-access.js:71
+#: assets/js/editor-access.js:73
 msgid "Copied"
 msgstr ""
 
-#: assets/js/editor-access.js:71
+#: assets/js/editor-access.js:73
 msgid "Copy link"
 msgstr ""
 
-#: assets/js/editor-access.js:72
+#: assets/js/editor-access.js:74
 msgid "New link"
 msgstr ""
 
-#: assets/js/editor-access.js:138
+#: assets/js/editor-access.js:140
 msgid "Clients"
 msgstr ""
 
-#: assets/js/editor-access.js:157
+#: assets/js/editor-access.js:159
 msgid "Password protected. Change it under Status → Visibility."
 msgstr ""
 
-#: assets/js/editor-access.js:158
+#: assets/js/editor-access.js:160
 msgid "No password. You can add one under Status → Visibility."
 msgstr ""
 
-#: assets/js/editor-access.js:163
+#: assets/js/editor-access.js:165
 msgid "After this day only you can see the gallery. Leave empty for no end date."
 msgstr ""
 
-#: assets/js/editor-access.js:171
+#: assets/js/editor-access.js:173
 msgid "Applies to images uploaded after the change. Originals are never changed."
 msgstr ""
 
-#: assets/js/editor-access.js:184
+#: assets/js/editor-access.js:186
 msgid "Optional. Acceptance is remembered only in a cookie in the visitor’s browser; nothing is logged."
 msgstr ""
 
-#: assets/js/editor-access.js:190
+#: assets/js/editor-access.js:192
 msgid "This is a sub-gallery: the password, client list, secret link, end date and terms of the galleries above it also apply."
+msgstr ""
+
+#: assets/js/editor-access.js:211
+msgid "Let clients choose favourites"
+msgstr ""
+
+#: assets/js/editor-access.js:212
+msgid "Logged-in clients mark images and send their selection to you. Visitors without an account keep favourites in their own browser only."
+msgstr ""
+
+#: assets/js/editor-access.js:215
+msgid "Same as parent gallery"
+msgstr ""
+
+#: assets/js/editor-access.js:216
+msgid "On, as a separate selection"
+msgstr ""
+
+#: assets/js/editor-access.js:217
+msgid "Off for this gallery"
+msgstr ""
+
+#: assets/js/editor-access.js:227
+msgid "Maximum number of images"
+msgstr ""
+
+#: assets/js/editor-access.js:228
+msgid "0 means no limit. Applies to the whole selection, including sub-galleries."
+msgstr ""
+
+#: assets/js/editor-access.js:235
+msgid "Sent selections appear in the “Client selections” box at the bottom of the editor (Meta Boxes). You also get an email."
 msgstr ""
 
 #: blocks/gallery/index.js:36

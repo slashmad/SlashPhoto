@@ -23,6 +23,8 @@
 		expires: '_slashphoto_expires',
 		terms: '_slashphoto_terms',
 		watermark: '_slashphoto_watermark',
+		proofing: '_slashphoto_proofing',
+		proofingMax: '_slashphoto_proofing_max',
 	};
 
 	function ShareLink( { postId, savedMode } ) {
@@ -191,5 +193,49 @@
 		);
 	}
 
+	function ProofingPanel() {
+		const postType = useSelect( ( select ) => select( 'core/editor' ).getCurrentPostType(), [] );
+		const parent = useSelect( ( select ) => select( 'core/editor' ).getEditedPostAttribute( 'parent' ), [] );
+		const [ meta, setMeta ] = useEntityProp( 'postType', POST_TYPE, 'meta' );
+
+		if ( POST_TYPE !== postType || ! meta ) {
+			return null;
+		}
+		const value = meta[ META.proofing ] || '';
+		const update = ( key, next ) => setMeta( { ...meta, [ key ]: next } );
+
+		return el(
+			PluginDocumentSettingPanel,
+			{ name: 'slashphoto-proofing', title: __( 'Client selections', 'slashphoto' ), className: 'slashphoto-proofing-panel' },
+			el( SelectControl, {
+				label: __( 'Let clients choose favourites', 'slashphoto' ),
+				help: __( 'Logged-in clients mark images and send their selection to you. Visitors without an account keep favourites in their own browser only.', 'slashphoto' ),
+				value,
+				options: [
+					{ value: '', label: parent > 0 ? __( 'Same as parent gallery', 'slashphoto' ) : __( 'Off', 'slashphoto' ) },
+					{ value: 'on', label: parent > 0 ? __( 'On, as a separate selection', 'slashphoto' ) : __( 'On', 'slashphoto' ) },
+					{ value: 'off', label: __( 'Off for this gallery', 'slashphoto' ) },
+				].filter( ( option, index, all ) => parent > 0 || index < 2 ),
+				onChange: ( next ) => update( META.proofing, next ),
+				__next40pxDefaultSize: true,
+				__nextHasNoMarginBottom: true,
+			} ),
+			'on' === value &&
+				el( TextControl, {
+					type: 'number',
+					min: 0,
+					label: __( 'Maximum number of images', 'slashphoto' ),
+					help: __( '0 means no limit. Applies to the whole selection, including sub-galleries.', 'slashphoto' ),
+					value: String( meta[ META.proofingMax ] || 0 ),
+					onChange: ( next ) => update( META.proofingMax, Math.max( 0, parseInt( next, 10 ) || 0 ) ),
+					__next40pxDefaultSize: true,
+					__nextHasNoMarginBottom: true,
+				} ),
+			'on' === value &&
+				el( 'p', { className: 'components-base-control__help' }, __( 'Sent selections appear in the “Client selections” box at the bottom of the editor (Meta Boxes). You also get an email.', 'slashphoto' ) )
+		);
+	}
+
+	registerPlugin( 'slashphoto-proofing', { render: ProofingPanel } );
 	registerPlugin( 'slashphoto-access', { render: AccessPanel } );
 } )( window.wp );

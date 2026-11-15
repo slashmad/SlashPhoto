@@ -14,6 +14,7 @@
  *     @type int[]     $locked_children IDs of sub-galleries that need a password first (no cover shown).
  *     @type array[]   $items    Images: { attachment: WP_Post, kind: "photo"|"wide"|"360", panorama: array }.
  *     @type string    $align    "wide", "full" or "": uses the theme's own wide/full width.
+ *     @type int       $proofing ID of the gallery whose client selection these images go into, 0 when proofing is off.
  * }
  */
 
@@ -23,9 +24,10 @@ $slashphoto_children = $args['children'] ?? [];
 $slashphoto_locked   = $args['locked_children'] ?? [];
 $slashphoto_items    = $args['items'] ?? [];
 $slashphoto_align    = $args['align'] ?? '';
+$slashphoto_proofing = (int) ( $args['proofing'] ?? 0 );
 $slashphoto_classes  = 'slashphoto slashphoto-gallery' . ( $slashphoto_align ? ' align' . $slashphoto_align : '' );
 ?>
-<div class="<?php echo esc_attr( $slashphoto_classes ); ?>">
+<div class="<?php echo esc_attr( $slashphoto_classes ); ?>"<?php echo $slashphoto_proofing ? ' data-slashphoto-proofing="' . esc_attr( (string) $slashphoto_proofing ) . '"' : ''; ?>>
 	<?php if ( $slashphoto_children ) : ?>
 		<ul class="slashphoto-albums">
 			<?php foreach ( $slashphoto_children as $slashphoto_child ) : ?>
