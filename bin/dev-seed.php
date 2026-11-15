@@ -25,6 +25,7 @@ use SlashPhoto\Gallery\Uploads;
 use SlashPhoto\Media\Watermark;
 use SlashPhoto\Proofing\Proofing;
 use SlashPhoto\Settings;
+use SlashPhoto\Shop\PriceLists;
 use SlashPhoto\Tests\Integration\TestImages;
 
 /**
@@ -98,6 +99,17 @@ foreach ( get_posts(
 ) as $slashphoto_old ) {
 	if ( str_starts_with( $slashphoto_old->post_name, 'demo-' ) ) {
 		slashphoto_seed_delete_gallery( $slashphoto_old->ID );
+	}
+}
+foreach ( get_posts(
+	[
+		'post_type'   => [ PriceLists::POST_TYPE, 'page' ],
+		'post_status' => 'any',
+		'numberposts' => -1,
+	]
+) as $slashphoto_old ) {
+	if ( str_starts_with( $slashphoto_old->post_name, 'demo-' ) ) {
+		wp_delete_post( $slashphoto_old->ID, true );
 	}
 }
 foreach ( get_posts(
@@ -267,9 +279,88 @@ foreach ( range( 1, 4 ) as $slashphoto_n ) {
 slashphoto_seed_image( 'ready-1', 1200, 800, $slashphoto_proofing_child );
 slashphoto_seed_image( 'ready-2', 800, 1200, $slashphoto_proofing_child );
 
+// Shop: a price list, a cart page and a gallery for sale. The proofing
+// gallery sells too, so both lightbox tools appear together.
+$slashphoto_list = wp_insert_post(
+	[
+		'post_type'   => PriceLists::POST_TYPE,
+		'post_status' => 'publish',
+		'post_title'  => 'Demo: Prints and downloads',
+		'post_name'   => 'demo-prices',
+	]
+);
+PriceLists::save_products(
+	$slashphoto_list,
+	[
+		[
+			'kind'  => 'download',
+			'name'  => 'Digital download, full resolution',
+			'price' => 30000,
+		],
+		[
+			'kind'  => 'print',
+			'name'  => 'Print 13 × 18 cm',
+			'price' => 9900,
+		],
+		[
+			'kind'  => 'print',
+			'name'  => 'Print 20 × 30 cm',
+			'price' => 19900,
+		],
+		[
+			'kind'  => 'print',
+			'name'  => 'Print 30 × 45 cm',
+			'price' => 34900,
+		],
+	]
+);
+$slashphoto_cart = wp_insert_post(
+	[
+		'post_type'    => 'page',
+		'post_status'  => 'publish',
+		'post_title'   => 'Cart',
+		'post_name'    => 'demo-cart',
+		'post_content' => '<!-- wp:shortcode -->[slashphoto_checkout]<!-- /wp:shortcode -->',
+	]
+);
+update_option(
+	Settings::OPTION,
+	array_merge(
+		Settings::all(),
+		[
+			'currency'            => 'SEK',
+			'prices_include_tax'  => true,
+			'tax_rate'            => 25,
+			'shipping_flat'       => 4900,
+			'free_shipping_over'  => 100000,
+			'shipping_countries'  => 'SE, NO, DK, FI',
+			'shop_page'           => (int) $slashphoto_cart,
+			'manual_enabled'      => true,
+			'manual_title'        => 'Pay later (Swish or invoice)',
+			'manual_instructions' => 'Swish 123 456 78 90 and mark the payment with your order number.',
+		]
+	)
+);
+$slashphoto_shop = wp_insert_post(
+	[
+		'post_type'    => PostType::POST_TYPE,
+		'post_status'  => 'publish',
+		'post_title'   => 'Demo: Shop',
+		'post_name'    => 'demo-shop',
+		'post_content' => '<!-- wp:paragraph --><p>Order prints or download the originals.</p><!-- /wp:paragraph -->',
+	]
+);
+update_post_meta( $slashphoto_shop, PriceLists::GALLERY_META, (string) $slashphoto_list );
+update_post_meta( $slashphoto_proofing, PriceLists::GALLERY_META, (string) $slashphoto_list );
+foreach ( range( 1, 3 ) as $slashphoto_n ) {
+	slashphoto_seed_image( "shop-{$slashphoto_n}", 1800, 1200, $slashphoto_shop );
+}
+slashphoto_seed_image( 'shop-portrait', 1200, 1800, $slashphoto_shop );
+
 WP_CLI::success( 'Demo gallery: ' . get_permalink( $slashphoto_parent ) );
 WP_CLI::success( 'Watermarked gallery: ' . get_permalink( $slashphoto_watermarked ) );
 WP_CLI::success( 'Secret link: ' . Access::share_url( get_post( $slashphoto_linked ) ) );
 WP_CLI::success( 'Password gallery (password "demo"): ' . get_permalink( $slashphoto_password ) );
 WP_CLI::success( 'Terms gallery: ' . get_permalink( $slashphoto_terms ) );
 WP_CLI::success( 'Proofing gallery (log in as demo-client / demo-client): ' . get_permalink( $slashphoto_proofing ) );
+WP_CLI::success( 'Shop gallery: ' . get_permalink( $slashphoto_shop ) . ' (cart: ' . get_permalink( $slashphoto_cart ) . ')' );

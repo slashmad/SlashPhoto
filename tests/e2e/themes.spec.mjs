@@ -61,3 +61,35 @@ for ( const theme of THEMES ) {
 		await page.screenshot( { path: testInfo.outputPath( `${ theme }-proofing.png` ), fullPage: true } );
 	} );
 }
+
+for ( const theme of THEMES ) {
+	test( `shop panel and cart page are intact in ${ theme }`, async ( { page }, testInfo ) => {
+		activate( theme );
+		await page.goto( '/galleries/demo-shop/' );
+		await page.evaluate( () => window.localStorage.removeItem( 'slashphoto-cart' ) );
+		await page.reload();
+		await expect( page.locator( '.slashphoto-shopbar' ) ).toBeVisible();
+
+		await page.locator( '.slashphoto-link' ).first().click();
+		const dialog = page.locator( 'dialog.slashphoto-lightbox' );
+		const buy = dialog.getByRole( 'button', { name: 'Buy this photo' } );
+		const box = await buy.boundingBox();
+		expect( Math.round( box.width ) ).toBe( 44 );
+		await buy.click();
+		const panel = dialog.locator( '.slashphoto-lightbox__buy' );
+		await panel.getByRole( 'button', { name: /Add Print 20 × 30 cm/ } ).click();
+		// The panel stays inside the viewport.
+		const rect = await panel.boundingBox();
+		const viewport = page.viewportSize();
+		expect( rect.x ).toBeGreaterThanOrEqual( 0 );
+		expect( rect.x + rect.width ).toBeLessThanOrEqual( viewport.width );
+		await page.screenshot( { path: testInfo.outputPath( `${ theme }-buy.png` ) } );
+
+		await page.goto( '/demo-cart/' );
+		await expect( page.locator( '.slashphoto-cart__line' ) ).toHaveCount( 1 );
+		await expect( page.locator( '[data-slashphoto-checkout-form]' ) ).toBeVisible();
+		// The honeypot field is never visible.
+		await expect( page.locator( '.slashphoto-checkout__website input' ) ).not.toBeInViewport();
+		await page.screenshot( { path: testInfo.outputPath( `${ theme }-cart.png` ), fullPage: true } );
+	} );
+}

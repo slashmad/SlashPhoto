@@ -25,6 +25,7 @@
 		watermark: '_slashphoto_watermark',
 		proofing: '_slashphoto_proofing',
 		proofingMax: '_slashphoto_proofing_max',
+		priceList: '_slashphoto_price_list',
 	};
 
 	function ShareLink( { postId, savedMode } ) {
@@ -236,6 +237,54 @@
 		);
 	}
 
+	function ShopPanel() {
+		const postType = useSelect( ( select ) => select( 'core/editor' ).getCurrentPostType(), [] );
+		const parent = useSelect( ( select ) => select( 'core/editor' ).getEditedPostAttribute( 'parent' ), [] );
+		const [ meta, setMeta ] = useEntityProp( 'postType', POST_TYPE, 'meta' );
+		const shop = window.slashphotoShopEditor || { lists: [] };
+
+		if ( POST_TYPE !== postType || ! meta ) {
+			return null;
+		}
+		const value = meta[ META.priceList ] || '';
+		let inherit;
+		if ( parent > 0 ) {
+			inherit = __( 'Same as parent gallery', 'slashphoto' );
+		} else if ( shop.defaultTitle ) {
+			/* translators: %s: price list name */
+			inherit = sprintf( __( 'Default (%s)', 'slashphoto' ), shop.defaultTitle );
+		} else {
+			inherit = __( 'Default (not for sale)', 'slashphoto' );
+		}
+
+		return el(
+			PluginDocumentSettingPanel,
+			{ name: 'slashphoto-shop', title: __( 'Shop', 'slashphoto' ), className: 'slashphoto-shop-panel' },
+			el( SelectControl, {
+				label: __( 'Price list', 'slashphoto' ),
+				help: __( 'Visitors who can see this gallery can buy downloads and prints of its photos at these prices. Sub-galleries use the same list unless they choose another.', 'slashphoto' ),
+				value,
+				options: [
+					{ value: '', label: inherit },
+					{ value: 'none', label: __( 'Not for sale', 'slashphoto' ) },
+					...shop.lists.map( ( list ) => ( { value: list.id, label: list.title } ) ),
+				],
+				onChange: ( next ) => setMeta( { ...meta, [ META.priceList ]: next } ),
+				__next40pxDefaultSize: true,
+				__nextHasNoMarginBottom: true,
+			} ),
+			shop.canManage &&
+				el(
+					'p',
+					{ className: 'components-base-control__help' },
+					el( 'a', { href: shop.manageUrl }, __( 'Price lists', 'slashphoto' ) ),
+					' · ',
+					el( 'a', { href: shop.settingsUrl }, __( 'Shop settings', 'slashphoto' ) )
+				)
+		);
+	}
+
+	registerPlugin( 'slashphoto-shop', { render: ShopPanel } );
 	registerPlugin( 'slashphoto-proofing', { render: ProofingPanel } );
 	registerPlugin( 'slashphoto-access', { render: AccessPanel } );
 } )( window.wp );

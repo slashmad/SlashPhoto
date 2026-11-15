@@ -7,6 +7,7 @@
 
 namespace SlashPhoto\SnapOtter;
 
+use SlashPhoto\Secrets;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -56,7 +57,7 @@ final class Connection {
 	 */
 	public static function key(): string {
 		$stored = (string) ( self::data()['key'] ?? '' );
-		return '' === $stored ? '' : self::decrypt( $stored );
+		return '' === $stored ? '' : Secrets::decrypt( $stored, 'snapotter' );
 	}
 
 	/**
@@ -146,7 +147,7 @@ final class Connection {
 			self::OPTION,
 			[
 				'url'     => $url,
-				'key'     => self::encrypt( $key ),
+				'key'     => Secrets::encrypt( $key, 'snapotter' ),
 				'key_id'  => $key_id,
 				'version' => $version,
 				'checked' => time(),
@@ -187,45 +188,5 @@ final class Connection {
 			$client->delete_key( (string) $data['key_id'] );
 		}
 		delete_option( self::OPTION );
-	}
-
-	/**
-	 * Encrypts with a key derived from the site's salts.
-	 *
-	 * @param string $plain Secret.
-	 */
-	private static function encrypt( string $plain ): string {
-		if ( ! function_exists( 'sodium_crypto_secretbox' ) ) {
-			return 'p:' . base64_encode( $plain ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- storage encoding, not obfuscation.
-		}
-		$nonce = random_bytes( SODIUM_CRYPTO_SECRETBOX_NONCEBYTES );
-		return 's:' . base64_encode( $nonce . sodium_crypto_secretbox( $plain, $nonce, self::secret() ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- storage encoding of ciphertext.
-	}
-
-	/**
-	 * Decrypts a stored secret, or returns '' when it cannot be read.
-	 *
-	 * @param string $stored Stored value.
-	 */
-	private static function decrypt( string $stored ): string {
-		$raw = base64_decode( substr( $stored, 2 ), true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- storage encoding.
-		if ( false === $raw ) {
-			return '';
-		}
-		if ( str_starts_with( $stored, 'p:' ) ) {
-			return $raw;
-		}
-		if ( ! str_starts_with( $stored, 's:' ) || ! function_exists( 'sodium_crypto_secretbox_open' ) || strlen( $raw ) <= SODIUM_CRYPTO_SECRETBOX_NONCEBYTES ) {
-			return '';
-		}
-		$plain = sodium_crypto_secretbox_open( substr( $raw, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES ), substr( $raw, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES ), self::secret() );
-		return false === $plain ? '' : $plain;
-	}
-
-	/**
-	 * 32-byte key from the site's secret salts.
-	 */
-	private static function secret(): string {
-		return hash( 'sha256', wp_salt( 'secure_auth' ) . '|slashphoto-snapotter', true );
 	}
 }

@@ -12,6 +12,8 @@ use SlashPhoto\Access\Terms;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Gallery\GalleryMeta;
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Settings;
+use SlashPhoto\Shop\PriceLists;
 use SlashPhoto\Media\Watermark;
 use SlashPhoto\Proofing\Proofing;
 use WP_Post;
@@ -51,6 +53,28 @@ final class AccessSettings {
 			true
 		);
 		wp_set_script_translations( self::SCRIPT, 'slashphoto', SLASHPHOTO_DIR . 'languages' );
+
+		$default = (int) Settings::get( 'shop_price_list' );
+		$lists   = [];
+		foreach ( PriceLists::all() as $id => $title ) {
+			$lists[] = [
+				'id'    => (string) $id,
+				'title' => $title,
+			];
+		}
+		wp_add_inline_script(
+			self::SCRIPT,
+			'window.slashphotoShopEditor = ' . wp_json_encode(
+				[
+					'lists'        => $lists,
+					'defaultTitle' => $default ? get_the_title( $default ) : '',
+					'manageUrl'    => admin_url( 'edit.php?post_type=' . PriceLists::POST_TYPE ),
+					'settingsUrl'  => Settings::admin_url( '', ShopSettings::SLUG ),
+					'canManage'    => current_user_can( 'manage_options' ),
+				]
+			) . ';',
+			'before'
+		);
 	}
 
 	/**

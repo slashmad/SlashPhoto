@@ -8,6 +8,7 @@
 namespace SlashPhoto\Frontend;
 
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Shop\ShopPage;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -25,6 +26,7 @@ final class Assets {
 	public const LIGHTBOX_MODULE = '@slashphoto/lightbox';
 	public const VIEWER_MODULE   = '@slashphoto/panorama-viewer';
 	public const PROOFING_MODULE = '@slashphoto/proofing';
+	public const SHOP_MODULE     = '@slashphoto/shop';
 
 	/**
 	 * Registers hooks.
@@ -35,6 +37,7 @@ final class Assets {
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_filter( 'script_module_data_' . self::LIGHTBOX_MODULE, [ $this, 'lightbox_data' ] );
 		add_filter( 'script_module_data_' . self::PROOFING_MODULE, [ $this, 'proofing_data' ] );
+		add_filter( 'script_module_data_' . self::SHOP_MODULE, [ $this, 'shop_data' ] );
 	}
 
 	/**
@@ -105,6 +108,13 @@ final class Assets {
 			SLASHPHOTO_URL . 'assets/js/proofing.js',
 			[],
 			self::version( 'assets/js/proofing.js' )
+		);
+
+		wp_register_script_module(
+			self::SHOP_MODULE,
+			SLASHPHOTO_URL . 'assets/js/shop.js',
+			[],
+			self::version( 'assets/js/shop.js' )
 		);
 
 		wp_register_script_module(
@@ -189,6 +199,53 @@ final class Assets {
 					'save'          => __( 'Save', 'slashphoto' ),
 					'error'         => __( 'Your selection could not be saved. Check your connection and try again.', 'slashphoto' ),
 					'selectionName' => __( 'Your selection', 'slashphoto' ),
+				],
+			]
+		);
+	}
+
+	/**
+	 * Data passed to the shop module. The REST nonce lets logged-in clients
+	 * order from galleries limited to their account.
+	 *
+	 * @param array $data Existing data.
+	 * @return array
+	 */
+	public function shop_data( $data ) {
+		$page = ShopPage::page_id();
+		return array_merge(
+			(array) $data,
+			[
+				'restUrl' => esc_url_raw( rest_url( 'slashphoto/v1/shop/' ) ),
+				'nonce'   => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
+				'cartUrl' => $page ? (string) get_permalink( $page ) : '',
+				'i18n'    => [
+					'cart'        => __( 'Cart', 'slashphoto' ),
+					'buy'         => __( 'Buy this photo', 'slashphoto' ),
+					/* translators: %d: number of items */
+					'countOne'    => __( 'Cart: %d item', 'slashphoto' ),
+					/* translators: %d: number of items */
+					'count'       => __( 'Cart: %d items', 'slashphoto' ),
+					'hint'        => __( 'Open a photo to order prints or downloads.', 'slashphoto' ),
+					'goToCart'    => __( 'Go to cart', 'slashphoto' ),
+					'add'         => __( 'Add', 'slashphoto' ),
+					/* translators: %s: product name */
+					'addProduct'  => __( 'Add %s to cart', 'slashphoto' ),
+					/* translators: %s: product name */
+					'added'       => __( 'Added: %s.', 'slashphoto' ),
+					/* translators: %s: product name */
+					'quantityFor' => __( 'Quantity, %s', 'slashphoto' ),
+					'close'       => __( 'Close', 'slashphoto' ),
+					'empty'       => __( 'Your cart is empty.', 'slashphoto' ),
+					'unavailable' => __( 'Some photos are no longer available to you and were removed from the cart.', 'slashphoto' ),
+					'remove'      => __( 'Remove', 'slashphoto' ),
+					/* translators: %s: product and photo */
+					'removeLine'  => __( 'Remove %s', 'slashphoto' ),
+					'subtotal'    => __( 'Subtotal', 'slashphoto' ),
+					'shipping'    => __( 'Shipping', 'slashphoto' ),
+					'total'       => __( 'Total', 'slashphoto' ),
+					'fillIn'      => __( 'Fill in the marked fields.', 'slashphoto' ),
+					'error'       => __( 'Something went wrong. Check your connection and try again.', 'slashphoto' ),
 				],
 			]
 		);

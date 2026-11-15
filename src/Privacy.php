@@ -9,14 +9,19 @@ namespace SlashPhoto;
 
 use SlashPhoto\Proofing\Proofing;
 use SlashPhoto\Proofing\Selections;
+use SlashPhoto\Shop\Emails;
+use SlashPhoto\Shop\Money;
+use SlashPhoto\Shop\Orders;
+use SlashPhoto\Shop\Schema;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Suggests privacy policy text (Settings > Privacy) describing exactly what
  * SlashPhoto stores: no visitor logging, no tracking, functional cookies only.
- * Client selections are included in the WordPress personal data export and
- * erasure tools (Tools > Export / Erase Personal Data).
+ * Client selections and orders are included in the WordPress personal data
+ * export and erasure tools (Tools > Export / Erase Personal Data). Orders
+ * that were paid are kept for bookkeeping; unpaid ones are erased.
  */
 final class Privacy {
 
@@ -43,6 +48,9 @@ final class Privacy {
 		$text .= '<p>' . esc_html__( 'When you open a gallery through a private link, a cookie (slashphoto_link_…) remembers this in your browser for 30 days. It contains only a signature of the gallery and the link; nothing about you is stored on our server.', 'slashphoto' ) . '</p>';
 		$text .= '<p>' . esc_html__( 'If you mark favourites without being logged in, they are kept only in your own browser (local storage) and never sent to us.', 'slashphoto' ) . '</p>';
 		$text .= '<p>' . esc_html__( 'If you choose images while logged in, we store your choice, any notes you write and the message you send with it, together with your account, so we can deliver your photos. It is deleted with your account or when we delete the gallery, and you can ask for a copy or for it to be erased.', 'slashphoto' ) . '</p>';
+		$text .= '<p>' . esc_html__( 'Your shopping cart is kept only in your own browser (local storage) until you order.', 'slashphoto' ) . '</p>';
+		$text .= '<p>' . esc_html__( 'When you order, we store your name, email address, phone number if you give it, delivery address for prints, your message and what you bought, to deliver the order and for our bookkeeping. Orders that are never paid are deleted after a week. Paid orders are kept as long as accounting law requires.', 'slashphoto' ) . '</p>';
+		$text .= '<p>' . esc_html__( 'If you pay online, you enter your payment details on the page of our payment provider Stripe, not on this site. Stripe receives your email address and the order amount and processes the payment under its own privacy policy (https://stripe.com/privacy).', 'slashphoto' ) . '</p>';
 		$text .= '<p>' . esc_html__( 'If we give you a client account, your name, email address and the galleries you may see are stored in that account until you ask us to delete it.', 'slashphoto' ) . '</p>';
 		wp_add_privacy_policy_content( 'SlashPhoto', wp_kses_post( $text ) );
 	}
@@ -58,6 +66,10 @@ final class Privacy {
 			'exporter_friendly_name' => __( 'Photo selections', 'slashphoto' ),
 			'callback'               => [ self::class, 'export' ],
 		];
+		$exporters['slashphoto-orders']     = [
+			'exporter_friendly_name' => __( 'Photo orders', 'slashphoto' ),
+			'callback'               => [ self::class, 'export_orders' ],
+		];
 		return $exporters;
 	}
 
@@ -71,6 +83,10 @@ final class Privacy {
 		$erasers['slashphoto-selections'] = [
 			'eraser_friendly_name' => __( 'Photo selections', 'slashphoto' ),
 			'callback'             => [ self::class, 'erase' ],
+		];
+		$erasers['slashphoto-orders']     = [
+			'eraser_friendly_name' => __( 'Photo orders', 'slashphoto' ),
+			'callback'             => [ self::class, 'erase_orders' ],
 		];
 		return $erasers;
 	}
@@ -136,6 +152,104 @@ final class Privacy {
 			'items_removed'  => $removed,
 			'items_retained' => false,
 			'messages'       => [],
+			'done'           => true,
+		];
+	}
+
+	/**
+	 * Exports orders placed with this email address.
+	 *
+	 * @param string $email Email address.
+	 * @return array{data: array, done: bool}
+	 */
+	public static function export_orders( $email ): array {
+		$data = [];
+		foreach ( Orders::for_email( (string) $email ) as $order ) {
+			$money  = static fn( int $amount ): string => Money::format( $amount, (string) $order['currency'] );
+			$lines  = array_map(
+				static fn( array $item ): string => $item['quantity'] . ' × ' . $item['name'] . ' – ' . $item['file_label'],
+				Orders::items( (int) $order['id'] )
+			);
+			$data[] = [
+				'group_id'    => 'slashphoto-orders',
+				'group_label' => __( 'Photo orders', 'slashphoto' ),
+				'item_id'     => 'slashphoto-order-' . $order['id'],
+				'data'        => [
+					[
+						'name'  => __( 'Order', 'slashphoto' ),
+						'value' => (string) $order['id'],
+					],
+					[
+						'name'  => __( 'Date', 'slashphoto' ),
+						'value' => (string) $order['created_at'] . ' UTC',
+					],
+					[
+						'name'  => __( 'Status', 'slashphoto' ),
+						'value' => Orders::labels()[ $order['status'] ] ?? (string) $order['status'],
+					],
+					[
+						'name'  => __( 'Name', 'slashphoto' ),
+						'value' => (string) $order['name'],
+					],
+					[
+						'name'  => __( 'Email', 'slashphoto' ),
+						'value' => (string) $order['email'],
+					],
+					[
+						'name'  => __( 'Phone', 'slashphoto' ),
+						'value' => (string) $order['phone'],
+					],
+					[
+						'name'  => __( 'Delivery address', 'slashphoto' ),
+						'value' => implode( ', ', Emails::address_lines( $order ) ),
+					],
+					[
+						'name'  => __( 'Message', 'slashphoto' ),
+						'value' => (string) $order['customer_note'],
+					],
+					[
+						'name'  => __( 'Items', 'slashphoto' ),
+						'value' => implode( '; ', $lines ),
+					],
+					[
+						'name'  => __( 'Total', 'slashphoto' ),
+						'value' => $money( (int) $order['total'] ),
+					],
+				],
+			];
+		}//end foreach
+		return [
+			'data' => $data,
+			'done' => true,
+		];
+	}
+
+	/**
+	 * Erases unpaid orders placed with this email address. Paid, completed
+	 * and refunded orders are bookkeeping records and are kept.
+	 *
+	 * @param string $email Email address.
+	 * @return array{items_removed: bool, items_retained: bool, messages: string[], done: bool}
+	 */
+	public static function erase_orders( $email ): array {
+		global $wpdb;
+		$removed  = false;
+		$retained = false;
+		foreach ( Orders::for_email( (string) $email ) as $order ) {
+			if ( in_array( $order['status'], [ 'pending', 'on-hold', 'failed', 'cancelled' ], true ) ) {
+				// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom tables.
+				$wpdb->delete( Schema::items(), [ 'order_id' => $order['id'] ] );
+				$wpdb->delete( Schema::orders(), [ 'id' => $order['id'] ] );
+				// phpcs:enable
+				$removed = true;
+			} else {
+				$retained = true;
+			}
+		}
+		return [
+			'items_removed'  => $removed,
+			'items_retained' => $retained,
+			'messages'       => $retained ? [ __( 'Paid photo orders were kept because they are bookkeeping records.', 'slashphoto' ) ] : [],
 			'done'           => true,
 		];
 	}

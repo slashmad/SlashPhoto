@@ -89,6 +89,7 @@ final class SettingsPage {
 			<h1><?php esc_html_e( 'SlashPhoto settings', 'slashphoto' ); ?></h1>
 			<form method="post" action="options.php">
 				<?php settings_fields( self::GROUP ); ?>
+				<input type="hidden" name="<?php echo esc_attr( $name ); ?>[_section]" value="general">
 				<h2><?php esc_html_e( 'Watermark', 'slashphoto' ); ?></h2>
 				<p><?php esc_html_e( 'The watermark is stamped on the web copies of images uploaded to galleries that use it. Originals are never changed. Changes apply to images uploaded afterwards. 360° panoramas are not watermarked.', 'slashphoto' ); ?></p>
 				<table class="form-table" role="presentation">

@@ -13,6 +13,7 @@ use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Frontend\TemplateLoader;
 use SlashPhoto\Media\Panorama;
 use SlashPhoto\Proofing\Proofing;
+use SlashPhoto\Shop\Shop;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -66,6 +67,13 @@ final class GalleryRenderer {
 	private Proofing $proofing;
 
 	/**
+	 * Shop rules.
+	 *
+	 * @var Shop
+	 */
+	private Shop $shop;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param TemplateLoader    $templates Template loader.
@@ -74,14 +82,16 @@ final class GalleryRenderer {
 	 * @param Access            $access    Access rules.
 	 * @param Terms             $terms     Terms gate.
 	 * @param Proofing          $proofing  Proofing rules.
+	 * @param Shop              $shop      Shop rules.
 	 */
-	public function __construct( TemplateLoader $templates, GalleryRepository $galleries, Panorama $panorama, Access $access, Terms $terms, Proofing $proofing ) {
+	public function __construct( TemplateLoader $templates, GalleryRepository $galleries, Panorama $panorama, Access $access, Terms $terms, Proofing $proofing, Shop $shop ) {
 		$this->templates = $templates;
 		$this->galleries = $galleries;
 		$this->panorama  = $panorama;
 		$this->access    = $access;
 		$this->terms     = $terms;
 		$this->proofing  = $proofing;
+		$this->shop      = $shop;
 	}
 
 	/**
@@ -127,6 +137,10 @@ final class GalleryRenderer {
 		if ( $root ) {
 			wp_enqueue_script_module( Assets::PROOFING_MODULE );
 		}
+		$offer = $items ? $this->shop->offer( $gallery ) : [];
+		if ( $offer ) {
+			wp_enqueue_script_module( Assets::SHOP_MODULE );
+		}
 
 		return $this->templates->render(
 			'gallery.php',
@@ -137,6 +151,7 @@ final class GalleryRenderer {
 				'items'           => $items,
 				'align'           => $align,
 				'proofing'        => $root ? $root->ID : 0,
+				'shop'            => $offer,
 			]
 		);
 	}

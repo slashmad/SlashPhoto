@@ -107,6 +107,17 @@ entered to connect are used once and discarded. SnapOtter itself sends
 anonymous usage statistics to its developers by default, which can be
 switched off in SnapOtter.
 
+## Shop
+
+See [shop.md](shop.md). In short: prices and availability are always
+computed on the server, every image in a cart must be visible to the buyer
+through the access rules above, order links carry an HMAC key that is not
+stored, order pages are not cached or indexed and send no referrer,
+downloads are streamed only for paid orders, and Stripe webhooks need a
+valid, fresh signature. Stripe Checkout is hosted by Stripe: card details
+never reach the site and no Stripe script is loaded on its pages. Stripe
+keys are stored encrypted like the SnapOtter key.
+
 ## Watermarks
 
 With a watermark PNG set under SlashPhoto → Settings and watermarks switched
@@ -120,8 +131,9 @@ were switched on are not changed.
 Known limits:
 
 - Anyone who has been given an image URL can share it. Web images are served
-  directly by the web server for speed. Originals sold as downloads will be
-  delivered through signed, expiring links (planned, see the roadmap).
+  directly by the web server for speed. Originals sold as downloads are
+  streamed through PHP, only for paid orders, during the download period and
+  with the order's secret key (see below).
 - Images uploaded before this feature (or uploaded outside a gallery and
   attached later) keep their old WordPress paths.
 - Someone with access to the server's file system is outside this model.
@@ -142,6 +154,12 @@ Known limits:
   notes, a message, the time they sent it) in a private post owned by their
   account. They are deleted with the account or the gallery and covered by
   the export and erase tools. See [proofing.md](proofing.md).
+- Shop: the cart stays in the visitor's localStorage (`slashphoto-cart`:
+  image IDs, product IDs, quantities) until they order. An order stores what
+  the customer typed in and what they bought; unpaid orders are deleted
+  after a week. Export covers orders; erasure deletes unpaid orders and
+  keeps paid ones as bookkeeping records. Stripe receives the customer's
+  email address and the order lines when they choose to pay online.
 - Client accounts are ordinary WordPress users; WordPress' personal data
   export and erase tools apply to them.
 - SlashPhoto adds suggested text for the site's privacy policy under

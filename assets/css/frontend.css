@@ -548,3 +548,365 @@ html.slashphoto-lightbox-open {
 		bottom: calc(40px + 0.75rem);
 	}
 }
+
+/*
+ * Lightbox tool groups (proofing, shop) and the "Buy" panel.
+ */
+
+.slashphoto-lightbox .slashphoto-lightbox__group {
+	display: flex;
+	gap: 0.25rem;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__group--proofing {
+	order: 1;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__group--shop {
+	order: 2;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__buy-button[aria-expanded="true"] {
+	background: var(--slashphoto-lightbox-button-hover);
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__buy {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-start: 3.75rem;
+	z-index: 4;
+	display: grid;
+	gap: 0.75rem;
+	box-sizing: border-box;
+	width: min(28rem, calc(100% - 1rem));
+	max-height: calc(100% - 5rem);
+	margin: 0 0.5rem 0 auto;
+	padding: 1rem;
+	overflow: auto;
+	border-radius: 8px;
+	background: rgb(32 32 32);
+	color: var(--slashphoto-lightbox-fg);
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__products {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__product {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.25rem 0.75rem;
+	margin: 0;
+	padding: 0 0 0.5rem;
+	border-bottom: 1px solid rgb(255 255 255 / 0.12);
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__product-price {
+	color: var(--slashphoto-lightbox-muted);
+	text-align: end;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__product-actions {
+	display: flex;
+	grid-column: 1 / -1;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__qty {
+	box-sizing: border-box;
+	width: 4.5rem;
+	margin: 0;
+	padding: 0.35rem 0.5rem;
+	border: 1px solid rgb(255 255 255 / 0.3);
+	border-radius: 4px;
+	background: rgb(0 0 0 / 0.4);
+	color: inherit;
+	font: inherit;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__add,
+.slashphoto-lightbox .slashphoto-lightbox__buy-close {
+	margin: 0;
+	padding: 0.4rem 0.9rem;
+	border: 1px solid rgb(255 255 255 / 0.4);
+	border-radius: 4px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__add {
+	background: var(--slashphoto-lightbox-fg);
+	color: var(--slashphoto-lightbox-bg);
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__buy-close {
+	justify-self: start;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__buy-status {
+	margin: 0;
+	min-height: 1.4em;
+	font-size: 0.9375rem;
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__buy-status a {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.slashphoto-lightbox .screen-reader-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/*
+ * Shop: cart bar under galleries, cart and checkout page, order page.
+ * Inherits the theme's fonts, colours, fields and buttons.
+ */
+
+.slashphoto .slashphoto-shopbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	margin: 0 0 var(--slashphoto-gap);
+	padding: 0.75rem 1rem;
+}
+
+:where(.slashphoto-shopbar) {
+	border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+	border-radius: var(--slashphoto-radius);
+	background: var(--slashphoto-surface);
+}
+
+.slashphoto .slashphoto-shopbar__status {
+	margin: 0;
+}
+
+:where(.slashphoto-shopbar.is-empty .slashphoto-shopbar__status) {
+	color: var(--slashphoto-muted);
+	font-size: var(--slashphoto-caption-size);
+}
+
+.slashphoto .slashphoto-shopbar [hidden],
+.slashphoto-checkout [hidden],
+.slashphoto-checkout__form[hidden] {
+	display: none;
+}
+
+.slashphoto .slashphoto-cart__lines,
+.slashphoto .slashphoto-order__lines {
+	margin: 0 0 1rem;
+	padding: 0;
+	list-style: none;
+}
+
+.slashphoto .slashphoto-cart__line,
+.slashphoto .slashphoto-order__line {
+	display: grid;
+	grid-template-columns: 64px minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: 0.5rem 1rem;
+	margin: 0;
+	padding: 0.75rem 0;
+	border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.slashphoto .slashphoto-cart__line {
+	grid-template-columns: 64px minmax(0, 1fr) auto auto auto;
+}
+
+.slashphoto .slashphoto-cart__thumb,
+.slashphoto .slashphoto-order__thumb {
+	display: block;
+	width: 64px;
+	height: 64px;
+	margin: 0;
+	object-fit: cover;
+}
+
+.slashphoto .slashphoto-cart__what,
+.slashphoto .slashphoto-order__what {
+	display: grid;
+	min-width: 0;
+}
+
+:where(.slashphoto-cart__title, .slashphoto-order__file) {
+	overflow: hidden;
+	color: var(--slashphoto-muted);
+	font-size: var(--slashphoto-caption-size);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.slashphoto .slashphoto-cart__qty input {
+	box-sizing: border-box;
+	width: 4.5rem;
+	margin: 0;
+}
+
+/* A text link in every state: some themes style every <button> with several :not() conditions. */
+.slashphoto .slashphoto-cart__remove.slashphoto-cart__remove.slashphoto-cart__remove,
+.slashphoto .slashphoto-cart__remove.slashphoto-cart__remove.slashphoto-cart__remove:hover,
+.slashphoto .slashphoto-cart__remove.slashphoto-cart__remove.slashphoto-cart__remove:focus {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-size: var(--slashphoto-caption-size);
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.slashphoto .slashphoto-order__download {
+	grid-column: 2 / -1;
+	justify-self: start;
+}
+
+.slashphoto .slashphoto-cart__totals,
+.slashphoto .slashphoto-order__totals {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 0.25rem 1rem;
+	margin: 0 0 1.5rem;
+}
+
+.slashphoto .slashphoto-cart__totals dd,
+.slashphoto .slashphoto-order__totals dd {
+	margin: 0;
+	text-align: end;
+}
+
+.slashphoto .slashphoto-cart__total,
+.slashphoto .slashphoto-order__total {
+	font-weight: 700;
+}
+
+.slashphoto .slashphoto-checkout__form {
+	display: grid;
+	gap: 0.25rem;
+	max-width: 36rem;
+}
+
+.slashphoto .slashphoto-field {
+	display: grid;
+	gap: 0.25rem;
+	margin: 0 0 0.75rem;
+}
+
+.slashphoto .slashphoto-field input,
+.slashphoto .slashphoto-field select,
+.slashphoto .slashphoto-field textarea {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: none;
+	margin: 0;
+}
+
+.slashphoto .slashphoto-field--short input {
+	max-width: 10rem;
+}
+
+.slashphoto .slashphoto-checkout__address,
+.slashphoto .slashphoto-checkout__gateways {
+	margin: 0 0 1rem;
+	padding: 0.75rem 1rem 0.25rem;
+	min-width: 0;
+}
+
+:where(.slashphoto-checkout__address, .slashphoto-checkout__gateways) {
+	border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+	border-radius: var(--slashphoto-radius);
+}
+
+.slashphoto .slashphoto-checkout__gateway,
+.slashphoto .slashphoto-checkout__terms {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+	margin: 0 0 0.75rem;
+}
+
+.slashphoto .slashphoto-checkout__gateway input,
+.slashphoto .slashphoto-checkout__terms input {
+	flex: none;
+	margin: 0.3em 0 0;
+}
+
+.slashphoto .slashphoto-checkout__gateway label {
+	display: grid;
+}
+
+:where(.slashphoto-checkout__hint, .slashphoto-checkout__privacy, .slashphoto-checkout__login, .slashphoto-order__privacy, .slashphoto-cart__notice) {
+	color: var(--slashphoto-muted);
+	font-size: var(--slashphoto-caption-size);
+}
+
+:where(.slashphoto-checkout__error, .slashphoto-checkout__notice) {
+	color: #b32d2e;
+}
+
+/* Honeypot for bots: off-screen, never shown to people. */
+.slashphoto .slashphoto-checkout__website {
+	position: absolute;
+	left: -10000px;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+:where(.slashphoto-order__instructions) {
+	margin: 0 0 1rem;
+	padding: 0.75rem 1rem;
+	border-inline-start: 3px solid var(--slashphoto-accent);
+	background: var(--slashphoto-placeholder);
+}
+
+@media (max-width: 600px) {
+	.slashphoto .slashphoto-cart__line {
+		grid-template-columns: 48px minmax(0, 1fr) auto;
+	}
+
+	.slashphoto .slashphoto-order__line {
+		grid-template-columns: 48px minmax(0, 1fr) auto;
+	}
+
+	.slashphoto .slashphoto-cart__thumb,
+	.slashphoto .slashphoto-order__thumb {
+		width: 48px;
+		height: 48px;
+	}
+
+	.slashphoto .slashphoto-cart__qty {
+		grid-column: 2;
+	}
+
+	.slashphoto .slashphoto-order__qty {
+		display: none;
+	}
+}
+
+/* Light defaults for themes that leave form fields unstyled; zero specificity, so theme styles win. */
+:where(.slashphoto-checkout, .slashphoto-cart) :where(input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select, textarea) {
+	box-sizing: border-box;
+	min-height: 2.5em;
+	padding: 0.4em 0.6em;
+	border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+	border-radius: 2px;
+	font: inherit;
+}

@@ -15,6 +15,7 @@
  *     @type array[]   $items    Images: { attachment: WP_Post, kind: "photo"|"wide"|"360", panorama: array }.
  *     @type string    $align    "wide", "full" or "": uses the theme's own wide/full width.
  *     @type int       $proofing ID of the gallery whose client selection these images go into, 0 when proofing is off.
+ *     @type array[]   $shop     Products for sale: { id, kind: "download"|"print", name, price (formatted) }; empty when not for sale.
  * }
  */
 
@@ -25,9 +26,10 @@ $slashphoto_locked   = $args['locked_children'] ?? [];
 $slashphoto_items    = $args['items'] ?? [];
 $slashphoto_align    = $args['align'] ?? '';
 $slashphoto_proofing = (int) ( $args['proofing'] ?? 0 );
+$slashphoto_shop     = $args['shop'] ?? [];
 $slashphoto_classes  = 'slashphoto slashphoto-gallery' . ( $slashphoto_align ? ' align' . $slashphoto_align : '' );
 ?>
-<div class="<?php echo esc_attr( $slashphoto_classes ); ?>"<?php echo $slashphoto_proofing ? ' data-slashphoto-proofing="' . esc_attr( (string) $slashphoto_proofing ) . '"' : ''; ?>>
+<div class="<?php echo esc_attr( $slashphoto_classes ); ?>"<?php echo $slashphoto_proofing ? ' data-slashphoto-proofing="' . esc_attr( (string) $slashphoto_proofing ) . '"' : ''; ?><?php echo $slashphoto_shop ? ' data-slashphoto-shop="' . esc_attr( (string) wp_json_encode( $slashphoto_shop ) ) . '"' : ''; ?>>
 	<?php if ( $slashphoto_children ) : ?>
 		<ul class="slashphoto-albums">
 			<?php foreach ( $slashphoto_children as $slashphoto_child ) : ?>

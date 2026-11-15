@@ -12,7 +12,9 @@ use SlashPhoto\Access\AccessGuard;
 use SlashPhoto\Access\ShareLinks;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Admin\AccessSettings;
+use SlashPhoto\Admin\OrdersPage;
 use SlashPhoto\Admin\SelectionsBox;
+use SlashPhoto\Admin\ShopSettings;
 use SlashPhoto\Admin\SnapOtterSettings;
 use SlashPhoto\Admin\UploadPanel;
 use SlashPhoto\Admin\SettingsPage;
@@ -35,6 +37,15 @@ use SlashPhoto\Proofing\Notifications;
 use SlashPhoto\Proofing\Proofing;
 use SlashPhoto\Proofing\Selections;
 use SlashPhoto\Proofing\SelectionsRest;
+use SlashPhoto\Shop\CheckoutRest;
+use SlashPhoto\Shop\Downloads;
+use SlashPhoto\Shop\Emails;
+use SlashPhoto\Shop\Gateways\StripeGateway;
+use SlashPhoto\Shop\Orders;
+use SlashPhoto\Shop\PriceLists;
+use SlashPhoto\Shop\Schema;
+use SlashPhoto\Shop\Shop;
+use SlashPhoto\Shop\ShopPage;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -77,6 +88,13 @@ final class Plugin {
 	 * @var Proofing
 	 */
 	private Proofing $proofing;
+
+	/**
+	 * Shop rules.
+	 *
+	 * @var Shop
+	 */
+	private Shop $shop;
 
 	/**
 	 * Gallery renderer.
@@ -137,7 +155,17 @@ final class Plugin {
 		( new Importer() )->register_hooks();
 		( new ChunkedUploads() )->register_hooks();
 
-		$this->renderer = new GalleryRenderer( $this->templates, new GalleryRepository(), $panorama, $this->access, $terms, $this->proofing );
+		$this->shop = new Shop( $this->access, $terms );
+		( new Schema() )->register_hooks();
+		( new PriceLists() )->register_hooks();
+		( new Orders() )->register_hooks();
+		( new CheckoutRest( $this->shop ) )->register_hooks();
+		( new ShopPage( $this->templates ) )->register_hooks();
+		( new Downloads() )->register_hooks();
+		( new Emails() )->register_hooks();
+		( new StripeGateway() )->register_hooks();
+
+		$this->renderer = new GalleryRenderer( $this->templates, new GalleryRepository(), $panorama, $this->access, $terms, $this->proofing, $this->shop );
 		( new ThemeCompat( $this->renderer ) )->register_hooks();
 		( new Assets() )->register_hooks();
 
@@ -149,12 +177,14 @@ final class Plugin {
 		( new UploadPanel() )->register_hooks();
 		( new SnapOtterSettings() )->register_hooks();
 		( new SettingsPage() )->register_hooks();
+		( new ShopSettings() )->register_hooks();
+		( new OrdersPage() )->register_hooks();
 		( new Privacy() )->register_hooks();
 
 		/**
 		 * Fires after SlashPhoto has registered its hooks.
 		 *
-		 * Extensions (payment gateways, print labs, importers) should hook in here.
+		 * Extensions (payment gateways via slashphoto_gateways, print labs, importers) should hook in here.
 		 *
 		 * @param Plugin $plugin The plugin instance.
 		 */
@@ -180,6 +210,13 @@ final class Plugin {
 	 */
 	public function proofing(): Proofing {
 		return $this->proofing;
+	}
+
+	/**
+	 * Returns the shop rules.
+	 */
+	public function shop(): Shop {
+		return $this->shop;
 	}
 
 	/**
@@ -209,7 +246,9 @@ final class Plugin {
 	 */
 	public static function activate(): void {
 		PostType::register();
+		PriceLists::register();
 		GalleryMeta::ensure_role();
+		Schema::install();
 		flush_rewrite_rules();
 	}
 
@@ -218,6 +257,7 @@ final class Plugin {
 	 */
 	public static function deactivate(): void {
 		wp_clear_scheduled_hook( ChunkedUploads::CRON );
+		wp_clear_scheduled_hook( Orders::CRON );
 		unregister_post_type( PostType::POST_TYPE );
 		flush_rewrite_rules();
 	}

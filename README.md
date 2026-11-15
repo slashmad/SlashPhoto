@@ -4,8 +4,8 @@ Open-source photography galleries, client proofing and photo sales for
 WordPress. No subscriptions, no paid add-ons, no locked features.
 
 > **Status: early development (0.1.0-dev).** Galleries, panoramas, client
-> access, proofing and full-size uploads work; the shop is not built yet. Not
-> ready for production.
+> access, proofing, full-size uploads and a first shop (downloads and prints)
+> work. Not ready for production.
 
 ## Features
 
@@ -49,6 +49,13 @@ Working now:
   and the file names to paste into Lightroom, and can reopen or delete it.
   Visitors without an account keep favourites in their own browser only.
   See [docs/proofing.md](docs/proofing.md).
+- **Shop: downloads and prints.** Price lists with downloads of the original
+  and prints in your sizes, chosen per gallery and inherited by
+  sub-galleries. Customers add photos from the lightbox, check out as guests
+  and pay manually (invoice, transfer, Swish) or on Stripe's hosted Checkout
+  page (no platform fee). Orders with status emails, an order screen with
+  file names and originals for printing, and downloads streamed only for
+  paid orders through a private link. See [docs/shop.md](docs/shop.md).
 - **No visitor logging.** No IP addresses, analytics or third-party requests;
   terms acceptance is a signed cookie in the visitor's browser only.
 - **Gallery block** for placing any gallery on any page, with the same
@@ -58,8 +65,8 @@ Working now:
 
 Planned, in order:
 
-1. Shop: price lists for digital downloads and prints, cart, Stripe Checkout,
-   orders, receipts and secure expiring download links
+1. Shop, continued: discount codes, packages, product options, invoices,
+   CSV export
 2. Import from Sunshine Photo Cart
 3. Client invitations by email, licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
 

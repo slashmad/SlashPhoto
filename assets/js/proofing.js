@@ -441,8 +441,15 @@ function renderLightboxTools() {
 	if ( ! lightboxView || ! lightboxView.dialog.open ) {
 		return;
 	}
-	const { tools, store, id, dialog } = lightboxView;
+	const { store, id, dialog } = lightboxView;
 	const selected = store.has( id );
+	// Own group in the shared tools slot, so other features keep their buttons.
+	let tools = lightboxView.tools.querySelector( '.slashphoto-lightbox__group--proofing' );
+	if ( ! tools ) {
+		tools = document.createElement( 'span' );
+		tools.className = 'slashphoto-lightbox__group slashphoto-lightbox__group--proofing';
+		lightboxView.tools.prepend( tools );
+	}
 	tools.replaceChildren();
 
 	const pick = button( 'slashphoto-lightbox__button slashphoto-lightbox__pick', HEART );

@@ -11,6 +11,7 @@ use SlashPhoto\Access\Access;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Media\Watermark;
 use SlashPhoto\Proofing\Proofing;
+use SlashPhoto\Shop\PriceLists;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -108,6 +109,30 @@ final class GalleryMeta {
 					'schema' => [
 						'type'    => 'integer',
 						'minimum' => 0,
+						'context' => [ 'edit' ],
+					],
+				],
+			]
+		);
+
+		register_post_meta(
+			PostType::POST_TYPE,
+			PriceLists::GALLERY_META,
+			[
+				'type'              => 'string',
+				'single'            => true,
+				'default'           => '',
+				'sanitize_callback' => static function ( $value ): string {
+					$value = (string) $value;
+					if ( PriceLists::NONE === $value ) {
+						return $value;
+					}
+					return ctype_digit( $value ) && PriceLists::POST_TYPE === get_post_type( (int) $value ) ? $value : '';
+				},
+				'auth_callback'     => $auth,
+				'show_in_rest'      => [
+					'schema' => [
+						'type'    => 'string',
 						'context' => [ 'edit' ],
 					],
 				],
