@@ -3,17 +3,30 @@
 Open-source photography galleries, client proofing and photo sales for
 WordPress. No subscriptions, no paid add-ons, no locked features.
 
-> **Status: early development (0.1.0-dev).** Galleries, panoramas, client
-> access, proofing, full-size uploads, the shop (downloads, prints, packages,
-> discount codes, receipts) and the Sunshine importer work. Not ready for
-> production.
+> **Early development (`0.1.0-dev`).** Use a test WordPress site to try
+> SlashPhoto. The online payment integrations have been tested with simulated
+> provider APIs.
+
+## Quick start
+
+1. On a test site with WordPress 6.7+ and PHP 8.3+, copy the folder containing
+   `slashphoto.php` to `wp-content/plugins/slashphoto/` and activate it under
+   **Plugins**.
+   The browser libraries are bundled, so the plugin needs no build step.
+2. Go to **SlashPhoto → Add new gallery** and add images using **Upload photos**
+   in the gallery editor. Set the gallery's access rules before publishing.
+3. Open the published gallery or place it on another page with the
+   **SlashPhoto gallery** block. To enable client selections or sales, see
+   the [proofing guide](docs/proofing.md) or [shop setup](docs/shop.md).
+
+If your test site uses nginx, configure the deny rule for originals and temporary
+uploads. See [image storage and server configuration](docs/security-and-privacy.md#image-files).
 
 ## Features
 
-Working now:
-
-- **Galleries and sub-galleries** as a hierarchical post type, rendered inside
-  any theme's own layout (block and classic themes).
+- **Galleries and sub-galleries** that use the active block or classic theme's
+  layout, colours and typography. The gallery block applies the same access
+  rules on other pages. See [theme compatibility](docs/theme-compatibility.md).
 - **Panoramas and 360° images.** 360° images are detected from the GPano XMP
   metadata that cameras and stitchers such as PTGui write, including partial
   spheres. They keep up to 8192 px instead of WordPress' usual 2560 px, and
@@ -26,23 +39,21 @@ Working now:
   only when a visitor opens one. Partial panoramas cannot be panned past
   their edges, and panoramas that were cropped again after stitching are
   mapped correctly.
-- **Client access.** Password (WordPress' own), secret share links,
-  selected client accounts, end dates and terms to accept, all inherited by
-  sub-galleries. Protected
-  galleries do not leak through the REST API, attachment pages, sitemaps,
-  search, feeds, caches or oEmbed, and their images get unguessable URLs.
-  See [docs/security-and-privacy.md](docs/security-and-privacy.md).
+- **Client access.** Use WordPress passwords, secret share links, selected
+  client accounts or any signed-in account. Add expiry dates and terms that
+  visitors must accept. Sub-galleries follow their ancestors' access rules.
+  See [gallery access and privacy](docs/security-and-privacy.md).
 - **Full-size originals.** Upload one full-resolution file per image through
-  the gallery editor's "Upload photos" panel; files are sent in pieces, so
-  PHP's upload limit does not apply. Every image gets a display copy (2560 px
-  by default) and the original is stored privately for later delivery.
+  the gallery editor's **Upload photos** panel. Chunked uploads can handle
+  originals larger than PHP's per-upload limit. SlashPhoto stores the original
+  privately and creates a separate display copy.
 - **Optional SnapOtter processing.** Connect your own
   [SnapOtter](https://github.com/snapotter-hq/SnapOtter) server (address and
   login, or an API key) to import RAW, HEIC, TIFF and PSD files and to make
   display copies of very large images off your web host.
   See [docs/snapotter.md](docs/snapotter.md).
-- **Watermarked previews** with protected originals: the full-resolution
-  file cannot be derived from a preview URL.
+- **Watermarked previews.** Apply a watermark to display copies while keeping
+  the original files intact for delivery.
 - **Proofing.** Clients mark favourites (in the grid or the lightbox), add a
   note per image and send their selection with a message. One selection
   covers a gallery and its sub-galleries, with an optional maximum. The
@@ -50,33 +61,29 @@ Working now:
   and the file names to paste into Lightroom, and can reopen or delete it.
   Visitors without an account keep favourites in their own browser only.
   See [docs/proofing.md](docs/proofing.md).
-- **Shop: downloads and prints.** Price lists with downloads of the original
-  and prints in your sizes, chosen per gallery and inherited by
-  sub-galleries. Customers add photos from the lightbox, check out as guests
-  and pay manually (invoice, transfer, Swish) or online with Stripe
-  Checkout, PayPal or Mollie (no platform fee). Orders with status emails, an order screen with
-  file names and originals for printing, and downloads streamed only for
-  paid orders through a private link. Packages ("10 downloads", "the
-  whole gallery"), discount codes, and printable receipts and invoices.
-  See [docs/shop.md](docs/shop.md).
+- **Photo sales.** Sell original downloads and prints in your own sizes with
+  per-gallery price lists, packages and discount codes. Customers add photos
+  from the lightbox and check out as guests. Accept manual payments (invoice,
+  bank transfer or Swish) or connect Stripe Checkout, PayPal or Mollie.
+  SlashPhoto charges no platform fee. Manage orders, send status emails and
+  offer printable receipts and invoices. Private download links work for paid
+  orders during the configured download period.
+  See [shop setup](docs/shop.md).
 - **Import from Sunshine Photo Cart.** Copies galleries with their access
   settings, images, price levels and orders, in repeatable steps, without
   changing Sunshine's data. See [docs/import-sunshine.md](docs/import-sunshine.md).
-- **Visitors, privacy first.** Galleries for any logged-in account, an
-  email request before the photos, a log of terms acceptances, and
-  anonymous daily view counts. Never IP addresses or browser details, no
-  third-party requests, a retention period and export/erase support.
-  See [docs/visitors.md](docs/visitors.md).
-- **Gallery block** for placing any gallery on any page, with the same
-  access rules.
-- **Theme-first styling** that adapts to the theme's colors, fonts and width.
-  See [docs/theme-compatibility.md](docs/theme-compatibility.md).
+- **Visitor controls and statistics.** Request an email address before showing
+  photos, record terms acceptances and count daily views anonymously. The
+  visitor log supports retention settings, CSV export and WordPress's personal
+  data export and erasure tools. SlashPhoto keeps view totals without storing
+  IP addresses or browser details. See [visitor settings](docs/visitors.md).
 
-Planned, in order:
+## Roadmap
 
-1. Shop, continued: product options (paper, frames), CSV export, tax per
-   country, gift cards
-2. Client invitations by email, licences, print-lab integrations, AVIF/WebP, EXIF/IPTC search
+- Shop product options such as paper and frames, order CSV export, tax per
+  country and gift cards.
+- Client invitations by email, licences, print-lab integrations, AVIF/WebP and
+  EXIF/IPTC search.
 
 ## Requirements
 
@@ -89,20 +96,20 @@ Requires Node.js and Docker. PHP and Composer run inside the containers, so
 they do not need to be installed locally.
 
 ```sh
-npm install
+npm ci
 npm run env:start      # WordPress at http://localhost:8888 (admin / password)
 npm run setup          # composer install inside the container
 npm run test:php       # PHPUnit integration tests
 npm run lint:php       # WordPress Coding Standards + PHP compatibility
-npm run seed           # demo galleries; uses your own JPEGs from .dev-media/ if present
+npm run seed           # replaces demo galleries in the local test site
 npm run test:e2e       # Playwright browser tests (needs the seeded site)
 npm run vendor         # copy three.js / Photo Sphere Viewer from node_modules to assets/vendor
 npm run i18n:pot       # regenerate languages/slashphoto.pot
 npm run env:stop
 ```
 
-Put your own test photos, for example 360° panoramas, in `.dev-media/`. The
-folder is ignored by Git.
+Put your own JPEG test photos, including 360° panoramas, in `.dev-media/` for
+`npm run seed`. The folder is ignored by Git.
 
 Browser tests use Playwright's Chromium (`npx playwright install chromium`),
 or a system Chromium: `PLAYWRIGHT_CHROMIUM=/usr/bin/chromium-browser npm run test:e2e`.
@@ -118,12 +125,17 @@ The copies are committed, so the plugin needs no build step.
 slashphoto.php          plugin header and autoloader
 src/                    PSR-4 classes (SlashPhoto\)
   Plugin.php            wiring
-  Gallery/              post type and queries
-  Access/               access rules, leak guards, terms
-  Admin/                editor access panel
+  Gallery/              post type, queries, rendering and uploads
+  Access/               access rules, visibility guards and visitor gates
+  Admin/                gallery editor panels and administration screens
   Blocks/               gallery block
   Frontend/             theme compatibility, templates, assets
-  Media/                panorama and 360° detection
+  Media/                display copies, originals, watermarks and panoramas
+  Proofing/             client favourites and selections
+  Shop/                 price lists, orders, payment gateways and downloads
+  Import/               Sunshine Photo Cart migration
+  SnapOtter/            optional image processing service
+  Visitors/             visitor log and view counts
 blocks/                 block.json, render.php and editor script
 templates/              overridable partials (copy to yourtheme/slashphoto/)
 assets/                 CSS, JavaScript modules, bundled vendor libraries
@@ -132,13 +144,14 @@ tests/e2e/              Playwright browser tests
 docs/                   developer documentation
 ```
 
-## Support the project
+## Support
 
-SlashPhoto is free and will stay free, with no paid add-ons. If it saves you
-a subscription, consider supporting development through
-[GitHub Sponsors](https://github.com/sponsors/slashmad),
-[Ko-fi](https://ko-fi.com/slashmad) or
-[Liberapay](https://liberapay.com/slashmad).
+SlashPhoto is free and will stay free. If it saves you a subscription, you can
+support its development.
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub-Sponsors-EA4AAA?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/slashmad)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-buy%20me%20a%20beer-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/slashmad)
+[![Liberapay](https://img.shields.io/badge/Liberapay-donate-F6C915?logo=liberapay&logoColor=black)](https://liberapay.com/slashmad/)
 
 ## Licence
 
