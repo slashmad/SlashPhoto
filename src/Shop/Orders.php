@@ -109,17 +109,20 @@ final class Orders {
 		foreach ( $quote['lines'] as $line ) {
 			$parent = self::insert_item(
 				[
-					'order_id'   => $id,
-					'kind'       => $line['kind'],
-					'gallery_id' => $line['gallery'],
-					'image_id'   => $line['image'],
-					'product_id' => $line['product'],
-					'name'       => $line['name'],
+					'order_id'      => $id,
+					'kind'          => $line['kind'],
+					'gallery_id'    => $line['gallery'],
+					'image_id'      => $line['image'],
+					'product_id'    => $line['product'],
+					'name'          => $line['name'],
 					/* translators: %d: number of photos */
-					'file_label' => 'package' === $line['kind'] ? sprintf( _n( '%d photo', '%d photos', count( $line['images'] ), 'slashphoto' ), count( $line['images'] ) ) : $line['file'],
-					'quantity'   => $line['qty'],
-					'unit_price' => $line['unit'],
-					'total'      => $line['total'],
+					'file_label'    => 'package' === $line['kind'] ? sprintf( _n( '%d photo', '%d photos', count( $line['images'] ), 'slashphoto' ), count( $line['images'] ) ) : $line['file'],
+					'print_product' => $line['print_product'] ?? '',
+					'print_paper'   => $line['print_paper'] ?? '',
+					'print_frame'   => $line['print_frame'] ?? '',
+					'quantity'      => $line['qty'],
+					'unit_price'    => $line['unit'],
+					'total'         => $line['total'],
 				]
 			);
 			// Each photo of a package becomes its own line (price 0), so
@@ -127,17 +130,18 @@ final class Orders {
 			foreach ( $line['images'] ?? [] as $image ) {
 				self::insert_item(
 					[
-						'order_id'   => $id,
-						'parent_id'  => $parent,
-						'kind'       => $line['includes']['kind'],
-						'gallery_id' => $image['gallery'],
-						'image_id'   => $image['id'],
-						'product_id' => $line['includes']['id'],
-						'name'       => $line['includes']['name'],
-						'file_label' => $image['file'],
-						'quantity'   => 1,
-						'unit_price' => 0,
-						'total'      => 0,
+						'order_id'      => $id,
+						'parent_id'     => $parent,
+						'kind'          => $line['includes']['kind'],
+						'gallery_id'    => $image['gallery'],
+						'image_id'      => $image['id'],
+						'product_id'    => $line['includes']['id'],
+						'name'          => $line['includes']['name'],
+						'file_label'    => $image['file'],
+						'print_product' => 'print' === $line['includes']['kind'] ? $line['includes']['name'] : '',
+						'quantity'      => 1,
+						'unit_price'    => 0,
+						'total'         => 0,
 					]
 				);
 			}
@@ -223,29 +227,77 @@ final class Orders {
 	 */
 	public static function query( string $status, string $search, int $per_page, int $page ): array {
 		global $wpdb;
-		$table  = Schema::orders();
-		$where  = [ '1=1' ];
-		$params = [];
-		if ( in_array( $status, self::STATUSES, true ) ) {
-			$where[]  = 'status = %s';
-			$params[] = $status;
-		}
-		if ( '' !== $search ) {
-			$like     = '%' . $wpdb->esc_like( $search ) . '%';
-			$where[]  = '(id = %d OR email LIKE %s OR name LIKE %s)';
-			$params[] = (int) ltrim( $search, '#' );
-			$params[] = $like;
-			$params[] = $like;
-		}
-		$sql = implode( ' AND ', $where );
+		$table            = Schema::orders();
+		[ $sql, $params ] = self::filters( $status, $search );
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- custom table; $sql holds placeholders only, filled from $params.
-		$total = (int) $wpdb->get_var( $params ? $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE {$sql}", $params ) : "SELECT COUNT(*) FROM {$table} WHERE {$sql}" );
-		$rows  = (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE {$sql} ORDER BY id DESC LIMIT %d OFFSET %d", array_merge( $params, [ $per_page, max( 0, $page - 1 ) * $per_page ] ) ), ARRAY_A );
+		$total = (int) $wpdb->get_var( $params ? $wpdb->prepare( "SELECT COUNT(*) FROM {$table} orders WHERE {$sql}", $params ) : "SELECT COUNT(*) FROM {$table} orders WHERE {$sql}" );
+		$rows  = (array) $wpdb->get_results( $wpdb->prepare( "SELECT orders.* FROM {$table} orders WHERE {$sql} ORDER BY orders.id DESC LIMIT %d OFFSET %d", array_merge( $params, [ $per_page, max( 0, $page - 1 ) * $per_page ] ) ), ARRAY_A );
 		// phpcs:enable
 		return [
 			'rows'  => array_map( [ self::class, 'hydrate' ], $rows ),
 			'total' => $total,
 		];
+	}
+
+	/**
+	 * Streams print lines in descending item order, including prints in packages.
+	 *
+	 * @param string $status Order status filter.
+	 * @param string $search Order number, email or name filter.
+	 * @return \Generator<int, array>
+	 */
+	public static function print_rows( string $status = '', string $search = '' ): \Generator {
+		global $wpdb;
+		$orders           = Schema::orders();
+		$items            = Schema::items();
+		[ $sql, $params ] = self::filters( $status, $search );
+		$before           = PHP_INT_MAX;
+		$batch            = 250;
+		do {
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- custom tables; filters hold placeholders only.
+			$rows = (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT items.id, orders.id AS order_id, orders.status, items.gallery_id, items.image_id,
+						items.file_label, items.name, items.print_product, items.print_paper, items.print_frame, items.quantity
+					FROM {$items} items INNER JOIN {$orders} orders ON orders.id = items.order_id
+					WHERE items.kind = 'print' AND items.id < %d AND {$sql}
+					ORDER BY items.id DESC LIMIT %d",
+					array_merge( [ $before ], $params, [ $batch ] )
+				),
+				ARRAY_A
+			);
+			// phpcs:enable
+			$more = count( $rows ) === $batch;
+			foreach ( $rows as $row ) {
+				$before = (int) $row['id'];
+				yield $row;
+			}
+		} while ( $more );
+	}
+
+	/**
+	 * Builds the shared order filters for the admin list and production export.
+	 *
+	 * @param string $status Order status filter.
+	 * @param string $search Order number, email or name filter.
+	 * @return array{string, array}
+	 */
+	private static function filters( string $status, string $search ): array {
+		global $wpdb;
+		$where  = [ '1=1' ];
+		$params = [];
+		if ( in_array( $status, self::STATUSES, true ) ) {
+			$where[]  = 'orders.status = %s';
+			$params[] = $status;
+		}
+		if ( '' !== $search ) {
+			$like     = '%' . $wpdb->esc_like( $search ) . '%';
+			$where[]  = '(orders.id = %d OR orders.email LIKE %s OR orders.name LIKE %s)';
+			$params[] = (int) ltrim( $search, '#' );
+			$params[] = $like;
+			$params[] = $like;
+		}
+		return [ implode( ' AND ', $where ), $params ];
 	}
 
 	/**

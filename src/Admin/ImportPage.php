@@ -125,7 +125,10 @@ final class ImportPage {
 			<h1><?php esc_html_e( 'Import from Sunshine Photo Cart', 'slashphoto' ); ?></h1>
 			<p><?php esc_html_e( 'Copies your Sunshine galleries, images, prices and orders into SlashPhoto. Sunshine’s own data is only read and never changed, so you can compare both before you switch Sunshine off. You can run the import again: what is already imported is skipped.', 'slashphoto' ); ?></p>
 
-			<h2><?php esc_html_e( 'Found on this site', 'slashphoto' ); ?></h2>
+			<h2><?php esc_html_e( 'Sunshine data in the WordPress database', 'slashphoto' ); ?></h2>
+			<?php if ( ! post_type_exists( 'sunshine-gallery' ) ) : ?>
+				<div class="notice notice-info inline"><p><?php esc_html_e( 'Sunshine Photo Cart is inactive. These records were left in the WordPress database and can still be imported.', 'slashphoto' ); ?></p></div>
+			<?php endif; ?>
 			<ul class="ul-disc">
 				<?php /* translators: %d: number */ ?>
 				<li><?php echo esc_html( sprintf( _n( '%d gallery', '%d galleries', $summary['galleries'], 'slashphoto' ), $summary['galleries'] ) ); ?></li>
@@ -158,7 +161,7 @@ final class ImportPage {
 				<p data-status aria-live="polite">
 					<?php
 					if ( 'done' === $state['step'] ) {
-						esc_html_e( 'The import is complete.', 'slashphoto' );
+						echo esc_html( array_sum( $state['done'] ) ? __( 'The import is complete.', 'slashphoto' ) : __( 'The last import run copied no records.', 'slashphoto' ) );
 					}
 					?>
 				</p>
@@ -191,6 +194,7 @@ final class ImportPage {
 					'images'    => __( 'Copying images… This can take a while; keep this page open.', 'slashphoto' ),
 					'orders'    => __( 'Copying orders…', 'slashphoto' ),
 					'done'      => __( 'The import is complete.', 'slashphoto' ),
+					'empty'     => __( 'The last import run copied no records.', 'slashphoto' ),
 					'error'     => __( 'The import stopped because of an error. Click the button to continue.', 'slashphoto' ),
 				]
 			);
@@ -223,7 +227,8 @@ final class ImportPage {
 						status.textContent = steps.error;
 						break;
 					}
-					status.textContent = steps[ state.step ] || '';
+					const completedWithoutCopies = 'done' === state.step && ! Object.values( state.done ).some( Boolean );
+					status.textContent = steps[ completedWithoutCopies ? 'empty' : state.step ] || '';
 					counts.textContent = format( counts.dataset.template, [ state.done.price_lists, state.done.galleries, state.done.images, state.done.orders, state.done.visitors ] );
 					if ( state.notes.length ) {
 						notes.innerHTML = '<h2></h2><ul class="ul-disc"></ul>';

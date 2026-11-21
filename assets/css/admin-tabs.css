@@ -1,0 +1,30 @@
+.slashphoto-admin-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.375rem;
+	margin: 0.875rem 0 1.25rem;
+}
+
+.slashphoto-admin-tabs .nav-tab {
+	float: none;
+	margin: 0 0 -1px;
+}
+
+.slashphoto-watermark-preview {
+	width: fit-content;
+	max-width: 100%;
+	margin-block-start: 0.5rem;
+}
+
+.slashphoto-watermark-preview img {
+	display: block;
+	width: auto;
+	height: auto;
+	max-width: min(22rem, 100%);
+	max-height: 12rem;
+	background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+}
+
+#slashphoto-watermark-id {
+	max-width: 100%;
+}

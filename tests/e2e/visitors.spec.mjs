@@ -37,8 +37,8 @@ test( 'email request, then terms, then the photos; both are logged', async ( { p
 	if ( 'desktop' === testInfo.project.name ) {
 		await logIn( page, baseURL, 'admin', 'password' );
 		await page.goto( '/wp-admin/edit.php?post_type=slashphoto_gallery&page=slashphoto-visitors' );
-		await expect( page.locator( 'table' ) ).toContainText( address );
-		await expect( page.locator( 'table' ) ).toContainText( 'Accepted terms' );
+		await expect( page.locator( '#slashphoto-visitor-log' ) ).toContainText( address );
+		await expect( page.locator( '#slashphoto-visitor-log' ) ).toContainText( 'Accepted terms' );
 		const csv = await page.request.get( await page.getByRole( 'link', { name: 'Download CSV' } ).getAttribute( 'href' ) );
 		expect( csv.headers()[ 'content-type' ] ).toContain( 'text/csv' );
 		expect( await csv.text() ).toContain( address );
@@ -73,7 +73,7 @@ test( 'views are counted anonymously and shown to the photographer', async ( { p
 
 	await logIn( page, baseURL, 'admin', 'password' );
 	await page.goto( '/wp-admin/edit.php?post_type=slashphoto_gallery&page=slashphoto-stats' );
-	await expect( page.locator( 'table' ).first() ).toContainText( 'Demo: Shop' );
+	await expect( page.locator( '#slashphoto-viewed-galleries' ) ).toContainText( 'Demo: Shop' );
 	await page.goto( '/galleries/demo-shop/' );
 	await page.waitForLoadState( 'networkidle' );
 	expect( Number( wpEval( `global $wpdb; echo (int) $wpdb->get_var( "SELECT SUM(views) FROM {$wpdb->prefix}slashphoto_stats WHERE gallery_id = ${ gallery } AND image_id = 0" );` ) ) ).toBe( before + 1 );

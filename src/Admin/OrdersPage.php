@@ -7,6 +7,8 @@
 
 namespace SlashPhoto\Admin;
 
+use SlashPhoto\Frontend\Assets;
+
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Settings;
 use SlashPhoto\Shop\Downloads;
@@ -45,7 +47,9 @@ final class OrdersPage {
 	 */
 	public function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'menu' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_action( 'admin_post_' . self::ACTION, [ $this, 'handle' ] );
+		( new PrintExport() )->register_hooks();
 	}
 
 	/**
@@ -101,27 +105,103 @@ final class OrdersPage {
 	}
 
 	/**
+	 * Loads the grouped overview layout.
+	 *
+	 * @param string $hook Current admin page.
+	 */
+	public function enqueue( string $hook ): void {
+		if ( str_ends_with( $hook, '_page_' . self::SLUG ) ) {
+			$file = 'assets/css/admin-galleries.css';
+			wp_enqueue_style( 'slashphoto-gallery-overview', SLASHPHOTO_URL . $file, [ 'dashicons' ], Assets::version( $file ) );
+		}
+	}
+
+	/** Shows recent orders in their current status, with links to the full list. */
+	private function overview(): void {
+		$base    = Settings::admin_url( '', self::SLUG );
+		$counts  = Orders::counts();
+		$groups  = [
+			'on-hold'   => 'password',
+			'paid'      => 'public',
+			'completed' => 'public',
+			'pending'   => 'restricted',
+		];
+		$labels  = Orders::labels();
+		$groups += array_fill_keys( array_keys( $labels ), 'private' );
+		?>
+		<div class="wrap slashphoto-gallery-overview">
+			<header class="slashphoto-gallery-overview__header">
+				<h1><?php esc_html_e( 'Orders', 'slashphoto' ); ?></h1>
+				<div>
+					<a class="button" href="<?php echo esc_url( PrintExport::url( 'paid' ) ); ?>"><?php esc_html_e( 'Export paid prints CSV', 'slashphoto' ); ?></a>
+					<a class="button" href="<?php echo esc_url( add_query_arg( 'view', 'list', $base ) ); ?>"><?php esc_html_e( 'List view', 'slashphoto' ); ?></a>
+				</div>
+			</header>
+			<div class="slashphoto-gallery-overview__groups">
+				<?php foreach ( $groups as $status => $color ) : ?>
+					<?php $orders = $counts[ $status ] ? Orders::query( $status, '', 4, 1 )['rows'] : []; ?>
+					<section class="slashphoto-gallery-section" data-visibility="<?php echo esc_attr( $color ); ?>" aria-labelledby="<?php echo esc_attr( 'slashphoto-order-status-' . $status ); ?>">
+						<header class="slashphoto-gallery-section__header">
+							<h2 id="<?php echo esc_attr( 'slashphoto-order-status-' . $status ); ?>"><?php echo esc_html( $labels[ $status ] ); ?></h2>
+							<span class="slashphoto-gallery-section__count"><?php echo esc_html( number_format_i18n( $counts[ $status ] ) ); ?></span>
+							<?php if ( $orders ) : ?>
+								<a class="slashphoto-gallery-section__view" href="<?php echo esc_url( add_query_arg( 'status', $status, $base ) ); ?>" aria-describedby="<?php echo esc_attr( 'slashphoto-order-status-' . $status ); ?>"><?php esc_html_e( 'View list', 'slashphoto' ); ?></a>
+							<?php endif; ?>
+						</header>
+						<?php if ( $orders ) : ?>
+							<ul class="slashphoto-gallery-section__items">
+								<?php foreach ( $orders as $order ) : ?>
+									<li>
+										<a href="<?php echo esc_url( add_query_arg( 'order', $order['id'], $base ) ); ?>">
+											<span><?php echo esc_html( '#' . $order['id'] . ' · ' . Money::format( (int) $order['total'], (string) $order['currency'] ) ); ?></span>
+											<small><?php echo esc_html( wp_date( get_option( 'date_format' ), (int) strtotime( $order['created_at'] . ' UTC' ) ) ); ?></small>
+										</a>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						<?php else : ?>
+							<p class="slashphoto-gallery-section__empty"><?php esc_html_e( 'No orders in this status.', 'slashphoto' ); ?></p>
+						<?php endif; ?>
+					</section>
+				<?php endforeach; ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Renders the list or one order.
 	 */
 	public function render(): void {
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- navigation only.
+		if ( ! current_user_can( self::capability() ) ) {
+			return;
+		}
 		$id = isset( $_GET['order'] ) ? absint( $_GET['order'] ) : 0;
 		if ( $id ) {
 			$this->render_order( $id, ! empty( $_GET['updated'] ) );
 			return;
 		}
+		if ( ! isset( $_GET['view'] ) && ! isset( $_GET['status'] ) && ! isset( $_GET['s'] ) && ! isset( $_GET['paged'] ) ) {
+			$this->overview();
+			return;
+		}
 		$table = new OrdersTable();
 		$table->prepare_items();
 		$status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
+		$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 		// phpcs:enable
 		?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Orders', 'slashphoto' ); ?></h1>
+			<a class="page-title-action" href="<?php echo esc_url( Settings::admin_url( '', self::SLUG ) ); ?>"><?php esc_html_e( 'Overview', 'slashphoto' ); ?></a>
+			<a class="page-title-action" href="<?php echo esc_url( PrintExport::url( $status, $search ) ); ?>"><?php esc_html_e( 'Export prints CSV', 'slashphoto' ); ?></a>
 			<hr class="wp-header-end">
 			<?php $table->views(); ?>
 			<form method="get">
 				<input type="hidden" name="post_type" value="<?php echo esc_attr( PostType::POST_TYPE ); ?>">
 				<input type="hidden" name="page" value="<?php echo esc_attr( self::SLUG ); ?>">
+				<input type="hidden" name="view" value="list">
 				<input type="hidden" name="status" value="<?php echo esc_attr( $status ); ?>">
 				<?php
 				$table->search_box( __( 'Search orders', 'slashphoto' ), 'slashphoto-order' );

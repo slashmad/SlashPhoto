@@ -7,6 +7,7 @@
 
 namespace SlashPhoto\Admin;
 
+use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Settings;
 use SlashPhoto\Visitors\Stats;
@@ -43,6 +44,7 @@ final class VisitorsPage {
 	 */
 	public function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'menu' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_action( 'admin_post_' . self::EXPORT, [ $this, 'export' ] );
 	}
 
@@ -53,6 +55,18 @@ final class VisitorsPage {
 		$parent = 'edit.php?post_type=' . PostType::POST_TYPE;
 		add_submenu_page( $parent, __( 'Visitors', 'slashphoto' ), __( 'Visitors', 'slashphoto' ), self::capability(), self::SLUG, [ $this, 'render_log' ] );
 		add_submenu_page( $parent, __( 'Statistics', 'slashphoto' ), __( 'Statistics', 'slashphoto' ), self::capability(), self::STATS_SLUG, [ $this, 'render_stats' ] );
+	}
+
+	/**
+	 * Loads the card layout for both reports.
+	 *
+	 * @param string $hook Current admin screen.
+	 */
+	public function enqueue( string $hook ): void {
+		if ( str_ends_with( $hook, '_page_' . self::SLUG ) || str_ends_with( $hook, '_page_' . self::STATS_SLUG ) ) {
+			$file = 'assets/css/admin-galleries.css';
+			wp_enqueue_style( 'slashphoto-gallery-overview', SLASHPHOTO_URL . $file, [ 'dashicons' ], Assets::version( $file ) );
+		}
 	}
 
 	/**
@@ -86,6 +100,9 @@ final class VisitorsPage {
 	 * Renders the log.
 	 */
 	public function render_log(): void {
+		if ( ! current_user_can( self::capability() ) ) {
+			return;
+		}
 		$filters = self::filters();
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- pagination only.
 		$page   = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
@@ -94,10 +111,12 @@ final class VisitorsPage {
 		$days   = (int) Settings::get( 'visitor_retention_days' );
 		$base   = Settings::admin_url( '', self::SLUG );
 		?>
-		<div class="wrap">
+		<div class="wrap slashphoto-gallery-overview">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Visitors', 'slashphoto' ); ?></h1>
 			<a class="page-title-action" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array_filter( $filters ), admin_url( 'admin-post.php?action=' . self::EXPORT ) ), self::EXPORT ) ); ?>"><?php esc_html_e( 'Download CSV', 'slashphoto' ); ?></a>
 			<hr class="wp-header-end">
+			<?php $this->visitor_activity(); ?>
+			<h2><?php esc_html_e( 'Visitor log', 'slashphoto' ); ?></h2>
 			<p>
 				<?php
 				esc_html_e( 'Email addresses visitors gave to open galleries with an email request, and acceptances of gallery terms. No IP addresses or browser details are stored.', 'slashphoto' );
@@ -129,7 +148,7 @@ final class VisitorsPage {
 				<input type="search" id="slashphoto-visitor-search" name="s" value="<?php echo esc_attr( $filters['search'] ); ?>" placeholder="<?php esc_attr_e( 'Email address', 'slashphoto' ); ?>">
 				<?php submit_button( __( 'Filter', 'slashphoto' ), '', '', false ); ?>
 			</form>
-			<table class="widefat striped" style="margin-top:12px">
+			<table id="slashphoto-visitor-log" class="widefat striped" style="margin-top:12px">
 				<thead>
 					<tr>
 						<th scope="col"><?php esc_html_e( 'Date', 'slashphoto' ); ?></th>
@@ -222,31 +241,100 @@ final class VisitorsPage {
 	 * @param mixed $value Cell.
 	 */
 	public static function csv_safe( $value ): string {
-		$value = (string) $value;
-		return preg_match( '/^[=+\-@\t\r]/', $value ) ? "'" . $value : $value;
+		return Csv::safe( $value );
+	}
+
+	/** Reports the existing visitor log and aggregate page-view data. */
+	private function visitor_activity(): void {
+		$start  = current_datetime()->setTime( 0, 0 )->modify( '-29 days' );
+		$events = VisitorLog::activity( gmdate( 'Y-m-d H:i:s', $start->getTimestamp() ) );
+		$guests = $events[0] ?? 0;
+		unset( $events[0] );
+		$top = array_slice( $events, 0, 10, true );
+		$max = $top ? max( $top ) : 1;
+		?>
+		<h2><?php esc_html_e( 'Activity in the last 30 days', 'slashphoto' ); ?></h2>
+		<div class="slashphoto-gallery-overview__groups slashphoto-report">
+			<section class="slashphoto-gallery-section" data-visibility="restricted">
+				<header class="slashphoto-gallery-section__header"><h2><?php esc_html_e( 'Activity by account', 'slashphoto' ); ?></h2></header>
+				<div class="slashphoto-report__body">
+					<p><?php esc_html_e( 'Email gate and terms events, up to 10 accounts with the most activity.', 'slashphoto' ); ?></p>
+					<?php if ( ! $top ) : ?>
+						<p><?php esc_html_e( 'No account activity in this period.', 'slashphoto' ); ?></p>
+					<?php else : ?>
+						<ul class="slashphoto-activity-accounts">
+							<?php foreach ( $top as $id => $count ) : ?>
+								<?php $account = get_userdata( $id ); ?>
+								<li>
+									<span><?php echo esc_html( $account ? $account->display_name : __( 'Deleted account', 'slashphoto' ) ); ?></span>
+									<span><?php echo esc_html( number_format_i18n( $count ) ); ?></span>
+									<meter min="0" max="<?php echo esc_attr( (string) $max ); ?>" value="<?php echo esc_attr( (string) $count ); ?>" aria-hidden="true"></meter>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+					<p>
+						<?php
+						/* translators: %s: event count */
+						echo esc_html( sprintf( __( 'Events without a signed-in account: %s', 'slashphoto' ), number_format_i18n( $guests ) ) );
+						?>
+					</p>
+				</div>
+			</section>
+			<section class="slashphoto-gallery-section">
+				<header class="slashphoto-gallery-section__header"><h2><?php esc_html_e( 'Gallery views without visitor identifiers', 'slashphoto' ); ?></h2></header>
+				<div class="slashphoto-report__body">
+					<p><?php esc_html_e( 'All counted gallery views share one total. Individual viewers cannot be identified from these counts.', 'slashphoto' ); ?></p>
+					<?php ActivityChart::daily( array_column( self::daily( $start ), 'gallery', 'day' ), __( 'Gallery views per day', 'slashphoto' ) ); ?>
+				</div>
+			</section>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Returns a continuous date range, including days with zero views.
+	 *
+	 * @param \DateTimeImmutable $start First day at midnight in the site time zone.
+	 */
+	private static function daily( \DateTimeImmutable $start ): array {
+		$recorded = Stats::daily_counts( $start->format( 'Y-m-d' ) );
+		$today    = current_datetime()->setTime( 0, 0 );
+		$days     = [];
+		for ( $day = $start; $day <= $today; $day = $day->modify( '+1 day' ) ) {
+			$key    = $day->format( 'Y-m-d' );
+			$days[] = [ 'day' => $key ] + ( $recorded[ $key ] ?? [
+				'gallery' => 0,
+				'photo'   => 0,
+			] );
+		}
+		return $days;
 	}
 
 	/**
 	 * Renders the statistics.
 	 */
 	public function render_stats(): void {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- filter only.
+		if ( ! current_user_can( self::capability() ) ) {
+			return;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Filter only.
 		$days   = isset( $_GET['days'] ) ? absint( $_GET['days'] ) : 30;
 		$days   = in_array( $days, [ 7, 30, 90, 365 ], true ) ? $days : 30;
-		$since  = wp_date( 'Y-m-d', time() - ( $days - 1 ) * DAY_IN_SECONDS );
+		$start  = current_datetime()->setTime( 0, 0 )->modify( '-' . ( $days - 1 ) . ' days' );
+		$since  = $start->format( 'Y-m-d' );
 		$rows   = Stats::galleries( $since );
 		$photos = Stats::photos( $since );
-		$daily  = Stats::days( $since );
-		$max    = $daily ? max( $daily ) : 0;
+		$daily  = self::daily( $start );
 		$base   = Settings::admin_url( '', self::STATS_SLUG );
 		?>
-		<div class="wrap">
+		<div class="wrap slashphoto-gallery-overview">
 			<h1><?php esc_html_e( 'Statistics', 'slashphoto' ); ?></h1>
 			<?php if ( ! Stats::enabled() ) : ?>
 				<div class="notice notice-info inline"><p><?php esc_html_e( 'Counting is switched off under SlashPhoto → Settings → Visitors.', 'slashphoto' ); ?></p></div>
 			<?php endif; ?>
-			<p><?php esc_html_e( 'Anonymous daily totals: how often gallery pages were opened and photos were viewed in the lightbox. Your own views and robots are not counted; nothing identifies a visitor.', 'slashphoto' ); ?></p>
-			<p>
+			<p><?php esc_html_e( 'Daily views of gallery pages and lightbox photos. Totals include views of content that has since been removed. Editors and robots are excluded.', 'slashphoto' ); ?></p>
+			<nav class="slashphoto-report__periods" aria-label="<?php esc_attr_e( 'Statistics period', 'slashphoto' ); ?>">
 				<?php
 				foreach ( [ 7, 30, 90, 365 ] as $option ) {
 					/* translators: %d: number of days */
@@ -256,47 +344,85 @@ final class VisitorsPage {
 						: '<a href="' . esc_url( add_query_arg( 'days', $option, $base ) ) . '">' . esc_html( $label ) . '</a> ';
 				}
 				?>
-			</p>
-			<?php if ( $daily ) : ?>
-				<h2><?php esc_html_e( 'Gallery views per day', 'slashphoto' ); ?></h2>
-				<div style="display:flex;align-items:flex-end;gap:2px;height:120px;max-width:900px;border-bottom:1px solid #c3c4c7" role="img" aria-label="<?php esc_attr_e( 'Gallery views per day', 'slashphoto' ); ?>">
-					<?php foreach ( $daily as $day => $views ) : ?>
-						<span title="<?php echo esc_attr( $day . ': ' . $views ); ?>" style="flex:1;min-width:2px;background:#2271b1;height:<?php echo esc_attr( (string) max( 1, (int) round( 100 * $views / max( 1, $max ) ) ) ); ?>%"></span>
-					<?php endforeach; ?>
-				</div>
-			<?php endif; ?>
-			<h2><?php esc_html_e( 'Galleries', 'slashphoto' ); ?></h2>
-			<table class="widefat striped" style="max-width:900px">
-				<thead><tr><th scope="col"><?php esc_html_e( 'Gallery', 'slashphoto' ); ?></th><th scope="col"><?php esc_html_e( 'Page views', 'slashphoto' ); ?></th><th scope="col"><?php esc_html_e( 'Photo views', 'slashphoto' ); ?></th></tr></thead>
-				<tbody>
-					<?php if ( ! $rows ) : ?>
-						<tr><td colspan="3"><?php esc_html_e( 'No views counted in this period.', 'slashphoto' ); ?></td></tr>
-					<?php endif; ?>
-					<?php foreach ( $rows as $row ) : ?>
-						<tr>
-							<td><a href="<?php echo esc_url( (string) get_edit_post_link( $row['gallery_id'] ) ); ?>"><?php echo esc_html( get_the_title( $row['gallery_id'] ) ); ?></a></td>
-							<td><?php echo esc_html( number_format_i18n( $row['page_views'] ) ); ?></td>
-							<td><?php echo esc_html( number_format_i18n( $row['photo_views'] ) ); ?></td>
-						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
-			<?php if ( $photos ) : ?>
-				<h2><?php esc_html_e( 'Most viewed photos', 'slashphoto' ); ?></h2>
-				<table class="widefat striped" style="max-width:900px">
-					<thead><tr><th scope="col"><?php esc_html_e( 'Photo', 'slashphoto' ); ?></th><th scope="col"><?php esc_html_e( 'Gallery', 'slashphoto' ); ?></th><th scope="col"><?php esc_html_e( 'Views', 'slashphoto' ); ?></th></tr></thead>
-					<tbody>
-						<?php foreach ( $photos as $photo ) : ?>
-							<tr>
-								<td><?php echo wp_get_attachment_image( $photo['image_id'], [ 60, 60 ], false, [ 'style' => 'width:48px;height:auto;vertical-align:middle;margin-right:8px' ] ); ?><?php echo esc_html( \SlashPhoto\Proofing\Proofing::file_label( $photo['image_id'] ) ); ?></td>
-								<td><?php echo esc_html( get_the_title( $photo['gallery_id'] ) ); ?></td>
-								<td><?php echo esc_html( number_format_i18n( $photo['views'] ) ); ?></td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-			<?php endif; ?>
+			</nav>
+			<div class="slashphoto-gallery-overview__groups slashphoto-report">
+				<?php
+				$charts = [
+					'gallery' => __( 'Gallery views per day', 'slashphoto' ),
+					'photo'   => __( 'Photo views per day', 'slashphoto' ),
+				];
+				foreach ( $charts as $key => $label ) :
+					$values = array_column( $daily, $key, 'day' );
+					?>
+					<section class="slashphoto-gallery-section" aria-label="<?php echo esc_attr( $label ); ?>" data-visibility="<?php echo 'photo' === $key ? 'restricted' : 'public'; ?>">
+						<header class="slashphoto-gallery-section__header">
+							<h2><?php echo esc_html( $label ); ?></h2>
+							<span class="slashphoto-gallery-section__count"><?php echo esc_html( number_format_i18n( array_sum( $values ) ) ); ?></span>
+						</header>
+						<div class="slashphoto-report__body"><?php ActivityChart::daily( $values, $label ); ?></div>
+					</section>
+				<?php endforeach; ?>
+				<section class="slashphoto-gallery-section" data-visibility="private">
+					<header class="slashphoto-gallery-section__header"><h2><?php esc_html_e( 'Galleries', 'slashphoto' ); ?></h2></header>
+					<div class="slashphoto-report__table">
+						<table id="slashphoto-viewed-galleries" class="widefat striped">
+							<thead><tr><th scope="col"><?php esc_html_e( 'Gallery', 'slashphoto' ); ?></th><th scope="col"><?php esc_html_e( 'Page views', 'slashphoto' ); ?></th><th scope="col"><?php esc_html_e( 'Photo views', 'slashphoto' ); ?></th></tr></thead>
+							<tbody>
+								<?php if ( ! $rows ) : ?>
+									<tr><td colspan="3"><?php esc_html_e( 'No views counted in this period.', 'slashphoto' ); ?></td></tr>
+								<?php endif; ?>
+								<?php foreach ( $rows as $row ) : ?>
+									<tr>
+										<td><?php self::gallery_name( $row['gallery_id'] ); ?></td>
+										<td><?php echo esc_html( number_format_i18n( $row['page_views'] ) ); ?></td>
+										<td><?php echo esc_html( number_format_i18n( $row['photo_views'] ) ); ?></td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				</section>
+				<section class="slashphoto-gallery-section" data-visibility="private">
+					<header class="slashphoto-gallery-section__header"><h2><?php esc_html_e( 'Most viewed photos', 'slashphoto' ); ?></h2></header>
+					<div class="slashphoto-report__table">
+						<table class="widefat striped">
+							<thead><tr><th scope="col"><?php esc_html_e( 'Photo', 'slashphoto' ); ?></th><th scope="col"><?php esc_html_e( 'Gallery', 'slashphoto' ); ?></th><th scope="col"><?php esc_html_e( 'Views', 'slashphoto' ); ?></th></tr></thead>
+							<tbody>
+								<?php if ( ! $photos ) : ?>
+									<tr><td colspan="3"><?php esc_html_e( 'No views counted in this period.', 'slashphoto' ); ?></td></tr>
+								<?php endif; ?>
+								<?php foreach ( $photos as $photo ) : ?>
+									<tr>
+										<td><?php echo wp_get_attachment_image( $photo['image_id'], [ 60, 60 ], false, [ 'style' => 'width:48px;height:auto;vertical-align:middle;margin-right:8px' ] ); ?><?php echo esc_html( \SlashPhoto\Proofing\Proofing::file_label( $photo['image_id'] ) ); ?></td>
+										<td><?php self::gallery_name( $photo['gallery_id'] ); ?></td>
+										<td><?php echo esc_html( number_format_i18n( $photo['views'] ) ); ?></td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				</section>
+			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Shows an existing gallery by name or labels its historical counts.
+	 *
+	 * @param int $id Gallery ID.
+	 */
+	private static function gallery_name( int $id ): void {
+		if ( PostType::POST_TYPE !== get_post_type( $id ) || 'trash' === get_post_status( $id ) ) {
+			esc_html_e( 'Removed gallery', 'slashphoto' );
+			return;
+		}
+		$title = get_the_title( $id );
+		$title = '' !== $title ? $title : __( '(Untitled gallery)', 'slashphoto' );
+		if ( ! current_user_can( 'edit_post', $id ) ) {
+			echo esc_html( $title );
+			return;
+		}
+		echo '<a href="' . esc_url( GalleryWorkspace::url( $id ) ) . '">' . esc_html( $title ) . '</a>';
 	}
 }

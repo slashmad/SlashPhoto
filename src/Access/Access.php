@@ -196,10 +196,16 @@ final class Access {
 	 * @param WP_Post $gallery Gallery.
 	 */
 	public function client_allowed( WP_Post $gallery ): bool {
-		if ( $this->is_editor( $gallery ) ) {
-			return true;
-		}
-		$user_id = get_current_user_id();
+		return $this->is_editor( $gallery ) || $this->account_allowed( $gallery, get_current_user_id() );
+	}
+
+	/**
+	 * Checks the recipient's account against inherited account rules.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 * @param int     $user_id Account ID, or zero for a guest.
+	 */
+	public function account_allowed( WP_Post $gallery, int $user_id ): bool {
 		foreach ( $this->chain( $gallery ) as $post ) {
 			if ( self::MODE_MEMBERS === self::mode( $post ) ) {
 				// Any account on the site.

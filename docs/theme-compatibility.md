@@ -122,3 +122,27 @@ Check every front-end change in all of them, on desktop and phone widths.
 npx wp-env run cli wp theme activate astra
 npm run seed
 ```
+
+## Public gallery directory
+
+Add `[slashphoto_galleries]` to a Shortcode block on a normal WordPress page
+to list published public galleries. Cards use the gallery's own cover or
+first photo. Galleries with a password, invitation, expiry date, email gate
+or terms stay out of this public directory, even when an editor views it.
+
+In **SlashPhoto → Settings → Galleries**, select the directory page to make
+the main gallery archive open it. Leave the theme archive selected to use the
+active theme's archive template.
+
+For a photography home page, use
+`[slashphoto_galleries layout="home" directory="123" featured="456"]`,
+where `directory` is the page ID of the public directory and `featured` is
+the ID of a public gallery. Both IDs are optional. The homepage uses the
+directory selected in Settings when no directory ID is provided. If your theme
+offers a page template without a title, use it to show only the landing page heading.
+
+After a Sunshine import, open the old client galleries page and replace
+`[sunshine_galleries]` with `[slashphoto_galleries]` if you want to keep the
+old page address. Point the site's Cart link to the page configured for
+SlashPhoto checkout. Review other Sunshine pages and navigation links before
+making them public.

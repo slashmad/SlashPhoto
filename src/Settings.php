@@ -8,7 +8,9 @@
 namespace SlashPhoto;
 
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Shop\Countries;
 use SlashPhoto\Shop\Money;
+use SlashPhoto\Shop\PrintPresets;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -36,8 +38,20 @@ final class Settings {
 	 * Keys per form section, and which of them are checkboxes.
 	 */
 	public const SECTIONS   = [
-		'general' => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity', 'display_size', 'display_quality', 'snapotter_mode', 'snapotter_min_mp', 'stats_enabled', 'visitor_retention_days', 'terms_ask_email' ],
-		'shop'    => [ 'currency', 'prices_include_tax', 'tax_rate', 'shipping_flat', 'free_shipping_over', 'shipping_countries', 'download_days', 'shop_page', 'shop_terms_page', 'shop_email', 'shop_price_list', 'manual_enabled', 'manual_title', 'manual_instructions', 'business_name', 'business_details', 'receipt_note' ],
+		'general_watermark' => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity' ],
+		'general_galleries' => [ 'gallery_directory_page' ],
+		'general_copies'    => [ 'display_size', 'display_quality' ],
+		'general_snapotter' => [ 'snapotter_mode', 'snapotter_min_mp' ],
+		'general_visitors'  => [ 'stats_enabled', 'visitor_retention_days', 'terms_ask_email' ],
+		'shop_pages'        => [ 'shop_page', 'shop_terms_page' ],
+		'shop_prices'       => [ 'currency', 'prices_include_tax', 'tax_rate', 'shop_price_list' ],
+		'shop_prints'       => [ 'print_presets' ],
+		'shop_shipping'     => [ 'shipping_flat', 'free_shipping_over', 'shipping_countries' ],
+		'shop_downloads'    => [ 'download_days' ],
+		'shop_receipts'     => [ 'business_name', 'business_details', 'receipt_note' ],
+		'shop_payments'     => [ 'shop_email', 'manual_enabled', 'manual_title', 'manual_instructions' ],
+		'general'           => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity', 'display_size', 'display_quality', 'snapotter_mode', 'snapotter_min_mp', 'stats_enabled', 'visitor_retention_days', 'terms_ask_email' ],
+		'shop'              => [ 'currency', 'prices_include_tax', 'tax_rate', 'shipping_flat', 'free_shipping_over', 'shipping_countries', 'download_days', 'shop_page', 'shop_terms_page', 'shop_email', 'shop_price_list', 'manual_enabled', 'manual_title', 'manual_instructions', 'business_name', 'business_details', 'receipt_note' ],
 	];
 	public const CHECKBOXES = [ 'watermark_default', 'prices_include_tax', 'manual_enabled', 'stats_enabled', 'terms_ask_email' ];
 	public const AMOUNTS    = [ 'shipping_flat', 'free_shipping_over' ];
@@ -50,6 +64,7 @@ final class Settings {
 	public static function defaults(): array {
 		$swedish = str_starts_with( (string) get_locale(), 'sv' );
 		return [
+			'gallery_directory_page' => 0,
 			'watermark_id'           => 0,
 			'watermark_default'      => false,
 			'watermark_position'     => 'center',
@@ -67,6 +82,7 @@ final class Settings {
 			'tax_rate'               => 25.0,
 			'shipping_flat'          => 0,
 			'free_shipping_over'     => 0,
+			'print_presets'          => PrintPresets::IDS,
 			'shipping_countries'     => $swedish ? 'SE' : '',
 			'download_days'          => 30,
 			'shop_page'              => 0,
@@ -153,6 +169,7 @@ final class Settings {
 		$currency   = in_array( $currency, $currencies, true ) ? $currency : $defaults['currency'];
 
 		$clean = [
+			'gallery_directory_page' => absint( $value( 'gallery_directory_page' ) ),
 			'watermark_id'           => $id,
 			'watermark_default'      => ! empty( $input['watermark_default'] ),
 			'watermark_position'     => in_array( $position, self::POSITIONS, true ) ? $position : $defaults['watermark_position'],
@@ -168,7 +185,8 @@ final class Settings {
 			'currency'               => $currency,
 			'prices_include_tax'     => (bool) $value( 'prices_include_tax' ),
 			'tax_rate'               => min( 100.0, max( 0.0, round( (float) str_replace( ',', '.', (string) $value( 'tax_rate' ) ), 3 ) ) ),
-			'shipping_countries'     => implode( ', ', array_unique( array_filter( (array) preg_split( '/[\s,;]+/', strtoupper( (string) $value( 'shipping_countries' ) ) ), static fn( string $code ): bool => (bool) preg_match( '/^[A-Z]{2}$/', $code ) ) ) ),
+			'print_presets'          => PrintPresets::sanitize( $value( 'print_presets' ) ),
+			'shipping_countries'     => implode( ', ', Countries::codes( $value( 'shipping_countries' ) ) ),
 			'download_days'          => min( 3650, max( 0, (int) $value( 'download_days' ) ) ),
 			'shop_page'              => absint( $value( 'shop_page' ) ),
 			'shop_terms_page'        => absint( $value( 'shop_terms_page' ) ),

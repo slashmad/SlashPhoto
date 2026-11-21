@@ -193,6 +193,29 @@ final class VisitorsTest extends AccessTestCase {
 		$this->assertSame( [ $gallery ], array_column( Stats::galleries( wp_date( 'Y-m-d' ) ), 'gallery_id' ) );
 	}
 
+	public function test_view_totals_and_visitor_activity_measure_different_events(): void {
+		$gallery = $this->gallery();
+		$image   = $this->image( $gallery );
+		$user    = $this->as_user( 'subscriber' );
+		Stats::add( $gallery );
+		Stats::add( $gallery, $image );
+		Stats::add( $gallery, $image );
+		VisitorLog::add( 'terms', $gallery, '', '', $user );
+		VisitorLog::add( 'email', $gallery, '', '', $user );
+		VisitorLog::add( 'terms', $gallery, '', '', 0 );
+		$history = Stats::daily_counts( wp_date( 'Y-m-d' ) );
+		$events  = VisitorLog::activity( gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS ) );
+
+		$this->assertSame( 1, reset( $history )['gallery'] );
+		$this->assertSame( 2, reset( $history )['photo'] );
+		$this->assertSame( 2, $events[ $user ] );
+		$this->assertSame( 1, $events[0] );
+		$this->assertSame( [ $image ], array_column( Stats::photos( wp_date( 'Y-m-d' ) ), 'image_id' ) );
+		wp_trash_post( $gallery );
+		$this->assertSame( [], Stats::photos( wp_date( 'Y-m-d' ) ) );
+		$this->assertSame( $history, Stats::daily_counts( wp_date( 'Y-m-d' ) ) );
+	}
+
 	public function test_retention_privacy_tools_and_csv(): void {
 		$gallery = $this->gallery();
 		$old     = VisitorLog::add( 'email', $gallery, 'old@example.org' );

@@ -90,6 +90,11 @@ final class UploadPanel {
 		if ( ! in_array( $hook, [ 'post.php', 'post-new.php' ], true ) || ! self::on_gallery_screen() ) {
 			return;
 		}
+		$this->enqueue_uploader();
+	}
+
+	/** Enqueues the shared uploader for a gallery form. */
+	public function enqueue_uploader(): void {
 		$this->register_uploader();
 		wp_enqueue_script( self::UPLOADER );
 	}

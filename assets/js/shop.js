@@ -3,7 +3,7 @@
  * and checkout page.
  *
  * The cart is kept in this browser only (localStorage: image IDs, product
- * IDs and quantities). Prices, names and availability always come from the
+ * IDs, print option IDs and quantities). Prices, names and availability always come from the
  * site, which checks again that the visitor can see each image.
  *
  * @package SlashPhoto
@@ -68,6 +68,7 @@ function readCart() {
 				return {
 					image: parseInt( item?.image, 10 ) || 0,
 					product: String( item?.product || '' ),
+					variant: String( item?.variant || '' ),
 					qty: Math.min( MAX_QTY, Math.max( 1, parseInt( item?.qty, 10 ) || 1 ) ),
 				};
 			} )
@@ -99,14 +100,22 @@ function setCart( items ) {
 	cartListeners.forEach( ( listener ) => listener( clean ) );
 }
 
-function addToCart( image, product, qty, kind ) {
+function lineKey( item ) {
+	if ( item.package ) {
+		return 'pkg:' + item.package;
+	}
+	return item.image + ':' + item.product + ( item.variant ? ':' + item.variant : '' );
+}
+
+function addToCart( image, product, variant, qty, kind ) {
 	const items = getCart();
-	const existing = items.find( ( item ) => item.image === image && item.product === product );
+	const key = lineKey( { image, product, variant } );
+	const existing = items.find( ( item ) => lineKey( item ) === key );
 	if ( existing ) {
 		// A download is bought once; prints add up.
 		existing.qty = 'download' === kind ? 1 : Math.min( MAX_QTY, existing.qty + qty );
 	} else {
-		items.push( { image, product, qty: 'download' === kind ? 1 : qty } );
+		items.push( { image, product, variant, qty: 'download' === kind ? 1 : qty } );
 	}
 	setCart( items );
 }
@@ -294,7 +303,8 @@ function openBuyPanel( dialog, opener, id, products ) {
 			<span class="slashphoto-lightbox__product-actions"></span>
 		`;
 		row.querySelector( '.slashphoto-lightbox__product-name' ).textContent = product.name;
-		row.querySelector( '.slashphoto-lightbox__product-price' ).textContent = product.price;
+		const price = row.querySelector( '.slashphoto-lightbox__product-price' );
+		price.textContent = product.price;
 		const actions = row.querySelector( '.slashphoto-lightbox__product-actions' );
 		if ( 'package' === product.kind ) {
 			const info = document.createElement( 'span' );
@@ -349,11 +359,35 @@ function openBuyPanel( dialog, opener, id, products ) {
 		add.type = 'button';
 		add.className = 'slashphoto-lightbox__add';
 		add.textContent = i18n.add || 'Add';
-		add.setAttribute( 'aria-label', format( i18n.addProduct || 'Add %s to cart', product.name ) );
+		let option = product.variants?.[ 0 ];
+		const productName = () => option ? product.name + ' — ' + option.label : product.name;
+		const updateChoice = () => {
+			price.textContent = option?.price ?? product.price;
+			add.setAttribute( 'aria-label', format( i18n.addProduct || 'Add %s to cart', productName() ) );
+		};
+		if ( option ) {
+			const field = document.createElement( 'label' );
+			field.className = 'slashphoto-lightbox__print-options';
+			const label = document.createElement( 'span' );
+			label.textContent = i18n.printOptions || 'Paper and framing';
+			const select = document.createElement( 'select' );
+			select.setAttribute( 'aria-label', format( i18n.printOptionsFor || 'Paper and framing, %s', product.name ) );
+			product.variants.forEach( ( choice ) => {
+				select.add( new Option( choice.label + ' — ' + choice.price, choice.id ) );
+			} );
+			price.setAttribute( 'aria-live', 'polite' );
+			select.addEventListener( 'change', () => {
+				option = product.variants[ select.selectedIndex ];
+				updateChoice();
+			} );
+			field.append( label, select );
+			row.insertBefore( field, actions );
+		}
+		updateChoice();
 		add.addEventListener( 'click', () => {
 			const amount = qty ? Math.min( MAX_QTY, Math.max( 1, parseInt( qty.value, 10 ) || 1 ) ) : 1;
-			addToCart( id, product.id, amount, product.kind );
-			status.replaceChildren( document.createTextNode( format( i18n.added || 'Added: %s.', product.name ) + ' ' ) );
+			addToCart( id, product.id, option?.id ?? '', amount, product.kind );
+			status.replaceChildren( document.createTextNode( format( i18n.added || 'Added: %s.', productName() ) + ' ' ) );
 			if ( config.cartUrl ) {
 				const link = document.createElement( 'a' );
 				link.href = config.cartUrl;
@@ -387,7 +421,7 @@ function openBuyPanel( dialog, opener, id, products ) {
 	panel.append( list, status, close );
 	dialog.append( panel );
 	opener.setAttribute( 'aria-expanded', 'true' );
-	panel.querySelector( 'input, button' )?.focus();
+	panel.querySelector( 'select, input, button' )?.focus();
 }
 
 /* ------------------------------------------------------------------ */
@@ -447,11 +481,10 @@ class Checkout {
 
 	apply( quote ) {
 		this.quote = quote;
-		const keyOf = ( item ) => ( item.package ? 'pkg:' + item.package : item.image + ':' + item.product );
 		if ( quote.unavailable?.length ) {
 			const gone = new Set( quote.unavailable );
-			setCart( getCart().filter( ( item ) => ! gone.has( keyOf( item ) ) ) );
 			this.notice = i18n.unavailable || '';
+			setCart( getCart().filter( ( item ) => ! gone.has( lineKey( item ) ) ) );
 			return; // setCart() triggers a new quote.
 		}
 		// Photos the site left out of a package (not visible, not for sale).
@@ -633,7 +666,7 @@ class Checkout {
 		li.querySelector( '.slashphoto-cart__price' ).textContent = line.total;
 		const qtyCell = li.querySelector( '.slashphoto-cart__qty' );
 		if ( 'print' === line.kind ) {
-			const uid = 'slashphoto-cart-qty-' + line.key.replace( ':', '-' );
+			const uid = 'slashphoto-cart-qty-' + line.key.replaceAll( ':', '-' );
 			const label = document.createElement( 'label' );
 			label.className = 'screen-reader-text';
 			label.htmlFor = uid;
@@ -646,7 +679,7 @@ class Checkout {
 			input.value = String( line.qty );
 			input.addEventListener( 'change', () => {
 				const qty = Math.min( MAX_QTY, Math.max( 1, parseInt( input.value, 10 ) || 1 ) );
-				setCart( getCart().map( ( item ) => ( item.image === line.image && item.product === line.product ? { ...item, qty } : item ) ) );
+				setCart( getCart().map( ( item ) => ( lineKey( item ) === line.key ? { ...item, qty } : item ) ) );
 			} );
 			qtyCell.append( label, input );
 		}
@@ -655,7 +688,7 @@ class Checkout {
 		remove.setAttribute( 'aria-label', format( i18n.removeLine || 'Remove %s', line.name + ', ' + line.title ) );
 		remove.addEventListener( 'click', () => {
 			this.notice = '';
-			setCart( getCart().filter( ( item ) => ! ( item.image === line.image && item.product === line.product ) ) );
+			setCart( getCart().filter( ( item ) => lineKey( item ) !== line.key ) );
 		} );
 		return li;
 	}

@@ -82,7 +82,7 @@ final class OrdersTable extends \WP_List_Table {
 		$counts  = Orders::counts();
 		$base    = Settings::admin_url( '', OrdersPage::SLUG );
 		$views   = [
-			'all' => sprintf( '<a href="%s"%s>%s <span class="count">(%d)</span></a>', esc_url( $base ), '' === $current ? ' class="current" aria-current="page"' : '', esc_html__( 'All', 'slashphoto' ), array_sum( $counts ) ),
+			'all' => sprintf( '<a href="%s"%s>%s <span class="count">(%d)</span></a>', esc_url( add_query_arg( 'view', 'list', $base ) ), '' === $current ? ' class="current" aria-current="page"' : '', esc_html__( 'All', 'slashphoto' ), array_sum( $counts ) ),
 		];
 		foreach ( Orders::labels() as $status => $label ) {
 			if ( ! $counts[ $status ] ) {

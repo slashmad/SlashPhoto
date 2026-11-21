@@ -62,7 +62,9 @@ final class Assets {
 			$this->register_assets();
 		}
 
-		$needed = is_singular( PostType::POST_TYPE ) || is_post_type_archive( PostType::POST_TYPE );
+		$needed    = is_singular( PostType::POST_TYPE ) || is_post_type_archive( PostType::POST_TYPE );
+		$post      = get_queried_object();
+		$directory = $post instanceof \WP_Post && has_shortcode( $post->post_content, GalleryDirectory::SHORTCODE );
 
 		/**
 		 * Filters whether the SlashPhoto front-end stylesheet is enqueued.
@@ -71,7 +73,7 @@ final class Assets {
 		 *
 		 * @param bool $needed Whether the current view shows a gallery.
 		 */
-		if ( apply_filters( 'slashphoto_enqueue_frontend_styles', $needed ) ) {
+		if ( apply_filters( 'slashphoto_enqueue_frontend_styles', $needed || $directory ) ) {
 			wp_enqueue_style( self::STYLE_HANDLE );
 		}
 
@@ -235,9 +237,12 @@ final class Assets {
 					'added'             => __( 'Added: %s.', 'slashphoto' ),
 					/* translators: %s: product name */
 					'quantityFor'       => __( 'Quantity, %s', 'slashphoto' ),
+					'printOptions'      => __( 'Paper and framing', 'slashphoto' ),
+					/* translators: %s: print product name */
+					'printOptionsFor'   => __( 'Paper and framing, %s', 'slashphoto' ),
 					'close'             => __( 'Close', 'slashphoto' ),
 					'empty'             => __( 'Your cart is empty.', 'slashphoto' ),
-					'unavailable'       => __( 'Some photos are no longer available to you and were removed from the cart.', 'slashphoto' ),
+					'unavailable'       => __( 'Some photos or options are no longer available and were removed from the cart.', 'slashphoto' ),
 					'remove'            => __( 'Remove', 'slashphoto' ),
 					/* translators: %s: product and photo */
 					'removeLine'        => __( 'Remove %s', 'slashphoto' ),

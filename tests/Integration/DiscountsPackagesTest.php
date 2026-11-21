@@ -113,6 +113,18 @@ final class DiscountsPackagesTest extends ShopTestCase {
 		$this->assertTrue( $prints['needs_shipping'], 'A package of prints is shipped.' );
 		$this->assertSame( 30000 + 4900, $prints['total'] );
 		$this->assertSame( 2, $prints['lines'][0]['count'] );
+		$order = Orders::create(
+			[
+				'email' => 'package@example.org',
+				'name'  => 'Package buyer',
+			],
+			$prints
+		);
+		$this->assertIsInt( $order );
+		$export = iterator_to_array( Orders::print_rows( 'pending', '#' . $order ) );
+		$this->assertCount( 1, $export );
+		$this->assertSame( $images[0], (int) $export[0]['image_id'] );
+		$this->assertSame( 'Print 20 × 30 cm', $export[0]['print_product'] );
 
 		$this->assertSame(
 			[ 'pkg:x' ],

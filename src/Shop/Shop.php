@@ -21,7 +21,7 @@ defined( 'ABSPATH' ) || exit;
  * Decides what is for sale to the current visitor and prices a cart.
  *
  * The cart itself lives in the visitor's browser. Every quote and order is
- * built again here from image IDs and product IDs only: prices, names and
+ * built again here from image, product and print option IDs: prices, names and
  * shipping come from the price lists, and each image must be in a gallery
  * the visitor can see right now (passwords, client lists, links, expiry,
  * terms). An image the visitor cannot see is reported as unavailable,
@@ -103,15 +103,28 @@ final class Shop {
 				$entry['includes'] = $includes ? $includes['name'] : '';
 				$entry['gallery']  = $gallery->ID;
 			}
+			if ( ! empty( $product['variants'] ) ) {
+				$entry['variants'] = array_values(
+					array_map(
+						static fn( array $variant ): array => [
+							'id'    => $variant['id'],
+							'label' => PriceLists::variant_label( $variant ),
+							'price' => Money::format( $variant['price'], $currency ),
+						],
+						$product['variants']
+					)
+				);
+				$entry['price']    = $entry['variants'][0]['price'];
+			}
 			$offer[] = $entry;
-		}
+		}//end foreach
 		return $offer;
 	}
 
 	/**
 	 * Prices a cart.
 	 *
-	 * Items are either single products, { image, product, qty }, or package
+	 * Items are either single products, { image, product, qty, variant? }, or package
 	 * instances, { package: <client ID>, product, images: [ … ], gallery }.
 	 * A package of a whole gallery ("count" 0) needs only the gallery.
 	 *
@@ -143,14 +156,16 @@ final class Shop {
 				}
 				continue;
 			}
-			$image = (int) ( $item['image'] ?? 0 );
-			$key   = $image . ':' . $product;
+			$image   = (int) ( $item['image'] ?? 0 );
+			$variant = (string) ( $item['variant'] ?? '' );
+			$key     = $image . ':' . $product . ( '' === $variant ? '' : ':' . $variant );
 			if ( $image <= 0 ) {
 				continue;
 			}
 			$merged[ $key ] = [
 				'image'   => $image,
 				'product' => $product,
+				'variant' => $variant,
 				'qty'     => ( $merged[ $key ]['qty'] ?? 0 ) + max( 1, (int) ( $item['qty'] ?? 1 ) ),
 			];
 		}//end foreach
@@ -158,7 +173,7 @@ final class Shop {
 		$lines       = [];
 		$unavailable = [];
 		foreach ( $merged as $key => $item ) {
-			$line = $this->line( $item['image'], $item['product'], $item['qty'] );
+			$line = $this->line( $key, $item );
 			if ( $line ) {
 				$lines[] = $line;
 			} else {
@@ -304,12 +319,12 @@ final class Shop {
 	/**
 	 * Prices one cart line, or returns null when it is not available.
 	 *
-	 * @param int    $image_id   Image.
-	 * @param string $product_id Product.
-	 * @param int    $qty        Quantity.
+	 * @param string $key  Cart line key.
+	 * @param array  $item Image, product, option and quantity.
 	 */
-	private function line( int $image_id, string $product_id, int $qty ): ?array {
-		$image = get_post( $image_id );
+	private function line( string $key, array $item ): ?array {
+		$image_id = $item['image'];
+		$image    = get_post( $image_id );
 		if ( ! $image || 'attachment' !== $image->post_type || ! wp_attachment_is_image( $image ) || ! $image->post_parent ) {
 			return null;
 		}
@@ -318,26 +333,42 @@ final class Shop {
 			return null;
 		}
 		$list    = $this->price_list( $gallery );
-		$product = $list ? PriceLists::product( $list, $product_id ) : null;
-		if ( ! $product ) {
+		$product = $list ? PriceLists::product( $list, $item['product'] ) : null;
+		if ( ! $product || 'package' === $product['kind'] ) {
 			return null;
 		}
+		$name    = $product['name'];
+		$unit    = $product['price'];
+		$variant = null;
+		if ( ! empty( $product['variants'] ) || '' !== $item['variant'] ) {
+			$variant = $product['variants'][ $item['variant'] ] ?? null;
+			if ( ! $variant ) {
+				return null;
+			}
+			$label = PriceLists::variant_label( $variant );
+			// The persisted order item name is limited to 200 characters.
+			$name = mb_substr( $name, 0, max( 0, 197 - mb_strlen( $label ) ) ) . ' — ' . $label;
+			$unit = $variant['price'];
+		}
 		// A download is delivered once, whatever the quantity.
-		$qty   = 'download' === $product['kind'] ? 1 : min( self::MAX_QTY, max( 1, $qty ) );
+		$qty   = 'download' === $product['kind'] ? 1 : min( self::MAX_QTY, max( 1, $item['qty'] ) );
 		$thumb = wp_get_attachment_image_src( $image_id, 'thumbnail' );
 		return [
-			'key'     => $image_id . ':' . $product_id,
-			'image'   => $image_id,
-			'gallery' => $gallery->ID,
-			'product' => $product_id,
-			'kind'    => $product['kind'],
-			'name'    => $product['name'],
-			'title'   => get_the_title( $image ),
-			'file'    => Proofing::file_label( $image_id ),
-			'thumb'   => $thumb ? $thumb[0] : '',
-			'qty'     => $qty,
-			'unit'    => $product['price'],
-			'total'   => $product['price'] * $qty,
+			'key'           => $key,
+			'image'         => $image_id,
+			'gallery'       => $gallery->ID,
+			'product'       => $item['product'],
+			'kind'          => $product['kind'],
+			'name'          => $name,
+			'title'         => get_the_title( $image ),
+			'file'          => Proofing::file_label( $image_id ),
+			'thumb'         => $thumb ? $thumb[0] : '',
+			'qty'           => $qty,
+			'unit'          => $unit,
+			'total'         => $unit * $qty,
+			'print_product' => 'print' === $product['kind'] ? $product['name'] : '',
+			'print_paper'   => $variant['paper'] ?? '',
+			'print_frame'   => $variant['frame'] ?? '',
 		];
 	}
 }

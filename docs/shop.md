@@ -27,6 +27,57 @@ There are no platform fees, no paid add-ons and no WooCommerce dependency.
    by default: write your payment details in the settings. For card
    payments, connect Stripe (below).
 
+Under **Prints and shipping**, open **Choose countries** to select delivery
+destinations by name. The search narrows the checklist while keeping your
+selections. Clear the checklist to disable print orders.
+
+## Paper and framing options
+
+Create a print product for each size. Under **Paper and framing options**,
+enter one available combination per line as `Paper | Frame | Full price`.
+Leave the frame field empty to offer an unframed print. Use the shop's
+currency and the same VAT settings as for other prices. The first listed
+combination is selected when a customer opens the Buy panel. The customer
+can choose a different combination before adding the photo to the cart.
+The price list's regular **Price** field applies to a print without options.
+
+A Swedish shop can use Crimson's separation between small prints, posters
+and framed prints as a starting point. List the papers and frames you can
+source for each size. This example is a 30 × 40 cm poster in SEK with
+illustrative retail prices. [Crimson's print and framing range](https://crimson.se/bestall-bilder)
+
+```text
+Matt fotopapper | | 229
+Blankt fotopapper | | 249
+Matt fotopapper | Svart träram | 399
+Fine art-papper | Ekram | 549
+```
+
+WhiteWall and theprintspace are international references for paper choices
+and framing by size. The same price list works with your own sizes and local
+fulfilment. [WhiteWall photo prints](https://www.whitewall.com/us/photo-prints) · [theprintspace framing options](https://www.theprintspace.co.uk/help/knowledge-base/how-to-set-up-and-sell-art-prints-with-frames/)
+
+### Print templates
+
+**Shop settings → Print templates** controls which starting points are shown
+in the price-list editor. Enable or disable Crimson, WhiteWall and
+theprintspace independently.
+
+On a print product, open **Paper and framing options**, choose a template and
+click **Add combinations**. New combinations are appended with blank prices.
+Existing combinations keep their current prices. Keep only the combinations
+you can produce at the size you sell, then enter their prices and save the list.
+Disabling a template hides it from the editor. The combinations you saved stay
+available, and you can always add your own paper and framing options.
+
+The cart keeps separate lines for different options of the same photo.
+The selected paper, framing and price are saved with the order for fulfilment
+and receipts. Customers will need to choose again if you add options to a
+plain print they have in their cart, or remove or rename the selected option.
+For a package with a fixed paper or frame, create a separate print named
+with that specification and choose it under **each with**. The package
+price covers that configuration.
+
 ## Packages
 
 A package is a number of photos the customer chooses, each with the same
@@ -105,6 +156,14 @@ note. Each line has a link to download the original for printing.
 
 You get an email for new manual orders and for paid orders. Marking an
 order paid opens its downloads for the number of days set in the settings.
+
+**Export paid prints CSV** on the Orders overview exports paid orders awaiting
+fulfilment. Use **Export prints CSV** in the list for a different status or
+search. There is one row per print line, including prints in packages, with
+quantity, original file label (without extension), the saved description and
+the product, paper and frame where recorded. Older lines retain their saved
+description. The CSV includes order and image IDs and excludes contact details,
+addresses and download links.
 
 ## Stripe
 
@@ -208,5 +267,5 @@ when the customer returns.
 
 ## Not yet
 
-Product options (paper, frames), tax per country, CSV export, print-lab
-integrations, downloads in smaller sizes and gift cards are planned.
+Tax per country, CSV export, print-lab integrations, downloads in smaller
+sizes and gift cards are planned.

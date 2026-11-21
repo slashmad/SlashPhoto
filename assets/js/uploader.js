@@ -137,6 +137,9 @@
 				rows[ index ].querySelector( 'progress' ).value = state.progress || 0;
 				rows[ index ].querySelector( '.status' ).textContent = statusText( state );
 				rows[ index ].classList.toggle( 'is-error', 'error' === state.phase );
+				if ( 'done' === state.phase ) {
+					box.dispatchEvent( new CustomEvent( 'slashphoto:photo-added', { bubbles: true, detail: state.result } ) );
+				}
 			} );
 			input.value = '';
 			input.disabled = false;

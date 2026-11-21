@@ -11,7 +11,7 @@ WordPress. No subscriptions, no paid add-ons, no locked features.
 
 1. On a test site with WordPress 6.7+ and PHP 8.3+, copy the folder containing
    `slashphoto.php` to `wp-content/plugins/slashphoto/` and activate it under
-   **Plugins**.
+   **Plugins**. With a beta ZIP, use **Plugins → Add New → Upload Plugin**.
    The browser libraries are bundled, so the plugin needs no build step.
 2. Go to **SlashPhoto → Add new gallery** and add images using **Upload photos**
    in the gallery editor. Set the gallery's access rules before publishing.
@@ -42,6 +42,7 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
 - **Client access.** Use WordPress passwords, secret share links, selected
   client accounts or any signed-in account. Add expiry dates and terms that
   visitors must accept. Sub-galleries follow their ancestors' access rules.
+  Send a gallery link from the **Invite** tab in a published gallery.
   See [gallery access and privacy](docs/security-and-privacy.md).
 - **Full-size originals.** Upload one full-resolution file per image through
   the gallery editor's **Upload photos** panel. Chunked uploads can handle
@@ -62,12 +63,13 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
   Visitors without an account keep favourites in their own browser only.
   See [docs/proofing.md](docs/proofing.md).
 - **Photo sales.** Sell original downloads and prints in your own sizes with
-  per-gallery price lists, packages and discount codes. Customers add photos
-  from the lightbox and check out as guests. Accept manual payments (invoice,
-  bank transfer or Swish) or connect Stripe Checkout, PayPal or Mollie.
-  SlashPhoto charges no platform fee. Manage orders, send status emails and
-  offer printable receipts and invoices. Private download links work for paid
-  orders during the configured download period.
+  paper and framing options, per-gallery price lists, packages and discount
+  codes. Customers add photos from the lightbox and check out as guests.
+  Accept manual payments (invoice, bank transfer or Swish) or connect Stripe
+  Checkout, PayPal or Mollie.
+  SlashPhoto charges no platform fee. Manage orders, export a print production
+  CSV, send status emails and offer printable receipts and invoices. Private
+  download links work for paid orders during the configured download period.
   See [shop setup](docs/shop.md).
 - **Import from Sunshine Photo Cart.** Copies galleries with their access
   settings, images, price levels and orders, in repeatable steps, without
@@ -80,10 +82,8 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
 
 ## Roadmap
 
-- Shop product options such as paper and frames, order CSV export, tax per
-  country and gift cards.
-- Client invitations by email, licences, print-lab integrations, AVIF/WebP and
-  EXIF/IPTC search.
+- Tax per country, gift cards, licences and print-lab integrations.
+- AVIF/WebP and EXIF/IPTC search.
 
 ## Requirements
 
@@ -105,6 +105,7 @@ npm run seed           # replaces demo galleries in the local test site
 npm run test:e2e       # Playwright browser tests (needs the seeded site)
 npm run vendor         # copy three.js / Photo Sphere Viewer from node_modules to assets/vendor
 npm run i18n:pot       # regenerate languages/slashphoto.pot
+npm run package:beta   # requires zip; build an installable archive in dist/
 npm run env:stop
 ```
 

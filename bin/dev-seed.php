@@ -315,6 +315,34 @@ PriceLists::save_products(
 			'price' => 34900,
 		],
 		[
+			'id'       => 'd0000002',
+			'kind'     => 'print',
+			'name'     => 'Poster 30 × 40 cm',
+			'price'    => 22900,
+			'variants' => [
+				[
+					'paper' => 'Matte photo paper',
+					'frame' => '',
+					'price' => 22900,
+				],
+				[
+					'paper' => 'Glossy photo paper',
+					'frame' => '',
+					'price' => 24900,
+				],
+				[
+					'paper' => 'Matte photo paper',
+					'frame' => 'Black wood',
+					'price' => 39900,
+				],
+				[
+					'paper' => 'Fine art paper',
+					'frame' => 'Natural oak',
+					'price' => 54900,
+				],
+			],
+		],
+		[
 			'kind'     => 'package',
 			'name'     => 'Three downloads',
 			'price'    => 70000,

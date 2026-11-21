@@ -71,6 +71,10 @@ final class CheckoutRest {
 						'type'    => 'string',
 						'pattern' => '^[a-f0-9]{8}$',
 					],
+					'variant' => [
+						'type'    => 'string',
+						'pattern' => '^(?:[a-f0-9]{16})?$',
+					],
 					'qty'     => [
 						'type'    => 'integer',
 						'minimum' => 1,
@@ -269,8 +273,7 @@ final class CheckoutRest {
 	 * @return string[] ISO 3166-1 alpha-2 codes.
 	 */
 	public static function countries(): array {
-		$codes = preg_split( '/[\s,;]+/', strtoupper( (string) Settings::get( 'shipping_countries' ) ) );
-		return array_values( array_filter( (array) $codes, static fn( string $code ): bool => (bool) preg_match( '/^[A-Z]{2}$/', $code ) ) );
+		return Countries::codes( Settings::get( 'shipping_countries' ) );
 	}
 
 	/**

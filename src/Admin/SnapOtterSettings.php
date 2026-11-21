@@ -7,7 +7,7 @@
 
 namespace SlashPhoto\Admin;
 
-use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Settings;
 use SlashPhoto\SnapOtter\Connection;
 
 defined( 'ABSPATH' ) || exit;
@@ -70,7 +70,7 @@ final class SnapOtterSettings {
 			],
 			MINUTE_IN_SECONDS
 		);
-		wp_safe_redirect( admin_url( 'edit.php?post_type=' . PostType::POST_TYPE . '&page=' . SettingsPage::SLUG ) . '#slashphoto-snapotter' );
+		wp_safe_redirect( add_query_arg( 'tab', 'snapotter', Settings::admin_url() ) . '#slashphoto-snapotter' );
 		exit;
 	}
 
@@ -82,9 +82,14 @@ final class SnapOtterSettings {
 	}
 
 	/**
-	 * Renders the connection section below the settings form.
+	 * Renders the connection section below the processing settings.
+	 *
+	 * @param string $tab Active settings section.
 	 */
-	public function render(): void {
+	public function render( string $tab ): void {
+		if ( 'snapotter' !== $tab ) {
+			return;
+		}
 		$notice = get_transient( self::notice_key() );
 		delete_transient( self::notice_key() );
 		$data       = Connection::data();

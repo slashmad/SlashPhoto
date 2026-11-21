@@ -27,6 +27,7 @@ This is an early development version. Galleries, panoramas, client access, proof
 * Proofing: clients mark favourites, add notes and send their selection; you get an email and a list with file names for Lightroom. Visitors without an account keep favourites in their own browser only.
 * Shop: sell downloads of your originals and prints in your own sizes, with price lists per gallery. Guest checkout, manual payment (invoice, transfer, Swish) or Stripe Checkout with no platform fee, order emails, and downloads that open only for paid orders.
 * Packages (a number of photos or the whole gallery for one price), discount codes, and printable receipts and invoices.
+* Paper and framing options on individual prints. Each size can offer its own combinations and prices, and the customer's choice is recorded on the order.
 * Import from Sunshine Photo Cart: galleries, access settings, images, prices and orders, without changing Sunshine's data.
 * Visitors: galleries for any logged-in account, an email request before the photos, a log of terms acceptances and anonymous view statistics. Never IP addresses or browser details, no third-party requests, with a retention period and export/erase support.
 * A gallery block to place any gallery on any page.
@@ -75,6 +76,7 @@ No. Galleries, images and orders are kept when the plugin is removed.
 == Changelog ==
 
 = 0.1.0-dev =
+* Print options for paper and framing with a price per combination.
 * Gallery post type with sub-galleries.
 * Theme compatibility layer and overridable templates.
 * Panorama and 360° detection.

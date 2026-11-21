@@ -8,6 +8,7 @@
 namespace SlashPhoto\Shop;
 
 use SlashPhoto\Access\Access;
+use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Settings;
 use WP_Post;
@@ -30,6 +31,9 @@ final class PriceLists {
 	public const MAX_PACKAGE  = 500;
 	public const MAX_PRODUCTS = 100;
 	public const NONCE        = 'slashphoto_pricelist';
+	/** Limits for text entered in the options editor. */
+	private const MAX_VARIANTS     = 24;
+	private const MAX_OPTION_LABEL = 36;
 
 	/**
 	 * Registers hooks.
@@ -39,6 +43,7 @@ final class PriceLists {
 		add_action( 'add_meta_boxes_' . self::POST_TYPE, [ $this, 'add_meta_box' ] );
 		add_action( 'save_post_' . self::POST_TYPE, [ $this, 'save' ], 10, 2 );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
+		add_action( 'admin_notices', [ $this, 'variant_notice' ] );
 	}
 
 	/**
@@ -178,9 +183,50 @@ final class PriceLists {
 				$product['count']    = min( self::MAX_PACKAGE, max( 0, (int) ( $row['count'] ?? 0 ) ) );
 				$product['includes'] = preg_match( '/^[a-f0-9]{8}$/', (string) ( $row['includes'] ?? '' ) ) ? (string) $row['includes'] : '';
 			}
+			if ( 'print' === $kind && ! empty( $row['variants'] ) ) {
+				$product['variants'] = self::clean_variants( (array) $row['variants'] );
+			}
 			$products[] = $product;
 		}//end foreach
 		return $products;
+	}
+
+	/**
+	 * Keeps explicitly offered paper/framing combinations. Their IDs survive
+	 * price edits and reordering. A different combination gets a new ID.
+	 *
+	 * @param array $rows Variants, priced in minor units.
+	 * @return array<string, array{id: string, paper: string, frame: string, price: int}>
+	 */
+	private static function clean_variants( array $rows ): array {
+		$variants = [];
+		foreach ( array_slice( $rows, 0, self::MAX_VARIANTS ) as $row ) {
+			if ( ! is_array( $row ) || ! is_string( $row['paper'] ?? null ) || ! is_string( $row['frame'] ?? null ) || ! is_int( $row['price'] ?? null ) || $row['price'] < 0 ) {
+				continue;
+			}
+			$paper = sanitize_text_field( $row['paper'] );
+			$frame = sanitize_text_field( $row['frame'] );
+			if ( '' === $paper || mb_strlen( $paper ) > self::MAX_OPTION_LABEL || mb_strlen( $frame ) > self::MAX_OPTION_LABEL || str_contains( $paper . $frame, '|' ) ) {
+				continue;
+			}
+			$id              = substr( hash( 'sha256', $paper . "\0" . $frame ), 0, 16 );
+			$variants[ $id ] = [
+				'id'    => $id,
+				'paper' => $paper,
+				'frame' => $frame,
+				'price' => $row['price'],
+			];
+		}
+		return $variants;
+	}
+
+	/**
+	 * Customer-facing name of a paper and framing combination.
+	 *
+	 * @param array $variant Configured print option.
+	 */
+	public static function variant_label( array $variant ): string {
+		return $variant['paper'] . ' / ' . ( '' === $variant['frame'] ? __( 'Unframed', 'slashphoto' ) : $variant['frame'] );
 	}
 
 	/**
@@ -255,11 +301,12 @@ final class PriceLists {
 		$products = is_array( $saved ) ? self::clean( $saved ) : [];
 		$rows     = $products ? $products : self::suggestions();
 		$plain    = array_values( array_filter( $products, static fn( array $p ): bool => 'package' !== $p['kind'] ) );
+		$presets  = array_intersect_key( PrintPresets::all(), array_flip( Settings::get( 'print_presets' ) ) );
 		wp_nonce_field( self::NONCE, self::NONCE . '_nonce' );
 		?>
-		<p><?php esc_html_e( 'Customers choose one of these for each image. Downloads deliver the original file you uploaded; prints are made and sent by you. Rows without a price are not saved; enter 0 for something free.', 'slashphoto' ); ?></p>
+		<p><?php esc_html_e( 'Customers choose one of these for each image. Downloads deliver the original file you uploaded. You make and send the prints. Enter a price or configure print options. Use 0 for something free.', 'slashphoto' ); ?></p>
 		<p><?php esc_html_e( 'A package is a number of photos the customer chooses, each with the same download or print, for one price, e.g. “10 downloads”. Set the number to 0 for every photo in the gallery. Save new downloads and prints before choosing them in a package.', 'slashphoto' ); ?></p>
-		<table class="widefat striped slashphoto-products" data-slashphoto-products>
+		<table class="widefat striped slashphoto-products" role="table" data-slashphoto-products>
 			<thead>
 				<tr>
 					<th scope="col"><?php esc_html_e( 'Type', 'slashphoto' ); ?></th>
@@ -276,7 +323,7 @@ final class PriceLists {
 			<tbody>
 				<?php
 				foreach ( $rows as $index => $row ) {
-					$this->row( (string) $index, $row, $currency, $plain );
+					$this->row( (string) $index, $row, $currency, $plain, $presets );
 				}
 				?>
 			</tbody>
@@ -292,7 +339,8 @@ final class PriceLists {
 					'price' => 0,
 				],
 				$currency,
-				$plain
+				$plain,
+				$presets
 			);
 			?>
 		</template>
@@ -316,15 +364,20 @@ final class PriceLists {
 	 * @param array  $row      Product.
 	 * @param string $currency Currency.
 	 * @param array  $plain    Saved downloads and prints, for packages.
+	 * @param array  $presets  Enabled paper and framing templates.
 	 */
-	private function row( string $index, array $row, string $currency, array $plain ): void {
-		$package = 'package' === $row['kind'];
-		$name    = 'slashphoto_products[' . $index . ']';
+	private function row( string $index, array $row, string $currency, array $plain, array $presets ): void {
+		$package       = 'package' === $row['kind'];
+		$name          = 'slashphoto_products[' . $index . ']';
+		$variant_lines = [];
+		foreach ( $row['variants'] ?? [] as $variant ) {
+			$variant_lines[] = $variant['paper'] . ' | ' . $variant['frame'] . ' | ' . Money::to_input( $variant['price'], $currency );
+		}
 		?>
 		<tr>
 			<td>
 				<input type="hidden" name="<?php echo esc_attr( $name ); ?>[id]" value="<?php echo esc_attr( (string) $row['id'] ); ?>">
-				<label class="screen-reader-text" for="slashphoto-kind-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Type', 'slashphoto' ); ?></label>
+				<label class="slashphoto-product-label" for="slashphoto-kind-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Type', 'slashphoto' ); ?></label>
 				<select id="slashphoto-kind-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[kind]">
 					<option value="download" <?php selected( $row['kind'], 'download' ); ?>><?php esc_html_e( 'Download', 'slashphoto' ); ?></option>
 					<option value="print" <?php selected( $row['kind'], 'print' ); ?>><?php esc_html_e( 'Print', 'slashphoto' ); ?></option>
@@ -332,7 +385,7 @@ final class PriceLists {
 				</select>
 			</td>
 			<td>
-				<label class="screen-reader-text" for="slashphoto-name-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Name shown to customers', 'slashphoto' ); ?></label>
+				<label class="slashphoto-product-label" for="slashphoto-name-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Name shown to customers', 'slashphoto' ); ?></label>
 				<input type="text" class="widefat" maxlength="120" id="slashphoto-name-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[name]" value="<?php echo esc_attr( (string) $row['name'] ); ?>">
 				<p class="slashphoto-package-fields" data-slashphoto-package-fields <?php echo $package ? '' : 'hidden'; ?>>
 					<label for="slashphoto-count-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Photos', 'slashphoto' ); ?></label>
@@ -344,9 +397,28 @@ final class PriceLists {
 						<?php endforeach; ?>
 					</select>
 				</p>
+				<details data-slashphoto-print-options <?php echo 'print' === $row['kind'] ? '' : 'hidden'; ?>>
+					<summary><?php esc_html_e( 'Paper and framing options', 'slashphoto' ); ?></summary>
+					<?php if ( $presets ) : ?>
+						<div class="slashphoto-print-template">
+							<label for="slashphoto-print-template-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Print template', 'slashphoto' ); ?></label>
+							<select id="slashphoto-print-template-<?php echo esc_attr( $index ); ?>" data-slashphoto-print-template>
+								<option value=""><?php esc_html_e( 'Choose a template', 'slashphoto' ); ?></option>
+								<?php foreach ( $presets as $key => $preset ) : ?>
+									<option value="<?php echo esc_attr( $key ); ?>" data-combinations="<?php echo esc_attr( wp_json_encode( $preset['options'] ) ); ?>"><?php echo esc_html( $preset['name'] ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<button type="button" class="button" data-slashphoto-add-combinations disabled><?php esc_html_e( 'Add combinations', 'slashphoto' ); ?></button>
+						</div>
+						<p class="description slashphoto-print-template-status" data-slashphoto-template-status role="status"></p>
+					<?php endif; ?>
+					<label for="slashphoto-variants-<?php echo esc_attr( $index ); ?>" class="screen-reader-text"><?php esc_html_e( 'Print options', 'slashphoto' ); ?></label>
+					<textarea id="slashphoto-variants-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[variant_input]" class="widefat" rows="4" data-slashphoto-variant-input aria-describedby="slashphoto-variants-help-<?php echo esc_attr( $index ); ?>"><?php echo esc_textarea( implode( "\n", $variant_lines ) ); ?></textarea>
+					<p class="description" id="slashphoto-variants-help-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Enter one available combination per line as Paper | Frame | Full price. Leave the frame blank for an unframed print. The first combination is selected by default.', 'slashphoto' ); ?></p>
+				</details>
 			</td>
 			<td>
-				<label class="screen-reader-text" for="slashphoto-price-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Price', 'slashphoto' ); ?></label>
+				<label class="slashphoto-product-label" for="slashphoto-price-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Price', 'slashphoto' ); ?></label>
 				<input type="text" inputmode="decimal" size="8" id="slashphoto-price-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[price]" value="<?php echo esc_attr( '' === (string) $row['id'] && ! (int) $row['price'] ? '' : Money::to_input( (int) $row['price'], $currency ) ); ?>">
 			</td>
 			<td><button type="button" class="button-link button-link-delete" data-slashphoto-remove-product><?php esc_html_e( 'Remove', 'slashphoto' ); ?></button></td>
@@ -375,14 +447,68 @@ final class PriceLists {
 			if ( '__i__' === (string) $index || ! is_array( $row ) ) {
 				continue;
 			}
-			// A row without a price is a suggestion that was not filled in.
-			if ( '' === trim( (string) ( $row['price'] ?? '' ) ) ) {
+			$variant_input = $row['variant_input'] ?? '';
+			$variants      = [];
+			if ( 'print' === ( $row['kind'] ?? '' ) && '' !== $variant_input ) {
+				$variants = is_string( $variant_input ) ? self::parse_variants( $variant_input, $currency ) : null;
+				if ( null === $variants ) {
+					add_filter( 'redirect_post_location', static fn( string $url ): string => add_query_arg( 'slashphoto_invalid_print_options', '1', $url ) );
+					return;
+				}
+			}
+			$price = trim( (string) ( $row['price'] ?? '' ) );
+			// A suggestion without a price or any options was not filled in.
+			if ( '' === $price && ! $variants ) {
 				continue;
 			}
-			$row['price'] = Money::parse( (string) ( $row['price'] ?? '' ), $currency );
-			$products[]   = $row;
-		}
+			$row['price']    = '' === $price ? reset( $variants )['price'] : Money::parse( $price, $currency );
+			$row['variants'] = $variants;
+			$products[]      = $row;
+		}//end foreach
 		self::save_products( $post_id, $products );
+	}
+
+	/**
+	 * Parses a combination per line. A bad row rejects the whole price-list
+	 * update so a typo cannot remove an option or turn its price into zero.
+	 *
+	 * @param string $input    Submitted options.
+	 * @param string $currency Site currency.
+	 * @return array|null Parsed combination list, or null for invalid input.
+	 */
+	private static function parse_variants( string $input, string $currency ): ?array {
+		$lines = preg_split( '/\R/u', trim( $input ), -1, PREG_SPLIT_NO_EMPTY );
+		if ( false === $lines ) {
+			return null;
+		}
+		$rows = [];
+		foreach ( $lines as $line ) {
+			if ( '' === trim( $line ) ) {
+				continue;
+			}
+			$cells = array_map( 'trim', explode( '|', $line ) );
+			if ( 3 !== count( $cells ) || ! preg_match( '/^\d{1,9}(?:[.,]\d{1,2})?$/D', $cells[2] ) || count( $rows ) >= self::MAX_VARIANTS ) {
+				return null;
+			}
+			$rows[] = [
+				'paper' => $cells[0],
+				'frame' => $cells[1],
+				'price' => Money::parse( $cells[2], $currency ),
+			];
+		}
+		$variants = self::clean_variants( $rows );
+		return count( $variants ) === count( $rows ) ? $variants : null;
+	}
+
+	/**
+	 * Reports a rejected price-list edit after WordPress redirects back.
+	 */
+	public function variant_notice(): void {
+		$screen = get_current_screen();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- this flag only displays a notice.
+		if ( $screen && self::POST_TYPE === $screen->post_type && isset( $_GET['slashphoto_invalid_print_options'] ) ) {
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'The price list was kept as it was. Enter each paper and frame combination once, with a price of zero or more. A print can have up to 24 combinations and each paper or frame name can be up to 36 characters.', 'slashphoto' ) . '</p></div>';
+		}
 	}
 
 	/**
@@ -395,38 +521,20 @@ final class PriceLists {
 		if ( ! $screen || self::POST_TYPE !== $screen->post_type || ! in_array( $hook, [ 'post.php', 'post-new.php' ], true ) ) {
 			return;
 		}
-		wp_register_script( 'slashphoto-pricelist', '', [], SLASHPHOTO_VERSION, true );
-		wp_enqueue_script( 'slashphoto-pricelist' );
-		wp_add_inline_script(
+		$script = 'assets/js/admin-price-lists.js';
+		$style  = 'assets/css/admin-price-lists.css';
+		wp_enqueue_script( 'slashphoto-pricelist', SLASHPHOTO_URL . $script, [], Assets::version( $script ), true );
+		wp_enqueue_style( 'slashphoto-pricelist', SLASHPHOTO_URL . $style, [], Assets::version( $style ) );
+		wp_localize_script(
 			'slashphoto-pricelist',
-			<<<'JS'
-( function () {
-	const table = document.querySelector( '[data-slashphoto-products]' );
-	const template = document.querySelector( '[data-slashphoto-product-template]' );
-	const add = document.querySelector( '[data-slashphoto-add-product]' );
-	if ( ! table || ! template || ! add ) {
-		return;
-	}
-	let next = table.tBodies[ 0 ].rows.length + 1;
-	add.addEventListener( 'click', () => {
-		const html = template.innerHTML.replaceAll( '__i__', 'n' + next++ );
-		table.tBodies[ 0 ].insertAdjacentHTML( 'beforeend', html );
-		table.tBodies[ 0 ].lastElementChild.querySelector( 'input[type="text"]' ).focus();
-	} );
-	table.addEventListener( 'change', ( event ) => {
-		if ( event.target.matches( 'select[name$="[kind]"]' ) ) {
-			event.target.closest( 'tr' ).querySelector( '[data-slashphoto-package-fields]' ).hidden = 'package' !== event.target.value;
-		}
-	} );
-	table.addEventListener( 'click', ( event ) => {
-		const button = event.target.closest( '[data-slashphoto-remove-product]' );
-		if ( button ) {
-			button.closest( 'tr' ).remove();
-			add.focus();
-		}
-	} );
-} )();
-JS
+			'slashPhotoPriceLists',
+			[
+				'limit'     => self::MAX_VARIANTS,
+				'added'     => __( 'Combinations added. Enter a price for each new row.', 'slashphoto' ),
+				'duplicate' => __( 'These combinations are already in this print.', 'slashphoto' ),
+				'full'      => __( 'This template would exceed the maximum of 24 combinations per print.', 'slashphoto' ),
+				'missing'   => __( 'Enter a price for every paper and frame combination before saving.', 'slashphoto' ),
+			]
 		);
 	}
 }

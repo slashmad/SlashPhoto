@@ -174,7 +174,7 @@ final class SelectionsBox {
 		 */
 		do_action( 'slashphoto_selection_changed', $operation, $selection );
 
-		wp_safe_redirect( get_edit_post_link( $selection->post_parent, 'raw' ) . '#slashphoto-selections' );
+		wp_safe_redirect( GalleryWorkspace::url( $selection->post_parent, 'selections' ) );
 		exit;
 	}
 }

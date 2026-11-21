@@ -97,8 +97,9 @@ final class AccessSettings {
 	 * Renders the classic-editor meta box.
 	 *
 	 * @param WP_Post $post Gallery.
+	 * @param array   $box  Meta box context.
 	 */
-	public function render_meta_box( WP_Post $post ): void {
+	public function render_meta_box( WP_Post $post, array $box = [] ): void {
 		$mode    = Access::mode( $post );
 		$clients = array_filter( array_map( 'get_userdata', Access::clients( $post ) ) );
 		$logins  = implode( ', ', wp_list_pluck( $clients, 'user_login' ) );
@@ -161,7 +162,15 @@ final class AccessSettings {
 			<label for="slashphoto-terms"><?php esc_html_e( 'Terms to accept before viewing', 'slashphoto' ); ?></label>
 			<textarea id="slashphoto-terms" name="slashphoto_terms" class="widefat" rows="4"><?php echo esc_textarea( Terms::text( $post ) ); ?></textarea>
 		</p>
-		<p class="description"><?php esc_html_e( 'Set a password under Visibility. Sub-galleries also follow the rules of the galleries above them.', 'slashphoto' ); ?></p>
+		<p class="description">
+			<?php
+			if ( ! empty( $box['workspace'] ) ) {
+				esc_html_e( 'Use Edit page content to manage the gallery password. Sub-galleries also follow the access rules of their parent galleries.', 'slashphoto' );
+			} else {
+				esc_html_e( 'Set a password under Visibility. Sub-galleries also follow the rules of the galleries above them.', 'slashphoto' );
+			}
+			?>
+		</p>
 		<?php
 	}
 

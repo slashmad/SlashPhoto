@@ -13,6 +13,11 @@ use SlashPhoto\Access\EmailGate;
 use SlashPhoto\Access\ShareLinks;
 use SlashPhoto\Access\Terms;
 use SlashPhoto\Admin\AccessSettings;
+use SlashPhoto\Admin\DonationsPage;
+use SlashPhoto\Admin\GalleryList;
+use SlashPhoto\Admin\GalleryOverview;
+use SlashPhoto\Admin\GalleryInvitations;
+use SlashPhoto\Admin\GalleryWorkspace;
 use SlashPhoto\Admin\ImportPage;
 use SlashPhoto\Admin\OrdersPage;
 use SlashPhoto\Admin\SelectionsBox;
@@ -23,6 +28,7 @@ use SlashPhoto\Admin\VisitorsPage;
 use SlashPhoto\Admin\SettingsPage;
 use SlashPhoto\Blocks\GalleryBlock;
 use SlashPhoto\Frontend\Assets;
+use SlashPhoto\Frontend\GalleryDirectory;
 use SlashPhoto\Frontend\TemplateLoader;
 use SlashPhoto\Frontend\ThemeCompat;
 use SlashPhoto\Gallery\GalleryMeta;
@@ -181,22 +187,34 @@ final class Plugin {
 		( new PayPalGateway() )->register_hooks();
 		( new MollieGateway() )->register_hooks();
 
-		$this->renderer = new GalleryRenderer( $this->templates, new GalleryRepository(), $panorama, $this->access, $terms, $this->proofing, $this->shop );
+		$galleries      = new GalleryRepository();
+		$this->renderer = new GalleryRenderer( $this->templates, $galleries, $panorama, $this->access, $terms, $this->proofing, $this->shop );
 		( new ThemeCompat( $this->renderer ) )->register_hooks();
+		( new GalleryDirectory( $this->access, $galleries, $this->templates ) )->register_hooks();
 		( new Assets() )->register_hooks();
 
 		$this->gallery_block = new GalleryBlock( $this->renderer, $this->access, $this->templates );
 		$this->gallery_block->register_hooks();
 
-		( new AccessSettings() )->register_hooks();
-		( new SelectionsBox( $this->proofing ) )->register_hooks();
-		( new UploadPanel() )->register_hooks();
+		$access_settings = new AccessSettings();
+		$access_settings->register_hooks();
+		$gallery_list = new GalleryList( $this->access );
+		$gallery_list->register_hooks();
+		( new GalleryOverview( $gallery_list, $this->access ) )->register_hooks();
+		$selections = new SelectionsBox( $this->proofing );
+		$selections->register_hooks();
+		$upload = new UploadPanel();
+		$upload->register_hooks();
+		$invitations = new GalleryInvitations( $this->access );
+		$invitations->register_hooks();
+		( new GalleryWorkspace( $this->access, new GalleryRepository(), $access_settings, $selections, $upload, $invitations ) )->register_hooks();
 		( new SnapOtterSettings() )->register_hooks();
 		( new SettingsPage() )->register_hooks();
 		( new ShopSettings() )->register_hooks();
 		( new OrdersPage() )->register_hooks();
 		( new ImportPage() )->register_hooks();
 		( new VisitorsPage() )->register_hooks();
+		( new DonationsPage() )->register_hooks();
 		( new Privacy() )->register_hooks();
 
 		/**

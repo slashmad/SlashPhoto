@@ -8,9 +8,63 @@
 namespace SlashPhoto\Tests\Integration;
 
 use SlashPhoto\Access\Access;
+use SlashPhoto\Access\EmailGate;
 use SlashPhoto\Access\Terms;
+use SlashPhoto\Admin\GalleryList;
+use SlashPhoto\Admin\GalleryOverview;
 
 final class AccessRulesTest extends AccessTestCase {
+
+	public function test_admin_visibility_uses_inherited_rules_even_for_an_editor(): void {
+		$this->as_user( 'administrator' );
+		$list = new GalleryList( new Access() );
+		$this->assertSame( 'public', $list->group( get_post( $this->gallery() ) ) );
+
+		$password = $this->gallery( [ 'post_password' => 'secret' ] );
+		$child    = $this->gallery( [ 'post_parent' => $password ] );
+		$draft    = $this->gallery(
+			[
+				'post_parent' => $password,
+				'post_status' => 'draft',
+			]
+		);
+		$private  = $this->gallery( [ 'post_status' => 'private' ] );
+		$this->assertSame( 'password', $list->group( get_post( $child ) ) );
+		$this->assertSame( 'private', $list->group( get_post( $draft ) ) );
+		$this->assertSame( 'private', $list->group( get_post( $this->gallery( [ 'post_parent' => $private ] ) ) ) );
+
+		$email = $this->gallery( [], [ EmailGate::META => 'on' ] );
+		$this->assertSame( 'restricted', $list->group( get_post( $this->gallery( [ 'post_parent' => $email ] ) ) ) );
+	}
+
+	public function test_gallery_overview_only_shows_titles_the_user_can_edit(): void {
+		$other  = self::factory()->user->create( [ 'role' => 'editor' ] );
+		$parent = $this->gallery(
+			[
+				'post_author' => $other,
+				'post_status' => 'private',
+				'post_title'  => 'Overview private parent secret',
+			]
+		);
+		$user   = $this->as_user( 'contributor' );
+		wp_get_current_user()->add_cap( 'edit_pages' );
+		$this->gallery(
+			[
+				'post_author' => $user,
+				'post_parent' => $parent,
+				'post_status' => 'draft',
+				'post_title'  => 'Overview own draft child',
+			]
+		);
+		$access   = new Access();
+		$overview = new GalleryOverview( new GalleryList( $access ), $access );
+		ob_start();
+		$overview->render();
+		$html = (string) ob_get_clean();
+
+		$this->assertStringContainsString( 'Overview own draft child', $html );
+		$this->assertStringNotContainsString( 'Overview private parent secret', $html );
+	}
 
 	public function test_sub_gallery_inherits_the_parent_password(): void {
 		$parent = $this->gallery( [ 'post_password' => 'secret' ] );

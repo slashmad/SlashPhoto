@@ -208,7 +208,7 @@ final class ShopPage {
 			$settings['shop_page'] = (int) $id;
 			update_option( Settings::OPTION, $settings );
 		}
-		wp_safe_redirect( Settings::admin_url( 'slashphoto-shop' ) );
+		wp_safe_redirect( Settings::admin_url( '', 'slashphoto-shop' ) );
 		exit;
 	}
 }

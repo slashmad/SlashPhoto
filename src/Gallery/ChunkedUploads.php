@@ -283,6 +283,7 @@ final class ChunkedUploads {
 				'id'        => $attachment,
 				'title'     => get_the_title( $attachment ),
 				'thumbnail' => $thumb ? $thumb[0] : '',
+				'preview'   => (string) wp_get_attachment_image_url( $attachment, 'medium' ),
 			],
 			201
 		);

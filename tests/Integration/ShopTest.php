@@ -8,12 +8,15 @@
 namespace SlashPhoto\Tests\Integration;
 
 use SlashPhoto\Plugin;
+use SlashPhoto\Admin\PrintExport;
 use SlashPhoto\Privacy;
 use SlashPhoto\Settings;
+use SlashPhoto\Shop\CheckoutRest;
 use SlashPhoto\Shop\Downloads;
 use SlashPhoto\Shop\Money;
 use SlashPhoto\Shop\Orders;
 use SlashPhoto\Shop\PriceLists;
+use SlashPhoto\Shop\PrintPresets;
 use SlashPhoto\Shop\ShopPage;
 
 final class ShopTest extends ShopTestCase {
@@ -77,6 +80,136 @@ final class ShopTest extends ShopTestCase {
 		$this->assertCount( 1, $clean );
 		$this->assertSame( 'Print 10 × 15', $clean[0]['name'] );
 		$this->assertMatchesRegularExpression( '/^[a-f0-9]{8}$/', $clean[0]['id'] );
+	}
+
+	public function test_print_options_are_priced_separately_and_saved_on_the_order(): void {
+		$list                = PriceLists::products( $this->list );
+		$list[1]['variants'] = [
+			[
+				'paper' => 'Matte photo paper',
+				'frame' => '',
+				'price' => 21900,
+			],
+			[
+				'paper' => 'Matte photo paper',
+				'frame' => 'Black wood',
+				'price' => 36900,
+			],
+		];
+		PriceLists::save_products( $this->list, $list );
+		$gallery = $this->shop_gallery();
+		$image   = $this->image( $gallery );
+		$offer   = Plugin::instance()->shop()->offer( get_post( $gallery ) );
+		$ids     = array_column( $offer[1]['variants'], 'id' );
+		$print   = [
+			'image'   => $image,
+			'product' => 'aaaa0002',
+		];
+		$matte   = $print + [ 'variant' => $ids[0] ];
+		$framed  = $print + [
+			'variant' => $ids[1],
+			'price'   => 1,
+			'name'    => 'Browser value',
+		];
+		$items   = [ $matte, $framed, $framed ];
+		$quote   = $this->quote( $items );
+		$this->assertCount( 2, $quote['lines'] );
+		$this->assertSame( [ 1, 2 ], array_column( $quote['lines'], 'qty' ) );
+		$this->assertSame( [ 21900, 36900 ], array_column( $quote['lines'], 'unit' ) );
+		$this->assertSame( 21900 + 2 * 36900 + 4900, $quote['total'] );
+		$this->assertSame(
+			[ $image . ':aaaa0002', $image . ':aaaa0002:0000000000000000', $image . ':aaaa0001:' . $ids[1] ],
+			$this->quote( [ $print, $print + [ 'variant' => '0000000000000000' ], array_replace( $framed, [ 'product' => 'aaaa0001' ] ) ] )['unavailable']
+		);
+
+		$order = $this->place( $items );
+
+		$this->settings( [ 'print_presets' => [] ] );
+		$this->assertSame( $quote['lines'], $this->quote( $items )['lines'] );
+
+		$list[1]['variants'] = [ $list[1]['variants'][0] ];
+		PriceLists::save_products( $this->list, $list );
+		$this->assertSame( [ $image . ':aaaa0002:' . $ids[1] ], $this->quote( $items )['unavailable'] );
+		$stored = Orders::items( $order['id'] );
+		$this->assertSame( [ 'Print 20 × 30 cm — Matte photo paper / Unframed', 'Print 20 × 30 cm — Matte photo paper / Black wood' ], array_column( $stored, 'name' ) );
+		$this->assertSame( [ 21900, 36900 ], array_column( $stored, 'unit_price' ) );
+		$this->assertSame( [ 'Print 20 × 30 cm', 'Print 20 × 30 cm' ], array_column( $stored, 'print_product' ) );
+		$this->assertSame( [ 'Matte photo paper', 'Matte photo paper' ], array_column( $stored, 'print_paper' ) );
+		$this->assertSame( [ '', 'Black wood' ], array_column( $stored, 'print_frame' ) );
+	}
+
+	public function test_print_csv_uses_stored_labels_and_filters_orders_without_exporting_contacts(): void {
+		$gallery = $this->shop_gallery();
+		$image   = $this->image( $gallery );
+		$quote   = $this->quote(
+			[
+				[
+					'image'   => $image,
+					'product' => 'aaaa0001',
+				],
+				[
+					'image'   => $image,
+					'product' => 'aaaa0002',
+					'qty'     => 2,
+				],
+			]
+		);
+		// An older print line has only a description and a file label.
+		unset( $quote['lines'][1]['print_product'] );
+		$quote['lines'][1]['name'] = ' =FORMULA()';
+		$id                        = Orders::create(
+			[
+				'email' => 'customer@example.org',
+				'name'  => 'Private contact',
+			],
+			$quote
+		);
+		$this->assertIsInt( $id );
+		$this->assertSame( [], iterator_to_array( Orders::print_rows( 'paid' ) ) );
+		$this->assertTrue( Orders::set_status( $id, 'paid' ) );
+		$this->assertSame( [], iterator_to_array( Orders::print_rows( 'paid', 'different@example.org' ) ) );
+
+		$csv = fopen( 'php://memory', 'w+' );
+		PrintExport::write( $csv, 'paid', '#' . $id );
+		rewind( $csv );
+		$headers = fgetcsv( $csv, 0, ',', '"', '' );
+		$row     = array_combine( $headers, fgetcsv( $csv, 0, ',', '"', '' ) );
+		$this->assertSame( (string) $id, $row['order_id'] );
+		$this->assertSame( 'paid', $row['status'] );
+		$this->assertSame( "' =FORMULA()", $row['description'] );
+		$this->assertSame( '', $row['product'] );
+		$this->assertSame( '2', $row['quantity'] );
+		$this->assertArrayNotHasKey( 'email', $row );
+		$this->assertArrayNotHasKey( 'address', $row );
+		$this->assertFalse( fgetcsv( $csv, 0, ',', '"', '' ) );
+		fclose( $csv );
+	}
+
+	public function test_print_options_in_price_list_form_are_validated_before_saving(): void {
+		$this->as_user( 'administrator' );
+		$lists = new PriceLists();
+		$post  = get_post( $this->list );
+
+		$_POST[ PriceLists::NONCE . '_nonce' ] = wp_create_nonce( PriceLists::NONCE );
+		$_POST['slashphoto_products']          = [
+			[
+				'id'            => 'aaaa0002',
+				'kind'          => 'print',
+				'name'          => 'Poster 30 × 40 cm',
+				'price'         => '',
+				'variant_input' => "Matte photo paper | | 219,50\nFine art | Natural oak | 429",
+			],
+		];
+		try {
+			$lists->save( $this->list, $post );
+			$saved = PriceLists::product( $this->list, 'aaaa0002' );
+			$this->assertSame( [ 21950, 42900 ], array_column( $saved['variants'], 'price' ) );
+			$_POST['slashphoto_products'][0]['variant_input'] = "Matte photo paper | | 219,50\nFine art | Natural oak | invalid";
+			$lists->save( $this->list, $post );
+			$this->assertSame( $saved, PriceLists::product( $this->list, 'aaaa0002' ) );
+		} finally {
+			unset( $_POST[ PriceLists::NONCE . '_nonce' ], $_POST['slashphoto_products'] );
+		}
 	}
 
 	public function test_quote_uses_server_prices_and_shipping_only_for_prints(): void {
@@ -458,5 +591,90 @@ final class ShopTest extends ShopTestCase {
 		$this->assertFalse( $clean['prices_include_tax'], 'Unchecked boxes in the submitted section are off.' );
 		$this->assertFalse( $clean['manual_enabled'] );
 		$this->assertSame( 'EUR', $clean['currency'] );
+	}
+
+	public function test_settings_tab_save_only_applies_its_own_fields(): void {
+		$this->settings(
+			[
+				'watermark_default'  => true,
+				'stats_enabled'      => true,
+				'terms_ask_email'    => true,
+				'prices_include_tax' => true,
+				'manual_enabled'     => true,
+				'currency'           => 'EUR',
+			]
+		);
+		$clean = Settings::sanitize(
+			[
+				'_section'            => 'shop_shipping',
+				'shipping_flat_input' => '12,50',
+				'shipping_countries'  => [ '', 'SE', 'NO' ],
+				'currency'            => 'USD',
+			]
+		);
+		$this->assertSame( 1250, $clean['shipping_flat'] );
+		$this->assertSame( 'SE, NO', $clean['shipping_countries'] );
+		$this->assertSame( 'EUR', $clean['currency'] );
+		$this->assertTrue( $clean['prices_include_tax'] );
+		$this->assertTrue( $clean['manual_enabled'] );
+
+		$clean = Settings::sanitize( [ '_section' => 'general_visitors' ] );
+		$this->assertFalse( $clean['stats_enabled'] );
+		$this->assertFalse( $clean['terms_ask_email'] );
+		$this->assertTrue( $clean['watermark_default'] );
+	}
+
+	public function test_print_template_settings_allow_each_template_or_none(): void {
+		$this->assertSame( PrintPresets::IDS, Settings::get( 'print_presets' ) );
+		$chosen = Settings::sanitize(
+			[
+				'_section'      => 'shop_prints',
+				'print_presets' => [ '', 'theprintspace', 'unknown', 'crimson', 'crimson', [ 'invalid' ] ],
+				'currency'      => 'USD',
+			]
+		);
+		$this->assertSame( [ 'crimson', 'theprintspace' ], $chosen['print_presets'] );
+		$this->assertSame( 'SEK', $chosen['currency'] );
+		$this->assertTrue( $chosen['manual_enabled'] );
+		$this->settings( $chosen );
+		$this->assertSame(
+			[ 'crimson', 'theprintspace' ],
+			Settings::sanitize(
+				[
+					'_section' => 'shop_shipping',
+				]
+			)['print_presets']
+		);
+
+		$disabled = Settings::sanitize(
+			[
+				'_section'      => 'shop_prints',
+				'print_presets' => [ '' ],
+			]
+		);
+		$this->assertSame( [], $disabled['print_presets'] );
+		$this->settings( $disabled );
+		$this->assertSame( [], Settings::get( 'print_presets' ) );
+	}
+
+	public function test_shipping_checkboxes_and_legacy_settings_preserve_country_order(): void {
+		$this->settings( [ 'shipping_countries' => 'se, GB; xk, SE' ] );
+		$this->assertSame( [ 'SE', 'GB', 'XK' ], CheckoutRest::countries() );
+
+		$form = Settings::sanitize(
+			[
+				'_section'           => 'shop',
+				'shipping_countries' => [ '', 'SE', 'GB', 'XK', 'US', 'gb', 'invalid' ],
+			]
+		);
+		$this->assertSame( 'SE, GB, XK, US', $form['shipping_countries'] );
+
+		$empty = Settings::sanitize(
+			[
+				'_section'           => 'shop',
+				'shipping_countries' => [ '' ],
+			]
+		);
+		$this->assertSame( '', $empty['shipping_countries'] );
 	}
 }

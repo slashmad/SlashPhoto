@@ -151,7 +151,7 @@ final class Stats {
 	}
 
 	/**
-	 * Views per gallery since a day.
+	 * Views per existing gallery since a day.
 	 *
 	 * @param string $since First day (Y-m-d).
 	 * @param int    $limit Rows.
@@ -161,12 +161,12 @@ final class Stats {
 		global $wpdb;
 		$table = Schema::stats();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table.
-		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT gallery_id, SUM(CASE WHEN image_id = 0 THEN views ELSE 0 END) AS page_views, SUM(CASE WHEN image_id > 0 THEN views ELSE 0 END) AS photo_views FROM {$table} WHERE day >= %s GROUP BY gallery_id ORDER BY page_views DESC, photo_views DESC LIMIT %d", $since, $limit ), ARRAY_A );
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT s.gallery_id, SUM(CASE WHEN s.image_id = 0 THEN s.views ELSE 0 END) AS page_views, SUM(CASE WHEN s.image_id > 0 THEN s.views ELSE 0 END) AS photo_views FROM {$table} s INNER JOIN {$wpdb->posts} g ON g.ID = s.gallery_id WHERE s.day >= %s AND g.post_type = %s AND g.post_status <> 'trash' GROUP BY s.gallery_id ORDER BY page_views DESC, photo_views DESC LIMIT %d", $since, PostType::POST_TYPE, $limit ), ARRAY_A );
 		return array_map( static fn( array $row ): array => array_map( 'intval', $row ), $rows );
 	}
 
 	/**
-	 * Most viewed photos since a day.
+	 * Most viewed photos still in their galleries since a day.
 	 *
 	 * @param string $since First day (Y-m-d).
 	 * @param int    $limit Rows.
@@ -176,8 +176,29 @@ final class Stats {
 		global $wpdb;
 		$table = Schema::stats();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table.
-		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT image_id, gallery_id, SUM(views) AS views FROM {$table} WHERE day >= %s AND image_id > 0 GROUP BY image_id, gallery_id ORDER BY views DESC LIMIT %d", $since, $limit ), ARRAY_A );
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT s.image_id, s.gallery_id, SUM(s.views) AS views FROM {$table} s INNER JOIN {$wpdb->posts} g ON g.ID = s.gallery_id INNER JOIN {$wpdb->posts} a ON a.ID = s.image_id AND a.post_parent = g.ID WHERE s.day >= %s AND g.post_type = %s AND g.post_status <> 'trash' AND a.post_type = 'attachment' AND a.post_status = 'inherit' GROUP BY s.image_id, s.gallery_id ORDER BY views DESC LIMIT %d", $since, PostType::POST_TYPE, $limit ), ARRAY_A );
 		return array_map( static fn( array $row ): array => array_map( 'intval', $row ), $rows );
+	}
+
+	/**
+	 * Daily gallery and lightbox views for reporting.
+	 *
+	 * @param string $since First day (Y-m-d).
+	 * @return array<string, array{gallery: int, photo: int}>
+	 */
+	public static function daily_counts( string $since ): array {
+		global $wpdb;
+		$table = Schema::stats();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table.
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT day, SUM(CASE WHEN image_id = 0 THEN views ELSE 0 END) AS gallery, SUM(CASE WHEN image_id > 0 THEN views ELSE 0 END) AS photo FROM {$table} WHERE day >= %s GROUP BY day ORDER BY day", $since ), ARRAY_A );
+		$days = [];
+		foreach ( $rows as $row ) {
+			$days[ $row['day'] ] = [
+				'gallery' => (int) $row['gallery'],
+				'photo'   => (int) $row['photo'],
+			];
+		}
+		return $days;
 	}
 
 	/**

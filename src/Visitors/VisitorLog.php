@@ -156,6 +156,21 @@ final class VisitorLog {
 	}
 
 	/**
+	 * Counts gate and terms events by account, with one bucket for guests.
+	 * No visitor identifiers are added to the log.
+	 *
+	 * @param string $since First UTC timestamp.
+	 * @return array<int, int>
+	 */
+	public static function activity( string $since ): array {
+		global $wpdb;
+		$table = Schema::visitors();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom table.
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT user_id, COUNT(*) AS events FROM {$table} WHERE created_at >= %s GROUP BY user_id ORDER BY events DESC, user_id ASC", $since ), ARRAY_A );
+		return array_combine( array_column( $rows, 'user_id' ), array_map( 'intval', array_column( $rows, 'events' ) ) );
+	}
+
+	/**
 	 * Rows of one person, by email address or the account with it.
 	 *
 	 * @param string $email Email address.

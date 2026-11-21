@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Schema {
 
-	public const VERSION = 3;
+	public const VERSION = 4;
 	public const OPTION  = 'slashphoto_db_version';
 
 	/**
@@ -126,6 +126,9 @@ CREATE TABLE {$items} (
 	product_id varchar(20) NOT NULL DEFAULT '',
 	name varchar(200) NOT NULL DEFAULT '',
 	file_label varchar(200) NOT NULL DEFAULT '',
+	print_product varchar(200) NOT NULL DEFAULT '',
+	print_paper varchar(36) NOT NULL DEFAULT '',
+	print_frame varchar(36) NOT NULL DEFAULT '',
 	quantity int(11) NOT NULL DEFAULT 1,
 	unit_price bigint(20) NOT NULL DEFAULT 0,
 	total bigint(20) NOT NULL DEFAULT 0,

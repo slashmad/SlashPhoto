@@ -6,6 +6,15 @@ to collect nothing about visitors.
 
 ## Access model
 
+Open **SlashPhoto → All galleries** for a grouped overview of editable
+galleries. Each group shows its total and the most recently edited galleries.
+Open its list to see the full group, or use **List view** for search and bulk
+actions across galleries. **Private / unpublished** includes drafts, scheduled
+galleries and galleries with an unpublished ancestor. **Password protected**
+includes inherited passwords. **Restricted** covers other access rules such as
+secret links, client accounts, terms and email gates. **Public** shows published
+galleries with open access. These filters organize the admin list.
+
 Each gallery can combine these rules. Sub-galleries always follow the rules of
 every gallery above them, so a sub-gallery is never more open than its parent.
 
@@ -57,6 +66,16 @@ without the key, so the key does not stay in the browser history or in
 Referer headers. The key is only visible to editors (REST edit context) and
 is never writable as plain post meta. Web server access logs may record the
 first request including the key; that is outside WordPress.
+
+## Gallery invitations
+
+An editor can send a gallery link and an optional message from the **Invite**
+tab of a published gallery. Account restrictions still apply and the
+recipient's email must belong to an eligible account if one is required.
+The invitation uses the existing secret link when needed. If it comes from a
+parent gallery, only someone who can edit the parent may send it. Share
+gallery passwords separately. SlashPhoto passes invitations to WordPress
+mail without keeping an invitation log.
 
 ## Image files
 

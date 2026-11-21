@@ -48,7 +48,7 @@ test.describe( 'uploads', () => {
 	} );
 
 	async function openPanel( page ) {
-		await page.goto( `/wp-admin/post.php?post=${ galleryId }&action=edit` );
+		await page.goto( `/wp-admin/post.php?post=${ galleryId }&action=edit&slashphoto_content=1` );
 		await page.waitForFunction( () => window.wp?.data?.select( 'core/editor' )?.getCurrentPostId() );
 		await page.evaluate( () => {
 			window.wp.data.dispatch( 'core/preferences' ).set( 'core/edit-post', 'welcomeGuide', false );
@@ -91,7 +91,7 @@ test.describe( 'uploads', () => {
 
 	test( 'RAW files are refused without SnapOtter, with an explanation', async ( { page } ) => {
 		test.skip( !! process.env.SNAPOTTER_E2E_URL, 'SnapOtter is connected in this run.' );
-		await page.goto( '/wp-admin/edit.php?post_type=slashphoto_gallery&page=slashphoto-settings' );
+		await page.goto( '/wp-admin/edit.php?post_type=slashphoto_gallery&page=slashphoto-settings&tab=snapotter' );
 		await expect( page.getByRole( 'heading', { name: 'SnapOtter connection' } ) ).toBeVisible();
 		await expect( page.getByLabel( 'Server address' ) ).toBeVisible();
 
@@ -102,7 +102,7 @@ test.describe( 'uploads', () => {
 
 	test( 'SnapOtter: connect with login, convert a TIFF, disconnect', async ( { page } ) => {
 		test.skip( ! process.env.SNAPOTTER_E2E_URL, 'Set SNAPOTTER_E2E_URL to test with a SnapOtter server.' );
-		await page.goto( '/wp-admin/edit.php?post_type=slashphoto_gallery&page=slashphoto-settings' );
+		await page.goto( '/wp-admin/edit.php?post_type=slashphoto_gallery&page=slashphoto-settings&tab=snapotter' );
 		await page.getByLabel( 'Server address' ).fill( process.env.SNAPOTTER_E2E_URL );
 		await page.getByLabel( 'User name' ).fill( process.env.SNAPOTTER_E2E_USER || 'admin' );
 		await page.getByLabel( 'Password', { exact: true } ).fill( process.env.SNAPOTTER_E2E_PASSWORD || 'admin' );
@@ -129,7 +129,7 @@ test.describe( 'uploads', () => {
 		const madeBy = wpEval( `$a = get_children( [ "post_parent" => ${ galleryId }, "post_type" => "attachment", "orderby" => "ID", "order" => "DESC" ] ); $a = reset( $a ); echo get_post_meta( $a->ID, "_slashphoto_display_copy", true ), " ", basename( wp_get_original_image_path( $a->ID ) );` );
 		expect( madeBy ).toMatch( /^snapotter scan-[a-f0-9]{12}\.tif$/ );
 
-		await page.goto( '/wp-admin/edit.php?post_type=slashphoto_gallery&page=slashphoto-settings' );
+		await page.goto( '/wp-admin/edit.php?post_type=slashphoto_gallery&page=slashphoto-settings&tab=snapotter' );
 		await page.getByRole( 'button', { name: 'Disconnect' } ).click();
 		await expect( page.getByText( 'SnapOtter was disconnected.' ) ).toBeVisible();
 	} );

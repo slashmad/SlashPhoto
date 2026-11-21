@@ -112,7 +112,7 @@ test.describe( 'editor', () => {
 	}
 
 	test( 'gallery editor has the Access panel and saves the settings', async ( { page }, testInfo ) => {
-		const errors = await openEditor( page, '/wp-admin/post-new.php?post_type=slashphoto_gallery' );
+		const errors = await openEditor( page, '/wp-admin/post-new.php?post_type=slashphoto_gallery&slashphoto_content=1' );
 
 		const panel = page.locator( '.slashphoto-access-panel' );
 		await expect( panel ).toBeVisible();

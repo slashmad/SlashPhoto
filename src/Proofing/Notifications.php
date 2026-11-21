@@ -7,6 +7,7 @@
 
 namespace SlashPhoto\Proofing;
 
+use SlashPhoto\Admin\GalleryWorkspace;
 use WP_Post;
 
 defined( 'ABSPATH' ) || exit;
@@ -68,7 +69,7 @@ final class Notifications {
 		if ( '' !== $message ) {
 			$body .= __( 'Message:', 'slashphoto' ) . "\n" . $message . "\n\n";
 		}
-		$body .= __( 'See the selection and the file names:', 'slashphoto' ) . "\n" . admin_url( 'post.php?post=' . $root->ID . '&action=edit' ) . "#slashphoto-selections\n";
+		$body .= __( 'See the selection and the file names:', 'slashphoto' ) . "\n" . GalleryWorkspace::url( $root->ID, 'selections' ) . "\n";
 
 		$headers = [];
 		if ( $client && is_email( $client->user_email ) ) {
