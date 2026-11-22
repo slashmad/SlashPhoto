@@ -102,6 +102,7 @@ final class SettingsPage {
 			'galleries' => __( 'Galleries', 'slashphoto' ),
 			'copies'    => __( 'Display copies', 'slashphoto' ),
 			'snapotter' => __( 'SnapOtter', 'slashphoto' ),
+			'proofing'  => __( 'Proofing', 'slashphoto' ),
 			'visitors'  => __( 'Visitors', 'slashphoto' ),
 		];
 		$tab      = AdminTabs::active( $tabs );
@@ -247,6 +248,17 @@ final class SettingsPage {
 						<tr>
 							<th scope="row"><label for="slashphoto-snapotter-min-mp"><?php esc_html_e( '“Very large” from (megapixels)', 'slashphoto' ); ?></label></th>
 							<td><input type="number" id="slashphoto-snapotter-min-mp" min="1" max="1000" name="<?php echo esc_attr( $name ); ?>[snapotter_min_mp]" value="<?php echo esc_attr( (string) $settings['snapotter_min_mp'] ); ?>"></td>
+						</tr>
+					</table>
+				<?php elseif ( 'proofing' === $tab ) : ?>
+					<h2><?php esc_html_e( 'Client selections', 'slashphoto' ); ?></h2>
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Confirmation', 'slashphoto' ); ?></th>
+							<td>
+								<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[selection_client_email]" value="1" <?php checked( $settings['selection_client_email'] ); ?>> <?php esc_html_e( 'Email clients a copy of the selection they send', 'slashphoto' ); ?></label>
+								<p class="description"><?php esc_html_e( 'Goes to the email address of the client’s account and lists the chosen file names, notes and message. Replies go to the gallery’s author. You are always emailed when a selection arrives.', 'slashphoto' ); ?></p>
+							</td>
 						</tr>
 					</table>
 				<?php elseif ( 'visitors' === $tab ) : ?>

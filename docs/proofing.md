@@ -37,6 +37,16 @@ sub-gallery's images.
 - When a selection is sent, the gallery's author gets a plain-text email
   (filter `slashphoto_selection_recipients`; return an empty array to send
   none). The client's address is set as Reply-To.
+- The client gets a copy at their account's email address: the chosen file
+  names in their order, their notes and message, and a link back to the
+  gallery (left out for secret-link galleries, whose plain address does not
+  open them). Replies go to the gallery's author. Switch it off under
+  **Settings → Proofing**, or per gallery with the filter
+  `slashphoto_selection_client_email` (`bool $send, WP_Post $selection,
+  WP_Post $gallery`).
+- The **Selections** column in the gallery list shows how many clients have
+  sent a selection and how many are still choosing, linked to the overview
+  filtered by that gallery.
 - **SlashPhoto → Client selections** shows selections across galleries you
   can edit. Filter by gallery or by whether the client has submitted their
   selection, then open a selection for review.

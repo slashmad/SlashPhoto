@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-21T21:17:26+00:00\n"
+"POT-Creation-Date: 2026-11-22T11:50:53+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: slashphoto\n"
@@ -104,7 +104,7 @@ msgstr ""
 
 #: src/Admin/AccessSettings.php:134
 #: src/Admin/SettingsPage.php:101
-#: src/Admin/SettingsPage.php:134
+#: src/Admin/SettingsPage.php:135
 #: assets/js/editor-access.js:188
 msgid "Watermark"
 msgstr ""
@@ -277,30 +277,54 @@ msgstr ""
 msgid "Use the gallery password shared with you separately."
 msgstr ""
 
-#: src/Admin/GalleryList.php:49
+#: src/Admin/GalleryList.php:59
 msgid "Public"
 msgstr ""
 
-#: src/Admin/GalleryList.php:50
+#: src/Admin/GalleryList.php:60
 msgid "Private / unpublished"
 msgstr ""
 
-#: src/Admin/GalleryList.php:51
+#: src/Admin/GalleryList.php:61
 msgid "Password protected"
 msgstr ""
 
-#: src/Admin/GalleryList.php:52
+#: src/Admin/GalleryList.php:62
 msgid "Restricted"
 msgstr ""
 
-#: src/Admin/GalleryList.php:118
+#: src/Admin/GalleryList.php:128
 #: src/Admin/OrdersPage.php:197
 msgid "Overview"
 msgstr ""
 
-#: src/Admin/GalleryList.php:128
+#: src/Admin/GalleryList.php:138
 msgid "Visibility"
 msgstr ""
+
+#: src/Admin/GalleryList.php:139
+msgid "Selections"
+msgstr ""
+
+#: src/Admin/GalleryList.php:175
+msgid "No selections"
+msgstr ""
+
+#. translators: %d: number of selections sent by clients
+#: src/Admin/GalleryList.php:185
+#, php-format
+msgid "%d sent"
+msgid_plural "%d sent"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of clients still choosing
+#: src/Admin/GalleryList.php:193
+#, php-format
+msgid "%d choosing"
+msgid_plural "%d choosing"
+msgstr[0] ""
+msgstr[1] ""
 
 #: src/Admin/GalleryOverview.php:52
 #: src/Admin/GalleryOverview.php:124
@@ -369,6 +393,7 @@ msgstr ""
 #: src/Admin/SelectionsPage.php:48
 #: src/Admin/SelectionsPage.php:49
 #: src/Admin/SelectionsPage.php:119
+#: src/Admin/SettingsPage.php:254
 #: src/Proofing/Selections.php:57
 #: assets/js/editor-access.js:225
 msgid "Client selections"
@@ -976,7 +1001,7 @@ msgid "Review selection"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:47
-#: src/Admin/SettingsPage.php:127
+#: src/Admin/SettingsPage.php:128
 msgid "SlashPhoto settings"
 msgstr ""
 
@@ -1005,7 +1030,7 @@ msgid "Repeated across the image"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:103
-#: src/Admin/SettingsPage.php:202
+#: src/Admin/SettingsPage.php:203
 msgid "Display copies"
 msgstr ""
 
@@ -1014,162 +1039,178 @@ msgid "SnapOtter"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:105
-#: src/Admin/SettingsPage.php:253
+msgid "Proofing"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:106
+#: src/Admin/SettingsPage.php:265
 #: src/Admin/VisitorsPage.php:56
 #: src/Admin/VisitorsPage.php:115
 msgid "Visitors"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:128
+#: src/Admin/SettingsPage.php:129
 #: src/Admin/ShopSettings.php:363
 msgid "Settings sections"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:135
+#: src/Admin/SettingsPage.php:136
 msgid "The watermark is stamped on the web copies of images uploaded to galleries that use it. Originals are never changed. Changes apply to images uploaded afterwards. 360° panoramas are not watermarked."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:138
+#: src/Admin/SettingsPage.php:139
 msgid "Watermark image"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:141
+#: src/Admin/SettingsPage.php:142
 msgid "None"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:146
+#: src/Admin/SettingsPage.php:147
 msgid "A PNG with a transparent background, uploaded to the media library."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:149
+#: src/Admin/SettingsPage.php:150
 msgid "Watermark preview"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:160
+#: src/Admin/SettingsPage.php:161
 msgid "Use by default"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:161
+#: src/Admin/SettingsPage.php:162
 msgid "Watermark new galleries unless a gallery says otherwise"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:164
+#: src/Admin/SettingsPage.php:165
 msgid "Position"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:174
+#: src/Admin/SettingsPage.php:175
 msgid "Size (% of image width)"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:178
+#: src/Admin/SettingsPage.php:179
 msgid "Opacity (%)"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:183
+#: src/Admin/SettingsPage.php:184
 msgid "Public gallery directory"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:186
+#: src/Admin/SettingsPage.php:187
 msgid "Gallery directory page"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:189
+#: src/Admin/SettingsPage.php:190
 msgid "Use the theme’s gallery archive"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:195
+#: src/Admin/SettingsPage.php:196
 msgid "Choose a public page with the following shortcode. Visitors who open the gallery archive will land on that page."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:203
+#: src/Admin/SettingsPage.php:204
 msgid "Upload one full-size original per image. Visitors see a display copy; the original is stored privately for downloads and sales. Changes apply to images uploaded afterwards."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:206
+#: src/Admin/SettingsPage.php:207
 msgid "Longest side (pixels)"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:209
+#: src/Admin/SettingsPage.php:210
 msgid "2560 suits most screens. 360° panoramas keep up to 8192 pixels."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:213
+#: src/Admin/SettingsPage.php:214
 msgid "JPEG quality"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:217
+#: src/Admin/SettingsPage.php:218
 msgid "Upload size"
 msgstr ""
 
 #. translators: %s: size such as "8 MB"
-#: src/Admin/SettingsPage.php:224
+#: src/Admin/SettingsPage.php:225
 #, php-format
 msgid "The gallery’s photo uploader transfers files in pieces. The WordPress media library uses this server’s normal upload limit of %s."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:234
+#: src/Admin/SettingsPage.php:235
 msgid "Image processing with SnapOtter"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:237
+#: src/Admin/SettingsPage.php:238
 msgid "Use SnapOtter for"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:240
+#: src/Admin/SettingsPage.php:241
 msgid "RAW, HEIC, TIFF, PSD and very large images"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:241
+#: src/Admin/SettingsPage.php:242
 msgid "All gallery uploads"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:242
+#: src/Admin/SettingsPage.php:243
 msgid "Nothing (WordPress makes all display copies)"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:244
+#: src/Admin/SettingsPage.php:245
 msgid "Applies when a SnapOtter server is connected. If SnapOtter cannot be reached, WordPress makes the copy itself for JPEG, PNG, WebP and AVIF."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:248
+#: src/Admin/SettingsPage.php:249
 msgid "“Very large” from (megapixels)"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:254
+#: src/Admin/SettingsPage.php:257
+msgid "Confirmation"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:259
+msgid "Email clients a copy of the selection they send"
+msgstr ""
+
+#: src/Admin/SettingsPage.php:260
+msgid "Goes to the email address of the client’s account and lists the chosen file names, notes and message. Replies go to the gallery’s author. You are always emailed when a selection arrives."
+msgstr ""
+
+#: src/Admin/SettingsPage.php:266
 msgid "SlashPhoto never stores IP addresses or browser details. What it can store about visitors is listed here and in the suggested privacy policy text."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:257
+#: src/Admin/SettingsPage.php:269
 #: src/Admin/VisitorsPage.php:57
 #: src/Admin/VisitorsPage.php:332
 msgid "Statistics"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:259
+#: src/Admin/SettingsPage.php:271
 msgid "Count how often galleries and photos are viewed"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:260
+#: src/Admin/SettingsPage.php:272
 msgid "Anonymous daily totals only: no cookies, no IP addresses, nothing that identifies a visitor. Your own views and those of search robots are not counted."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:264
+#: src/Admin/SettingsPage.php:276
 msgid "Terms"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:266
+#: src/Admin/SettingsPage.php:278
 msgid "Ask visitors who are not logged in for their email address when they accept a gallery’s terms"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:267
+#: src/Admin/SettingsPage.php:279
 msgid "Every acceptance is logged with the date, the wording that was accepted and the account or email address, so you can show who agreed to what."
 msgstr ""
 
-#: src/Admin/SettingsPage.php:271
+#: src/Admin/SettingsPage.php:283
 msgid "Keep the visitor log for (days)"
 msgstr ""
 
-#: src/Admin/SettingsPage.php:274
+#: src/Admin/SettingsPage.php:286
 msgid "Email addresses given to open a gallery and terms acceptances are deleted after this many days; 0 keeps them. View counts contain nothing personal and are kept."
 msgstr ""
 
@@ -2403,30 +2444,52 @@ msgstr ""
 msgid "Accepted the gallery terms"
 msgstr ""
 
-#: src/Proofing/Notifications.php:53
+#: src/Proofing/Notifications.php:64
 msgid "A client"
 msgstr ""
 
 #. translators: 1: site name, 2: gallery title
-#: src/Proofing/Notifications.php:60
+#: src/Proofing/Notifications.php:71
 #, php-format
 msgid "[%1$s] New selection for %2$s"
 msgstr ""
 
 #. translators: 1: client name, 2: number of images, 3: gallery title
-#: src/Proofing/Notifications.php:64
+#: src/Proofing/Notifications.php:75
 #, php-format
 msgid "%1$s has sent a selection of %2$d image from \"%3$s\"."
 msgid_plural "%1$s has sent a selection of %2$d images from \"%3$s\"."
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/Proofing/Notifications.php:70
+#: src/Proofing/Notifications.php:81
 msgid "Message:"
 msgstr ""
 
-#: src/Proofing/Notifications.php:72
+#: src/Proofing/Notifications.php:83
 msgid "See the selection and the file names:"
+msgstr ""
+
+#. translators: 1: site name, 2: gallery title
+#: src/Proofing/Notifications.php:125
+#, php-format
+msgid "[%1$s] Your selection from %2$s"
+msgstr ""
+
+#. translators: 1: number of images, 2: gallery title
+#: src/Proofing/Notifications.php:129
+#, php-format
+msgid "Thank you. Your selection of %1$d image from \"%2$s\" has been sent to the photographer."
+msgid_plural "Thank you. Your selection of %1$d images from \"%2$s\" has been sent to the photographer."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Proofing/Notifications.php:140
+msgid "Your message:"
+msgstr ""
+
+#: src/Proofing/Notifications.php:142
+msgid "The photographer can reopen the selection if you want to change it."
 msgstr ""
 
 #: src/Proofing/SelectionsRest.php:139

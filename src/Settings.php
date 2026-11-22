@@ -43,6 +43,7 @@ final class Settings {
 		'general_copies'    => [ 'display_size', 'display_quality' ],
 		'general_snapotter' => [ 'snapotter_mode', 'snapotter_min_mp' ],
 		'general_visitors'  => [ 'stats_enabled', 'visitor_retention_days', 'terms_ask_email' ],
+		'general_proofing'  => [ 'selection_client_email' ],
 		'shop_pages'        => [ 'shop_page', 'shop_terms_page' ],
 		'shop_prices'       => [ 'currency', 'prices_include_tax', 'tax_rate', 'shop_price_list' ],
 		'shop_prints'       => [ 'print_presets' ],
@@ -50,10 +51,10 @@ final class Settings {
 		'shop_downloads'    => [ 'download_days' ],
 		'shop_receipts'     => [ 'business_name', 'business_details', 'receipt_note' ],
 		'shop_payments'     => [ 'shop_email', 'manual_enabled', 'manual_title', 'manual_instructions' ],
-		'general'           => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity', 'display_size', 'display_quality', 'snapotter_mode', 'snapotter_min_mp', 'stats_enabled', 'visitor_retention_days', 'terms_ask_email' ],
+		'general'           => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity', 'display_size', 'display_quality', 'snapotter_mode', 'snapotter_min_mp', 'stats_enabled', 'visitor_retention_days', 'terms_ask_email', 'selection_client_email' ],
 		'shop'              => [ 'currency', 'prices_include_tax', 'tax_rate', 'shipping_flat', 'free_shipping_over', 'shipping_countries', 'download_days', 'shop_page', 'shop_terms_page', 'shop_email', 'shop_price_list', 'manual_enabled', 'manual_title', 'manual_instructions', 'business_name', 'business_details', 'receipt_note' ],
 	];
-	public const CHECKBOXES = [ 'watermark_default', 'prices_include_tax', 'manual_enabled', 'stats_enabled', 'terms_ask_email' ];
+	public const CHECKBOXES = [ 'watermark_default', 'prices_include_tax', 'manual_enabled', 'stats_enabled', 'terms_ask_email', 'selection_client_email' ];
 	public const AMOUNTS    = [ 'shipping_flat', 'free_shipping_over' ];
 
 	/**
@@ -77,6 +78,7 @@ final class Settings {
 			'stats_enabled'          => true,
 			'visitor_retention_days' => 365,
 			'terms_ask_email'        => true,
+			'selection_client_email' => true,
 			'currency'               => $swedish ? 'SEK' : 'EUR',
 			'prices_include_tax'     => true,
 			'tax_rate'               => 25.0,
@@ -182,6 +184,7 @@ final class Settings {
 			'stats_enabled'          => (bool) $value( 'stats_enabled' ),
 			'visitor_retention_days' => min( 3650, max( 0, (int) $value( 'visitor_retention_days' ) ) ),
 			'terms_ask_email'        => (bool) $value( 'terms_ask_email' ),
+			'selection_client_email' => (bool) $value( 'selection_client_email' ),
 			'currency'               => $currency,
 			'prices_include_tax'     => (bool) $value( 'prices_include_tax' ),
 			'tax_rate'               => min( 100.0, max( 0.0, round( (float) str_replace( ',', '.', (string) $value( 'tax_rate' ) ), 3 ) ) ),

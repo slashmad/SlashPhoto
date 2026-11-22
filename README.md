@@ -61,6 +61,7 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
   covers a gallery and its sub-galleries, with an optional maximum. The
   photographer gets an email and sees every selection with thumbnails, notes
   and the file names to paste into Lightroom, and can reopen or delete it.
+  The client gets an emailed copy of what they sent.
   Visitors without an account keep favourites in their own browser only.
   See [docs/proofing.md](docs/proofing.md).
 - **Photo sales.** Sell original downloads and prints in your own sizes with

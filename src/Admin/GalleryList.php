@@ -9,6 +9,7 @@ namespace SlashPhoto\Admin;
 
 use SlashPhoto\Access\Access;
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Proofing\Selections;
 use WP_Post;
 use WP_Query;
 
@@ -20,6 +21,15 @@ defined( 'ABSPATH' ) || exit;
 final class GalleryList {
 
 	private const VIEW = 'slashphoto_visibility';
+
+	private const SELECTIONS = 'slashphoto_selections';
+
+	/**
+	 * Selection counts for the galleries on the current list page.
+	 *
+	 * @var array<int, array{submitted: int, choosing: int}>|null
+	 */
+	private ?array $counts = null;
 
 	/**
 	 * Uses the plugin's existing access rules.
@@ -125,7 +135,9 @@ final class GalleryList {
 	 * @param array $columns Core columns.
 	 */
 	public function columns( array $columns ): array {
-		return array_slice( $columns, 0, 2, true ) + [ self::VIEW => __( 'Visibility', 'slashphoto' ) ] + $columns;
+		$columns = array_slice( $columns, 0, 2, true ) + [ self::VIEW => __( 'Visibility', 'slashphoto' ) ] + $columns;
+		$extra   = [ self::SELECTIONS => __( 'Selections', 'slashphoto' ) ];
+		return isset( $columns['date'] ) ? array_slice( $columns, 0, -1, true ) + $extra + array_slice( $columns, -1, null, true ) : $columns + $extra;
 	}
 
 	/**
@@ -135,10 +147,53 @@ final class GalleryList {
 	 * @param int    $id     Gallery post ID.
 	 */
 	public function column( string $column, int $id ): void {
-		$gallery = self::VIEW === $column ? get_post( $id ) : null;
-		if ( $gallery ) {
-			echo esc_html( self::labels()[ $this->group( $gallery ) ] );
+		$gallery = in_array( $column, [ self::VIEW, self::SELECTIONS ], true ) ? get_post( $id ) : null;
+		if ( ! $gallery ) {
+			return;
 		}
+		if ( self::VIEW === $column ) {
+			echo esc_html( self::labels()[ $this->group( $gallery ) ] );
+			return;
+		}
+		$this->selections_cell( $gallery );
+	}
+
+	/**
+	 * Prints how many clients sent or are still choosing a selection, linked
+	 * to the selection overview. Only gallery editors see the numbers.
+	 *
+	 * @param WP_Post $gallery Listed gallery.
+	 */
+	private function selections_cell( WP_Post $gallery ): void {
+		if ( null === $this->counts ) {
+			global $wp_query;
+			$ids          = $wp_query instanceof WP_Query ? array_map( static fn( $post ) => (int) ( $post->ID ?? $post ), (array) $wp_query->posts ) : [];
+			$this->counts = Selections::counts( $ids ? $ids : [ $gallery->ID ] );
+		}
+		$count = $this->access->is_editor( $gallery ) ? ( $this->counts[ $gallery->ID ] ?? null ) : null;
+		if ( ! $count ) {
+			echo '<span aria-hidden="true">—</span><span class="screen-reader-text">' . esc_html__( 'No selections', 'slashphoto' ) . '</span>';
+			return;
+		}
+		$url   = add_query_arg( 'gallery_id', $gallery->ID, SelectionsPage::url() );
+		$parts = [];
+		if ( $count['submitted'] ) {
+			$parts[] = sprintf(
+				'<a href="%s">%s</a>',
+				esc_url( add_query_arg( 'tab', 'submitted', $url ) ),
+				/* translators: %d: number of selections sent by clients */
+				esc_html( sprintf( _n( '%d sent', '%d sent', $count['submitted'], 'slashphoto' ), $count['submitted'] ) )
+			);
+		}
+		if ( $count['choosing'] ) {
+			$parts[] = sprintf(
+				'<a href="%s">%s</a>',
+				esc_url( add_query_arg( 'tab', 'choosing', $url ) ),
+				/* translators: %d: number of clients still choosing */
+				esc_html( sprintf( _n( '%d choosing', '%d choosing', $count['choosing'], 'slashphoto' ), $count['choosing'] ) )
+			);
+		}
+		echo wp_kses_post( implode( '<br>', $parts ) );
 	}
 
 	/**

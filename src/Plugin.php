@@ -166,7 +166,7 @@ final class Plugin {
 		$this->proofing = new Proofing( $this->access, $terms );
 		( new Selections() )->register_hooks();
 		( new SelectionsRest( $this->proofing ) )->register_hooks();
-		( new Notifications() )->register_hooks();
+		( new Notifications( $this->access ) )->register_hooks();
 
 		( new PostType() )->register_hooks();
 		( new GalleryMeta() )->register_hooks();

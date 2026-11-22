@@ -169,6 +169,40 @@ final class Selections {
 	}
 
 	/**
+	 * Counts sent and unsent selections per gallery with one query.
+	 *
+	 * @param int[] $root_ids Gallery IDs.
+	 * @return array<int, array{submitted: int, choosing: int}> Only galleries with selections.
+	 */
+	public static function counts( array $root_ids ): array {
+		$root_ids = array_values( array_filter( array_map( 'absint', $root_ids ) ) );
+		if ( ! $root_ids ) {
+			return [];
+		}
+		$parents = get_posts(
+			[
+				'post_type'        => self::POST_TYPE,
+				'post_status'      => 'private',
+				'post_parent__in'  => $root_ids,
+				'numberposts'      => -1,
+				'fields'           => 'id=>parent',
+				'orderby'          => 'none',
+				'suppress_filters' => true,
+			]
+		);
+		update_meta_cache( 'post', array_keys( $parents ) );
+		$counts = [];
+		foreach ( $parents as $id => $parent ) {
+			$counts[ $parent ] ??= [
+				'submitted' => 0,
+				'choosing'  => 0,
+			];
+			++$counts[ $parent ][ (int) get_post_meta( $id, self::META_SENT, true ) > 0 ? 'submitted' : 'choosing' ];
+		}
+		return $counts;
+	}
+
+	/**
 	 * Paginates recent selections within an already-authorized set of roots.
 	 *
 	 * @param int[]  $roots    Gallery IDs.
