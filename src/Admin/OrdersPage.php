@@ -278,7 +278,21 @@ final class OrdersPage {
 											<br><a href="<?php echo esc_url( (string) get_edit_post_link( $item['gallery_id'] ) ); ?>"><?php echo esc_html( get_the_title( $item['gallery_id'] ) ); ?></a>
 										<?php endif; ?>
 									</td>
-									<td><?php echo esc_html( $item['name'] ); ?></td>
+									<td>
+										<?php echo esc_html( $item['name'] ); ?>
+										<?php if ( 'download' === $item['kind'] ) : ?>
+											<br><span class="description">
+												<?php
+												echo esc_html(
+													$item['download_size']
+														/* translators: %d: longest side in pixels */
+														? sprintf( __( 'Delivered at %d px on the longest side', 'slashphoto' ), $item['download_size'] )
+														: __( 'Delivered as the full-size original', 'slashphoto' )
+												);
+												?>
+											</span>
+										<?php endif; ?>
+									</td>
 									<td><?php echo esc_html( (string) $item['quantity'] ); ?></td>
 									<td><?php echo esc_html( $item['parent_id'] ? __( 'In package', 'slashphoto' ) : $money( $item['total'] ) ); ?></td>
 									<td>

@@ -64,15 +64,15 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
   The client gets an emailed copy of what they sent.
   Visitors without an account keep favourites in their own browser only.
   See [docs/proofing.md](docs/proofing.md).
-- **Photo sales.** Sell original downloads and prints in your own sizes with
-  paper and framing options, per-gallery price lists, packages and discount
-  codes. Customers add photos from the lightbox and check out as guests.
-  Accept manual payments (invoice, bank transfer or Swish) or connect Stripe
-  Checkout, PayPal or Mollie.
-  SlashPhoto charges no platform fee. Manage orders, export a print production
-  CSV, send status emails and offer printable receipts and invoices. Private
-  download links work for paid orders during the configured download period.
-  See [shop setup](docs/shop.md).
+- **Photo sales.** Sell downloads (the original or a smaller web-size copy)
+  and prints in your own sizes with paper and framing options, per-gallery
+  price lists, packages and discount codes. Customers add photos from the
+  lightbox and check out as guests. Accept manual payments (invoice, bank
+  transfer or Swish) or connect Stripe Checkout, PayPal or Mollie. SlashPhoto
+  charges no platform fee. Manage orders, export a print production CSV, send
+  status emails and offer printable receipts and invoices. Private download
+  links work for paid orders during the configured download period. See [shop
+  setup](docs/shop.md).
 - **Import from Sunshine Photo Cart.** Copies galleries with their access
   settings, images, price levels and orders, in repeatable steps, without
   changing Sunshine's data. See [docs/import-sunshine.md](docs/import-sunshine.md).

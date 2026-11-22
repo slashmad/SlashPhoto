@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-22T11:50:53+00:00\n"
+"POT-Creation-Date: 2026-11-22T13:43:22+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: slashphoto\n"
@@ -379,7 +379,7 @@ msgstr ""
 
 #: src/Admin/GalleryWorkspace.php:161
 #: src/Admin/GalleryWorkspace.php:248
-#: src/Shop/PriceLists.php:391
+#: src/Shop/PriceLists.php:405
 msgid "Photos"
 msgstr ""
 
@@ -747,7 +747,7 @@ msgid "Quantity"
 msgstr ""
 
 #: src/Admin/OrdersPage.php:267
-#: src/Admin/OrdersPage.php:306
+#: src/Admin/OrdersPage.php:320
 #: src/Admin/OrdersTable.php:51
 #: src/Frontend/Assets.php:251
 #: src/Privacy.php:243
@@ -757,27 +757,38 @@ msgid "Total"
 msgstr ""
 
 #: src/Admin/OrdersPage.php:268
+#: src/Shop/PriceLists.php:416
 msgid "Original"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:283
+#. translators: %d: longest side in pixels
+#: src/Admin/OrdersPage.php:289
+#, php-format
+msgid "Delivered at %d px on the longest side"
+msgstr ""
+
+#: src/Admin/OrdersPage.php:290
+msgid "Delivered as the full-size original"
+msgstr ""
+
+#: src/Admin/OrdersPage.php:297
 #: templates/order.php:74
 msgid "In package"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:288
+#: src/Admin/OrdersPage.php:302
 #: src/Shop/Downloads.php:130
-#: src/Shop/PriceLists.php:382
+#: src/Shop/PriceLists.php:396
 #: templates/order.php:76
 msgid "Download"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:290
+#: src/Admin/OrdersPage.php:304
 msgid "Deleted"
 msgstr ""
 
 #. translators: %s: discount code
-#: src/Admin/OrdersPage.php:298
+#: src/Admin/OrdersPage.php:312
 #: src/Frontend/Assets.php:277
 #: templates/order.php:89
 #: templates/receipt.php:144
@@ -786,7 +797,7 @@ msgid "Discount (%s)"
 msgstr ""
 
 #. translators: %s: discount code
-#: src/Admin/OrdersPage.php:298
+#: src/Admin/OrdersPage.php:312
 #: src/Shop/Coupons.php:299
 #: src/Shop/Coupons.php:351
 #: src/Shop/Coupons.php:368
@@ -796,7 +807,7 @@ msgstr ""
 msgid "Discount"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:301
+#: src/Admin/OrdersPage.php:315
 #: src/Admin/ShopSettings.php:339
 #: src/Frontend/Assets.php:250
 #: src/Shop/Coupons.php:389
@@ -806,27 +817,27 @@ msgstr ""
 msgid "Shipping"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:304
+#: src/Admin/OrdersPage.php:318
 #: templates/order.php:101
 msgid "Including VAT"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:304
+#: src/Admin/OrdersPage.php:318
 #: templates/order.php:101
 msgid "VAT"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:310
+#: src/Admin/OrdersPage.php:324
 msgid "Message from the customer"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:317
+#: src/Admin/OrdersPage.php:331
 #: src/Admin/OrdersTable.php:49
 #: templates/receipt.php:101
 msgid "Customer"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:326
+#: src/Admin/OrdersPage.php:340
 #: src/Privacy.php:231
 #: templates/order.php:109
 #: templates/receipt.php:106
@@ -834,19 +845,19 @@ msgid "Delivery address"
 msgstr ""
 
 #. translators: 1: date, 2: payment method
-#: src/Admin/OrdersPage.php:334
+#: src/Admin/OrdersPage.php:348
 #, php-format
 msgid "Placed %1$s · %2$s"
 msgstr ""
 
 #. translators: %s: date
-#: src/Admin/OrdersPage.php:343
+#: src/Admin/OrdersPage.php:357
 #, php-format
 msgid "Paid %s"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:356
-#: src/Admin/OrdersPage.php:361
+#: src/Admin/OrdersPage.php:370
+#: src/Admin/OrdersPage.php:375
 #: src/Admin/OrdersTable.php:50
 #: src/Admin/ShopSettings.php:217
 #: src/Admin/ShopSettings.php:280
@@ -856,15 +867,15 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:368
+#: src/Admin/OrdersPage.php:382
 msgid "The customer gets an email when the order becomes paid, completed, cancelled or refunded. Marking it paid opens the downloads. Refunds through Stripe are made in the Stripe Dashboard."
 msgstr ""
 
-#: src/Admin/OrdersPage.php:370
+#: src/Admin/OrdersPage.php:384
 msgid "Private note"
 msgstr ""
 
-#: src/Admin/OrdersPage.php:373
+#: src/Admin/OrdersPage.php:387
 msgid "Update order"
 msgstr ""
 
@@ -1749,8 +1760,8 @@ msgstr ""
 
 #: src/Admin/VisitorsPage.php:135
 #: src/Shop/Coupons.php:371
-#: src/Shop/PriceLists.php:312
-#: src/Shop/PriceLists.php:380
+#: src/Shop/PriceLists.php:326
+#: src/Shop/PriceLists.php:394
 msgid "Type"
 msgstr ""
 
@@ -2081,8 +2092,8 @@ msgid "Some photos or options are no longer available and were removed from the 
 msgstr ""
 
 #: src/Frontend/Assets.php:246
-#: src/Shop/PriceLists.php:320
-#: src/Shop/PriceLists.php:424
+#: src/Shop/PriceLists.php:334
+#: src/Shop/PriceLists.php:443
 msgid "Remove"
 msgstr ""
 
@@ -2714,6 +2725,14 @@ msgstr ""
 msgid "You are not allowed to download this file."
 msgstr ""
 
+#: src/Shop/DownloadSizes.php:128
+msgid "This size cannot be made right now. Please try again later or contact us."
+msgstr ""
+
+#: src/Shop/DownloadSizes.php:140
+msgid "This size cannot be made from the original file. Please contact us."
+msgstr ""
+
 #. translators: 1: site name, 2: order number
 #: src/Shop/Emails.php:58
 #, php-format
@@ -3057,119 +3076,131 @@ msgstr ""
 msgid "No price lists found in Trash."
 msgstr ""
 
-#: src/Shop/PriceLists.php:229
+#: src/Shop/PriceLists.php:236
 msgid "Unframed"
 msgstr ""
 
-#: src/Shop/PriceLists.php:256
+#: src/Shop/PriceLists.php:263
 msgid "Products"
 msgstr ""
 
-#: src/Shop/PriceLists.php:269
+#: src/Shop/PriceLists.php:276
 msgid "Digital download, full resolution"
 msgstr ""
 
-#: src/Shop/PriceLists.php:275
+#: src/Shop/PriceLists.php:282
+msgid "Digital download, web size (2048 px)"
+msgstr ""
+
+#: src/Shop/PriceLists.php:289
 msgid "Print 13 × 18 cm"
 msgstr ""
 
-#: src/Shop/PriceLists.php:281
+#: src/Shop/PriceLists.php:295
 msgid "Print 20 × 30 cm"
 msgstr ""
 
-#: src/Shop/PriceLists.php:287
+#: src/Shop/PriceLists.php:301
 msgid "Print 30 × 45 cm"
 msgstr ""
 
-#: src/Shop/PriceLists.php:307
-msgid "Customers choose one of these for each image. Downloads deliver the original file you uploaded. You make and send the prints. Enter a price or configure print options. Use 0 for something free."
+#: src/Shop/PriceLists.php:321
+msgid "Customers choose one of these for each image. Downloads deliver the original file you uploaded, or a smaller copy of it when you set the longest side. You make and send the prints. Enter a price or configure print options. Use 0 for something free."
 msgstr ""
 
-#: src/Shop/PriceLists.php:308
+#: src/Shop/PriceLists.php:322
 msgid "A package is a number of photos the customer chooses, each with the same download or print, for one price, e.g. “10 downloads”. Set the number to 0 for every photo in the gallery. Save new downloads and prints before choosing them in a package."
 msgstr ""
 
-#: src/Shop/PriceLists.php:313
-#: src/Shop/PriceLists.php:388
+#: src/Shop/PriceLists.php:327
+#: src/Shop/PriceLists.php:402
 msgid "Name shown to customers"
 msgstr ""
 
 #. translators: %s: currency code such as SEK
-#: src/Shop/PriceLists.php:317
+#: src/Shop/PriceLists.php:331
 #, php-format
 msgid "Price (%s)"
 msgstr ""
 
-#: src/Shop/PriceLists.php:347
+#: src/Shop/PriceLists.php:361
 msgid "Add product"
 msgstr ""
 
-#: src/Shop/PriceLists.php:352
+#: src/Shop/PriceLists.php:366
 msgid "Prices include VAT, as set under SlashPhoto → Settings."
 msgstr ""
 
-#: src/Shop/PriceLists.php:353
+#: src/Shop/PriceLists.php:367
 msgid "VAT is added on top of these prices, as set under SlashPhoto → Settings."
 msgstr ""
 
-#: src/Shop/PriceLists.php:383
+#: src/Shop/PriceLists.php:397
 msgid "Print"
 msgstr ""
 
-#: src/Shop/PriceLists.php:384
+#: src/Shop/PriceLists.php:398
 msgid "Package"
 msgstr ""
 
-#: src/Shop/PriceLists.php:393
+#: src/Shop/PriceLists.php:407
 msgid "each with"
 msgstr ""
 
-#: src/Shop/PriceLists.php:401
-msgid "Paper and framing options"
-msgstr ""
-
-#: src/Shop/PriceLists.php:404
-msgid "Print template"
-msgstr ""
-
-#: src/Shop/PriceLists.php:406
-msgid "Choose a template"
-msgstr ""
-
-#: src/Shop/PriceLists.php:411
-msgid "Add combinations"
-msgstr ""
-
 #: src/Shop/PriceLists.php:415
-msgid "Print options"
+msgid "Longest side (px)"
 msgstr ""
 
 #: src/Shop/PriceLists.php:417
+msgid "Leave empty for the full-size original. Smaller originals are never enlarged."
+msgstr ""
+
+#: src/Shop/PriceLists.php:420
+msgid "Paper and framing options"
+msgstr ""
+
+#: src/Shop/PriceLists.php:423
+msgid "Print template"
+msgstr ""
+
+#: src/Shop/PriceLists.php:425
+msgid "Choose a template"
+msgstr ""
+
+#: src/Shop/PriceLists.php:430
+msgid "Add combinations"
+msgstr ""
+
+#: src/Shop/PriceLists.php:434
+msgid "Print options"
+msgstr ""
+
+#: src/Shop/PriceLists.php:436
 msgid "Enter one available combination per line as Paper | Frame | Full price. Leave the frame blank for an unframed print. The first combination is selected by default."
 msgstr ""
 
-#: src/Shop/PriceLists.php:421
+#: src/Shop/PriceLists.php:440
 #: templates/receipt.php:117
 msgid "Price"
 msgstr ""
 
-#: src/Shop/PriceLists.php:510
+#: src/Shop/PriceLists.php:529
 msgid "The price list was kept as it was. Enter each paper and frame combination once, with a price of zero or more. A print can have up to 24 combinations and each paper or frame name can be up to 36 characters."
 msgstr ""
 
-#: src/Shop/PriceLists.php:533
+#: src/Shop/PriceLists.php:552
 msgid "Combinations added. Enter a price for each new row."
 msgstr ""
 
-#: src/Shop/PriceLists.php:534
+#: src/Shop/PriceLists.php:553
 msgid "These combinations are already in this print."
 msgstr ""
 
-#: src/Shop/PriceLists.php:535
+#: src/Shop/PriceLists.php:554
 msgid "This template would exceed the maximum of 24 combinations per print."
 msgstr ""
 
-#: src/Shop/PriceLists.php:536
+#: src/Shop/PriceLists.php:555
 msgid "Enter a price for every paper and frame combination before saving."
 msgstr ""
 

@@ -50,6 +50,7 @@ use SlashPhoto\Proofing\SelectionsRest;
 use SlashPhoto\Shop\CheckoutRest;
 use SlashPhoto\Shop\Coupons;
 use SlashPhoto\Shop\Downloads;
+use SlashPhoto\Shop\DownloadSizes;
 use SlashPhoto\Shop\Emails;
 use SlashPhoto\Shop\Gateways\MollieGateway;
 use SlashPhoto\Shop\Gateways\PayPalGateway;
@@ -182,6 +183,7 @@ final class Plugin {
 		( new CheckoutRest( $this->shop ) )->register_hooks();
 		( new ShopPage( $this->templates ) )->register_hooks();
 		( new Downloads() )->register_hooks();
+		( new DownloadSizes() )->register_hooks();
 		( new Receipts( $this->templates ) )->register_hooks();
 		( new Emails() )->register_hooks();
 		( new StripeGateway() )->register_hooks();

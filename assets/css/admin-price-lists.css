@@ -6,6 +6,17 @@
 	margin-block: 0.5rem;
 }
 
+.slashphoto-download-fields {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.375rem 0.5rem;
+}
+
+.slashphoto-download-fields[hidden] {
+	display: none;
+}
+
 .slashphoto-print-template label {
 	font-weight: 600;
 }

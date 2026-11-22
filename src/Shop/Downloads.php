@@ -1,6 +1,6 @@
 <?php
 /**
- * Delivery of purchased originals.
+ * Delivery of purchased originals and their scaled copies.
  *
  * @package SlashPhoto
  */
@@ -66,7 +66,7 @@ final class Downloads {
 	 * @param int    $order_id Order.
 	 * @param int    $item_id  Order line.
 	 * @param string $key      Key from the link.
-	 * @return array{path: string, name: string}|WP_Error
+	 * @return array{path: string, name: string, temporary?: bool}|WP_Error
 	 */
 	public static function resolve( int $order_id, int $item_id, string $key ) {
 		$not_found = new WP_Error( 'slashphoto_download_not_found', __( 'This download link is not valid.', 'slashphoto' ), [ 'status' => 404 ] );
@@ -86,7 +86,7 @@ final class Downloads {
 		if ( ! Orders::downloads_open( $order ) ) {
 			return new WP_Error( 'slashphoto_download_closed', __( 'This download is not available. It opens when the payment has arrived and closes when the download period ends.', 'slashphoto' ), [ 'status' => 403 ] );
 		}
-		return self::file( $item['image_id'], $item['file_label'] );
+		return DownloadSizes::file( $item['image_id'], (int) ( $item['download_size'] ?? 0 ), $item['file_label'] );
 	}
 
 	/**
@@ -129,7 +129,7 @@ final class Downloads {
 		if ( is_wp_error( $file ) ) {
 			wp_die( esc_html( $file->get_error_message() ), esc_html__( 'Download', 'slashphoto' ), [ 'response' => (int) ( $file->get_error_data()['status'] ?? 404 ) ] );
 		}
-		self::send( $file['path'], $file['name'] );
+		self::send( $file['path'], $file['name'], ! empty( $file['temporary'] ) );
 	}
 
 	/**
@@ -152,10 +152,11 @@ final class Downloads {
 	/**
 	 * Streams a file as an attachment and ends the request.
 	 *
-	 * @param string $path File.
-	 * @param string $name Download name.
+	 * @param string $path      File.
+	 * @param string $name      Download name.
+	 * @param bool   $temporary Delete the file afterwards (a scaled copy that could not be cached).
 	 */
-	private static function send( string $path, string $name ): void {
+	private static function send( string $path, string $name, bool $temporary = false ): void {
 		$type = wp_check_filetype( $name );
 		nocache_headers();
 		header( 'Content-Type: ' . ( $type['type'] ? $type['type'] : 'application/octet-stream' ) );
@@ -186,6 +187,9 @@ final class Downloads {
 			fclose( $handle );
 		}
 		// phpcs:enable
+		if ( $temporary ) {
+			wp_delete_file( $path );
+		}
 		exit;
 	}
 }

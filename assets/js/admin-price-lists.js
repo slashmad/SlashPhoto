@@ -52,6 +52,7 @@
 			const row = event.target.closest( 'tr' );
 			row.querySelector( '[data-slashphoto-package-fields]' ).hidden = 'package' !== event.target.value;
 			row.querySelector( '[data-slashphoto-print-options]' ).hidden = 'print' !== event.target.value;
+			row.querySelector( '[data-slashphoto-download-fields]' ).hidden = 'download' !== event.target.value;
 			row.querySelector( '[data-slashphoto-variant-input]' ).setCustomValidity( '' );
 		}
 		if ( event.target.matches( '[data-slashphoto-print-template]' ) ) {

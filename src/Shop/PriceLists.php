@@ -151,10 +151,11 @@ final class PriceLists {
 	/**
 	 * Normalises a product list. Packages also have "count" (number of
 	 * photos, 0 for every photo in the gallery) and "includes" (the ID of
-	 * the download or print each photo gets).
+	 * the download or print each photo gets). Downloads may have "size",
+	 * the longest side in pixels; without it the original is delivered.
 	 *
 	 * @param array $rows Rows.
-	 * @return array<int, array{id: string, kind: string, name: string, price: int, count?: int, includes?: string}>
+	 * @return array<int, array{id: string, kind: string, name: string, price: int, count?: int, includes?: string, size?: int}>
 	 */
 	public static function clean( array $rows ): array {
 		$products = [];
@@ -182,6 +183,12 @@ final class PriceLists {
 			if ( 'package' === $kind ) {
 				$product['count']    = min( self::MAX_PACKAGE, max( 0, (int) ( $row['count'] ?? 0 ) ) );
 				$product['includes'] = preg_match( '/^[a-f0-9]{8}$/', (string) ( $row['includes'] ?? '' ) ) ? (string) $row['includes'] : '';
+			}
+			if ( 'download' === $kind ) {
+				$size = DownloadSizes::clean( $row['size'] ?? 0 );
+				if ( $size ) {
+					$product['size'] = $size;
+				}
 			}
 			if ( 'print' === $kind && ! empty( $row['variants'] ) ) {
 				$product['variants'] = self::clean_variants( (array) $row['variants'] );
@@ -271,6 +278,13 @@ final class PriceLists {
 			],
 			[
 				'id'    => '',
+				'kind'  => 'download',
+				'name'  => __( 'Digital download, web size (2048 px)', 'slashphoto' ),
+				'price' => 0,
+				'size'  => 2048,
+			],
+			[
+				'id'    => '',
 				'kind'  => 'print',
 				'name'  => __( 'Print 13 × 18 cm', 'slashphoto' ),
 				'price' => 0,
@@ -304,7 +318,7 @@ final class PriceLists {
 		$presets  = array_intersect_key( PrintPresets::all(), array_flip( Settings::get( 'print_presets' ) ) );
 		wp_nonce_field( self::NONCE, self::NONCE . '_nonce' );
 		?>
-		<p><?php esc_html_e( 'Customers choose one of these for each image. Downloads deliver the original file you uploaded. You make and send the prints. Enter a price or configure print options. Use 0 for something free.', 'slashphoto' ); ?></p>
+		<p><?php esc_html_e( 'Customers choose one of these for each image. Downloads deliver the original file you uploaded, or a smaller copy of it when you set the longest side. You make and send the prints. Enter a price or configure print options. Use 0 for something free.', 'slashphoto' ); ?></p>
 		<p><?php esc_html_e( 'A package is a number of photos the customer chooses, each with the same download or print, for one price, e.g. “10 downloads”. Set the number to 0 for every photo in the gallery. Save new downloads and prints before choosing them in a package.', 'slashphoto' ); ?></p>
 		<table class="widefat striped slashphoto-products" role="table" data-slashphoto-products>
 			<thead>
@@ -396,6 +410,11 @@ final class PriceLists {
 							<option value="<?php echo esc_attr( $option['id'] ); ?>" <?php selected( $row['includes'] ?? '', $option['id'] ); ?>><?php echo esc_html( $option['name'] ); ?></option>
 						<?php endforeach; ?>
 					</select>
+				</p>
+				<p class="slashphoto-download-fields" data-slashphoto-download-fields <?php echo 'download' === $row['kind'] ? '' : 'hidden'; ?>>
+					<label for="slashphoto-size-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Longest side (px)', 'slashphoto' ); ?></label>
+					<input type="number" min="<?php echo esc_attr( (string) DownloadSizes::MIN ); ?>" max="<?php echo esc_attr( (string) DownloadSizes::MAX ); ?>" step="1" style="width:7em" id="slashphoto-size-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[size]" value="<?php echo esc_attr( ! empty( $row['size'] ) ? (string) $row['size'] : '' ); ?>" placeholder="<?php esc_attr_e( 'Original', 'slashphoto' ); ?>" aria-describedby="slashphoto-size-help-<?php echo esc_attr( $index ); ?>">
+					<span class="description" id="slashphoto-size-help-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Leave empty for the full-size original. Smaller originals are never enlarged.', 'slashphoto' ); ?></span>
 				</p>
 				<details data-slashphoto-print-options <?php echo 'print' === $row['kind'] ? '' : 'hidden'; ?>>
 					<summary><?php esc_html_e( 'Paper and framing options', 'slashphoto' ); ?></summary>

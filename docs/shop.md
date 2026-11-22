@@ -3,7 +3,8 @@
 SlashPhoto sells two kinds of products for each photo:
 
 - **Downloads** of the original you uploaded (full resolution, the file as
-  it came from your camera or editor).
+  it came from your camera or editor), or a smaller copy of it, for example
+  2048 pixels on the longest side for web and social media.
 - **Prints** in the sizes you offer. You make and send them yourself; print
   labs are not connected yet.
 
@@ -17,8 +18,10 @@ There are no platform fees, no paid add-ons and no WooCommerce dependency.
    downloads stay available.
 2. **SlashPhoto → Price lists → Add price list.** Each row is a product:
    type (download or print), the name customers see ("Print 20 × 30 cm")
-   and the price. A new list suggests a download and three print sizes;
-   rows without a price are not saved.
+   and the price. A download can set **Longest side (px)**; leave it empty
+   to deliver the original. A new list suggests a full-size download, a
+   2048 px web download and three print sizes; rows without a price are not
+   saved.
 3. **In the gallery editor**, open the "Shop" panel and choose the price
    list. Sub-galleries use the same list unless they choose another or "Not
    for sale". A default price list in the shop settings covers top-level
@@ -231,6 +234,15 @@ when the customer returns.
   only for paid orders, only during the download period and only with the
   right key. Admin links to originals need a nonce and the right to edit
   the gallery.
+- A smaller download is made from the original the first time it is
+  downloaded and kept next to the original, in the same protected random
+  folder, until the image is deleted. It keeps the original's format for
+  JPEG, PNG, WebP and AVIF (other formats become JPEG), keeps the colour
+  profile and photo metadata where the server's image library can, and has
+  no watermark. Originals that are already small enough are delivered
+  unchanged. Formats WordPress cannot open (RAW, PSD) need a connected
+  SnapOtter server. The size is saved on the order line, so changing the
+  price list later does not change what a customer bought.
 - Stripe webhooks are accepted only with a valid signature no older than
   five minutes, and only for the Checkout Session stored with the order.
 - The checkout has a hidden field that bots fill in and people do not.
@@ -267,5 +279,4 @@ when the customer returns.
 
 ## Not yet
 
-Tax per country, CSV export, print-lab integrations, downloads in smaller
-sizes and gift cards are planned.
+Tax per country, print-lab integrations and gift cards are planned.

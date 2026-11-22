@@ -312,6 +312,7 @@ final class Shop {
 				'id'   => $includes['id'],
 				'kind' => $includes['kind'],
 				'name' => $includes['name'],
+				'size' => 'download' === $includes['kind'] ? (int) ( $includes['size'] ?? 0 ) : 0,
 			],
 		];
 	}
@@ -369,6 +370,7 @@ final class Shop {
 			'print_product' => 'print' === $product['kind'] ? $product['name'] : '',
 			'print_paper'   => $variant['paper'] ?? '',
 			'print_frame'   => $variant['frame'] ?? '',
+			'download_size' => 'download' === $product['kind'] ? (int) ( $product['size'] ?? 0 ) : 0,
 		];
 	}
 }

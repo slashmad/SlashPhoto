@@ -25,7 +25,7 @@ This is an early development version. Galleries, panoramas, client access, proof
 * Optional: connect your own SnapOtter server to import RAW, HEIC, TIFF and PSD files and to process very large images.
 * Watermarked previews; originals are kept where preview addresses cannot lead to them.
 * Proofing: clients mark favourites, add notes and send their selection; you get an email and a list with file names for Lightroom, and the client gets a copy. Visitors without an account keep favourites in their own browser only.
-* Shop: sell downloads of your originals and prints in your own sizes, with price lists per gallery. Guest checkout, manual payment (invoice, transfer, Swish) or Stripe Checkout with no platform fee, order emails, and downloads that open only for paid orders.
+* Shop: sell downloads of your originals or smaller web-size copies, and prints in your own sizes, with price lists per gallery. Guest checkout, manual payment (invoice, transfer, Swish) or Stripe Checkout with no platform fee, order emails, and downloads that open only for paid orders.
 * Packages (a number of photos or the whole gallery for one price), discount codes, and printable receipts and invoices.
 * Paper and framing options on individual prints. Each size can offer its own combinations and prices, and the customer's choice is recorded on the order.
 * Import from Sunshine Photo Cart: galleries, access settings, images, prices and orders, without changing Sunshine's data.

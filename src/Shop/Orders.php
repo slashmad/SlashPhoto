@@ -120,6 +120,7 @@ final class Orders {
 					'print_product' => $line['print_product'] ?? '',
 					'print_paper'   => $line['print_paper'] ?? '',
 					'print_frame'   => $line['print_frame'] ?? '',
+					'download_size' => $line['download_size'] ?? 0,
 					'quantity'      => $line['qty'],
 					'unit_price'    => $line['unit'],
 					'total'         => $line['total'],
@@ -139,6 +140,7 @@ final class Orders {
 						'name'          => $line['includes']['name'],
 						'file_label'    => $image['file'],
 						'print_product' => 'print' === $line['includes']['kind'] ? $line['includes']['name'] : '',
+						'download_size' => $line['includes']['size'] ?? 0,
 						'quantity'      => 1,
 						'unit_price'    => 0,
 						'total'         => 0,
@@ -189,8 +191,8 @@ final class Orders {
 		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE order_id = %d ORDER BY id", $id ), ARRAY_A );
 		return array_map(
 			static function ( array $row ): array {
-				foreach ( [ 'id', 'order_id', 'parent_id', 'gallery_id', 'image_id', 'quantity', 'unit_price', 'total' ] as $key ) {
-					$row[ $key ] = (int) $row[ $key ];
+				foreach ( [ 'id', 'order_id', 'parent_id', 'gallery_id', 'image_id', 'download_size', 'quantity', 'unit_price', 'total' ] as $key ) {
+					$row[ $key ] = (int) ( $row[ $key ] ?? 0 );
 				}
 				return $row;
 			},
