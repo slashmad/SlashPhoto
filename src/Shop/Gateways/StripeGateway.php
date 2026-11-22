@@ -198,7 +198,7 @@ final class StripeGateway implements Gateway {
 				continue;
 				// Photos of a package; the package line carries the price.
 			}
-			$params['line_items'][] = $line( $item['name'] . ' – ' . $item['file_label'], (int) $item['unit_price'], (int) $item['quantity'] );
+			$params['line_items'][] = $line( $item['name'] . ( '' !== (string) $item['file_label'] ? ' – ' . $item['file_label'] : '' ), (int) $item['unit_price'], (int) $item['quantity'] );
 		}
 		if ( $order['shipping'] > 0 ) {
 			$params['line_items'][] = $line( __( 'Shipping', 'slashphoto' ), (int) $order['shipping'], 1 );
@@ -208,17 +208,18 @@ final class StripeGateway implements Gateway {
 			$params['line_items'][] = $line( sprintf( __( 'VAT %s %%', 'slashphoto' ), number_format_i18n( $order['tax_rate'], floor( $order['tax_rate'] ) === $order['tax_rate'] ? 0 : 1 ) ), (int) $order['tax'], 1 );
 		}
 
-		if ( $order['discount'] > 0 ) {
-			// Line items cannot be negative: the discount becomes a one-time Stripe coupon.
+		// Line items cannot be negative: the discount and a gift card become a one-time Stripe coupon.
+		$reduction = (int) $order['discount'] + (int) $order['gift_card_amount'];
+		if ( $reduction > 0 ) {
 			$coupon = self::request(
 				'POST',
 				'coupons',
 				[
-					'amount_off'      => (int) $order['discount'],
+					'amount_off'      => $reduction,
 					'currency'        => $currency,
 					'duration'        => 'once',
 					'max_redemptions' => 1,
-					'name'            => mb_substr( '' !== (string) $order['coupon'] ? (string) $order['coupon'] : __( 'Discount', 'slashphoto' ), 0, 40 ),
+					'name'            => mb_substr( (int) $order['gift_card_amount'] > 0 ? ( (int) $order['discount'] > 0 ? __( 'Discount and gift card', 'slashphoto' ) : __( 'Gift card', 'slashphoto' ) ) : ( '' !== (string) $order['coupon'] ? (string) $order['coupon'] : __( 'Discount', 'slashphoto' ) ), 0, 40 ),
 				],
 				'',
 				'slashphoto-coupon-' . $order['id'] . '-' . $order['token']

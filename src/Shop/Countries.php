@@ -48,6 +48,15 @@ CODES;
 	}
 
 	/**
+	 * Every known country code.
+	 *
+	 * @return string[]
+	 */
+	public static function all(): array {
+		return self::codes( self::AVAILABLE );
+	}
+
+	/**
 	 * Returns the picker's options in saved order, followed by other countries.
 	 *
 	 * @param string[] $selected Saved codes.

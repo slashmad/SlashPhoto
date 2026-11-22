@@ -100,7 +100,19 @@ final class Emails {
 				$lines[] = '';
 			}
 		}
-		$lines   = array_merge( $lines, self::summary( $order ) );
+		$lines = array_merge( $lines, self::summary( $order ) );
+		// Gift cards bought with a paid order: the codes go to the buyer only.
+		$codes = in_array( $order['status'], Orders::PAID, true ) ? GiftCards::codes( $order ) : [];
+		if ( $codes ) {
+			$lines[] = '';
+			$lines[] = __( 'Your gift cards:', 'slashphoto' );
+			foreach ( $codes as $code ) {
+				$lines[] = $code['code'] . ' – ' . Money::format( $code['card']['amount'], (string) $order['currency'] )
+					/* translators: %s: date */
+					. ( null !== $code['card']['expires_at'] ? ', ' . sprintf( __( 'valid until %s', 'slashphoto' ), wp_date( (string) get_option( 'date_format' ), (int) strtotime( $code['card']['expires_at'] . ' UTC' ) ) ) : '' );
+			}
+			$lines[] = __( 'Enter a code under "Gift card code" in the cart. Anyone who has a code can use it.', 'slashphoto' );
+		}
 		$lines[] = '';
 		if ( Orders::downloads_open( $order ) && in_array( 'download', array_column( Orders::items( (int) $order['id'] ), 'kind' ), true ) ) {
 			$lines[] = __( 'Download your photos here:', 'slashphoto' );
@@ -170,6 +182,12 @@ final class Emails {
 		}
 		/* translators: %s: amount */
 		$lines[] = sprintf( __( 'Total: %s', 'slashphoto' ), $money( $order['total'] ) );
+		if ( $order['gift_card_amount'] > 0 ) {
+			/* translators: 1: last four characters of the gift card code, 2: amount */
+			$lines[] = sprintf( __( 'Gift card (…%1$s): −%2$s', 'slashphoto' ), $order['gift_card_hint'], $money( $order['gift_card_amount'] ) );
+			/* translators: %s: amount */
+			$lines[] = sprintf( __( 'To pay: %s', 'slashphoto' ), $money( GiftCards::due( $order ) ) );
+		}
 
 		if ( $details ) {
 			$lines[] = '';

@@ -141,12 +141,12 @@ final class Importer {
 	}
 
 	/**
-	 * Asks SnapOtter for a display copy.
+	 * Asks SnapOtter for a display copy, written next to $path.
 	 *
 	 * @param string $path Original.
 	 * @return string|WP_Error Path of the JPEG.
 	 */
-	private static function snapotter_copy( string $path ) {
+	public static function snapotter_copy( string $path ) {
 		$client = Connection::client();
 		if ( ! $client ) {
 			return new WP_Error( 'slashphoto_snapotter_off', __( 'SnapOtter is not connected.', 'slashphoto' ) );
@@ -157,6 +157,27 @@ final class Importer {
 		$target    = $path . '-display.jpg';
 		$result    = $client->display_copy( $path, $long_edge, (int) Settings::get( 'display_quality' ), $target );
 		return is_wp_error( $result ) ? $result : $target;
+	}
+
+	/**
+	 * Runs $callback (which generates metadata for a prepared display copy)
+	 * so that $path is stored as the attachment's private original.
+	 *
+	 * @param string   $path     Original file; it is moved.
+	 * @param string   $ext      Lower-case extension to give it.
+	 * @param callable $callback Work to run.
+	 * @return mixed The callback's result.
+	 */
+	public static function with_original( string $path, string $ext, callable $callback ) {
+		self::$pending = [
+			'path' => $path,
+			'ext'  => $ext,
+		];
+		try {
+			return $callback();
+		} finally {
+			self::$pending = null;
+		}
 	}
 
 	/**

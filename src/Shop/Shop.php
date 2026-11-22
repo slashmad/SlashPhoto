@@ -128,17 +128,29 @@ final class Shop {
 	 * instances, { package: <client ID>, product, images: [ … ], gallery }.
 	 * A package of a whole gallery ("count" 0) needs only the gallery.
 	 *
-	 * @param array  $items  Raw items.
-	 * @param string $coupon Discount code, if any.
-	 * @param string $email  Customer's email, for per-customer code limits.
-	 * @return array{lines: array, unavailable: array, currency: string, subtotal: int, discount: int, coupon: string, coupon_error: string, shipping: int, tax: int, total: int, tax_rate: float, prices_include_tax: bool, needs_shipping: bool}
+	 * @param array  $items   Raw items.
+	 * @param string $coupon  Discount code, if any.
+	 * @param string $email   Customer's email, for per-customer code limits.
+	 * Gift cards are { giftcard: <amount in minor units>, qty }.
+	 *
+	 * @param string $country Customer's country (delivery country for prints), for VAT by country.
+	 * @param string $gift    Gift card code to pay with, if any.
+	 * @return array{lines: array, unavailable: array, currency: string, subtotal: int, discount: int, coupon: string, coupon_error: string, shipping: int, tax: int, total: int, tax_rate: float, tax_country: string, tax_by_country: bool, prices_include_tax: bool, needs_shipping: bool, gift_card: array{id: int, hint: string, amount: int, error: string}, due: int}
 	 */
-	public function quote( array $items, string $coupon = '', string $email = '' ): array {
+	public function quote( array $items, string $coupon = '', string $email = '', string $country = '', string $gift = '' ): array {
 		$currency = (string) Settings::get( 'currency' );
 		$merged   = [];
 		$packages = [];
+		$cards    = [];
 		foreach ( array_slice( $items, 0, self::MAX_LINES ) as $item ) {
 			if ( ! is_array( $item ) ) {
+				continue;
+			}
+			if ( isset( $item['giftcard'] ) ) {
+				$amount = (int) $item['giftcard'];
+				if ( $amount > 0 ) {
+					$cards[ $amount ] = min( self::MAX_QTY, ( $cards[ $amount ] ?? 0 ) + max( 1, (int) ( $item['qty'] ?? 1 ) ) );
+				}
 				continue;
 			}
 			$product = (string) ( $item['product'] ?? '' );
@@ -195,6 +207,32 @@ final class Shop {
 			$subtotal += $line['total'];
 			$prints    = $prints || 'print' === ( $line['includes']['kind'] ?? $line['kind'] );
 		}
+		$goods = $lines;
+
+		// Gift cards: vouchers without VAT, shipping or discounts.
+		$vouchers = 0;
+		foreach ( $cards as $amount => $qty ) {
+			if ( ! GiftCards::enabled() || ! in_array( $amount, GiftCards::amounts(), true ) ) {
+				$unavailable[] = 'gc:' . $amount;
+				continue;
+			}
+			$lines[]   = [
+				'key'     => 'gc:' . $amount,
+				'image'   => 0,
+				'gallery' => 0,
+				'product' => GiftCards::KIND,
+				'kind'    => GiftCards::KIND,
+				'name'    => GiftCards::name( $amount, $currency ),
+				'title'   => '',
+				'file'    => '',
+				'thumb'   => '',
+				'qty'     => $qty,
+				'unit'    => $amount,
+				'total'   => $amount * $qty,
+				'amount'  => $amount,
+			];
+			$vouchers += $amount * $qty;
+		}//end foreach
 
 		$applied = [
 			'code'          => '',
@@ -202,8 +240,8 @@ final class Shop {
 			'free_shipping' => false,
 			'error'         => '',
 		];
-		if ( '' !== trim( $coupon ) && $lines ) {
-			$applied = Coupons::apply( $coupon, $lines, $subtotal, $email );
+		if ( '' !== trim( $coupon ) && $goods ) {
+			$applied = Coupons::apply( $coupon, $goods, $subtotal, $email );
 		}
 		$discount = min( $subtotal, $applied['discount'] );
 
@@ -212,26 +250,63 @@ final class Shop {
 			$free     = (int) Settings::get( 'free_shipping_over' );
 			$shipping = $free > 0 && $subtotal - $discount >= $free ? 0 : (int) Settings::get( 'shipping_flat' );
 		}
-		$rate     = (float) Settings::get( 'tax_rate' );
+		[ $rate, $tax_country ] = self::tax_rate( $country );
+
 		$included = (bool) Settings::get( 'prices_include_tax' );
 		$taxable  = $subtotal - $discount + $shipping;
 		$tax      = Money::tax( $taxable, $rate, $included );
+		$total    = $taxable + ( $included ? 0 : $tax ) + $vouchers;
+
+		$card = [
+			'id'     => 0,
+			'hint'   => '',
+			'amount' => 0,
+			'error'  => '',
+		];
+		if ( '' !== trim( $gift ) && $lines ) {
+			$found         = $vouchers ? null : GiftCards::find( $gift );
+			$card['error'] = $vouchers ? __( 'Gift cards cannot be paid for with a gift card.', 'slashphoto' ) : GiftCards::problem( $found, $currency );
+			if ( '' === $card['error'] && $found ) {
+				$card['id']     = $found['id'];
+				$card['hint']   = $found['hint'];
+				$card['amount'] = min( $found['balance'], $total );
+			}
+		}
 
 		return [
 			'lines'              => $lines,
 			'unavailable'        => $unavailable,
 			'currency'           => $currency,
-			'subtotal'           => $subtotal,
+			'subtotal'           => $subtotal + $vouchers,
 			'discount'           => $discount,
 			'coupon'             => $applied['code'],
 			'coupon_error'       => $applied['error'],
 			'shipping'           => $shipping,
 			'tax'                => $tax,
-			'total'              => $taxable + ( $included ? 0 : $tax ),
+			'total'              => $total,
+			'gift_card'          => $card,
+			'due'                => $total - $card['amount'],
 			'tax_rate'           => $rate,
+			// Only recorded when VAT depends on the country.
+			'tax_country'        => Settings::get( 'tax_rates' ) ? $tax_country : '',
+			'tax_by_country'     => (bool) Settings::get( 'tax_rates' ),
 			'prices_include_tax' => $included,
 			'needs_shipping'     => $prints,
 		];
+	}
+
+	/**
+	 * The VAT rate for a customer's country: its own rate when one is set
+	 * under VAT by country, otherwise the general rate.
+	 *
+	 * @param string $country Country code, or '' when not known yet.
+	 * @return array{0: float, 1: string} Rate and the normalised country code ('' when unknown).
+	 */
+	public static function tax_rate( string $country ): array {
+		$country = strtoupper( trim( $country ) );
+		$country = in_array( $country, Countries::all(), true ) ? $country : '';
+		$rates   = (array) Settings::get( 'tax_rates' );
+		return [ (float) ( '' !== $country && isset( $rates[ $country ] ) ? $rates[ $country ] : Settings::get( 'tax_rate' ) ), $country ];
 	}
 
 	/**

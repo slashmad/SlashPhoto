@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Schema {
 
-	public const VERSION = 5;
+	public const VERSION = 7;
 	public const OPTION  = 'slashphoto_db_version';
 
 	/**
@@ -60,6 +60,22 @@ final class Schema {
 	}
 
 	/**
+	 * Gift card table.
+	 */
+	public static function gift_cards(): string {
+		global $wpdb;
+		return $wpdb->prefix . 'slashphoto_gift_cards';
+	}
+
+	/**
+	 * Gift card spending records.
+	 */
+	public static function gift_card_uses(): string {
+		global $wpdb;
+		return $wpdb->prefix . 'slashphoto_gift_card_uses';
+	}
+
+	/**
 	 * Daily view counts.
 	 */
 	public static function stats(): string {
@@ -78,9 +94,13 @@ final class Schema {
 		$items   = self::items();
 		$log     = self::visitors();
 		$stats   = self::stats();
+		$cards   = self::gift_cards();
+		$uses    = self::gift_card_uses();
 
 		// Version 2 added discount, coupon and parent_id (packages); version 3
-		// the visitor log and anonymous daily view counts (D-021).
+		// the visitor log and anonymous daily view counts (D-021); version 4
+		// print option snapshots; version 5 download_size (D-033); version 6
+		// tax_country (D-036); version 7 gift cards (D-037).
 		// dbDelta needs two spaces after PRIMARY KEY and one field per line.
 		dbDelta(
 			"CREATE TABLE {$orders} (
@@ -98,10 +118,14 @@ final class Schema {
 	subtotal bigint(20) NOT NULL DEFAULT 0,
 	discount bigint(20) NOT NULL DEFAULT 0,
 	coupon varchar(50) NOT NULL DEFAULT '',
+	gift_card_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	gift_card_hint varchar(4) NOT NULL DEFAULT '',
+	gift_card_amount bigint(20) NOT NULL DEFAULT 0,
 	shipping bigint(20) NOT NULL DEFAULT 0,
 	tax bigint(20) NOT NULL DEFAULT 0,
 	total bigint(20) NOT NULL DEFAULT 0,
 	tax_rate decimal(6,3) NOT NULL DEFAULT 0,
+	tax_country char(2) NOT NULL DEFAULT '',
 	prices_include_tax tinyint(1) NOT NULL DEFAULT 1,
 	gateway varchar(30) NOT NULL DEFAULT '',
 	gateway_ref varchar(255) NOT NULL DEFAULT '',
@@ -157,6 +181,32 @@ CREATE TABLE {$stats} (
 	views int(10) unsigned NOT NULL DEFAULT 0,
 	PRIMARY KEY  (day,gallery_id,image_id),
 	KEY gallery_id (gallery_id)
+) {$charset};
+CREATE TABLE {$cards} (
+	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	code_hash char(64) NOT NULL,
+	hint varchar(4) NOT NULL DEFAULT '',
+	order_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	item_id bigint(20) unsigned NOT NULL DEFAULT 0,
+	number int(11) NOT NULL DEFAULT 0,
+	amount bigint(20) NOT NULL DEFAULT 0,
+	currency char(3) NOT NULL,
+	status varchar(10) NOT NULL DEFAULT 'active',
+	created_at datetime NOT NULL,
+	expires_at datetime NULL,
+	PRIMARY KEY  (id),
+	UNIQUE KEY code_hash (code_hash),
+	KEY order_id (order_id)
+) {$charset};
+CREATE TABLE {$uses} (
+	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	card_id bigint(20) unsigned NOT NULL,
+	order_id bigint(20) unsigned NOT NULL,
+	amount bigint(20) NOT NULL DEFAULT 0,
+	created_at datetime NOT NULL,
+	PRIMARY KEY  (id),
+	KEY card_id (card_id),
+	KEY order_id (order_id)
 ) {$charset};"
 		);
 		update_option( self::OPTION, self::VERSION, true );

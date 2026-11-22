@@ -91,10 +91,14 @@ final class Orders {
 				'subtotal'           => (int) $quote['subtotal'],
 				'discount'           => (int) ( $quote['discount'] ?? 0 ),
 				'coupon'             => (string) ( $quote['coupon'] ?? '' ),
+				'gift_card_id'       => (int) ( $quote['gift_card']['id'] ?? 0 ),
+				'gift_card_hint'     => (string) ( $quote['gift_card']['hint'] ?? '' ),
+				'gift_card_amount'   => (int) ( $quote['gift_card']['amount'] ?? 0 ),
 				'shipping'           => (int) $quote['shipping'],
 				'tax'                => (int) $quote['tax'],
 				'total'              => (int) $quote['total'],
 				'tax_rate'           => (float) $quote['tax_rate'],
+				'tax_country'        => (string) ( $quote['tax_country'] ?? '' ),
 				'prices_include_tax' => $quote['prices_include_tax'] ? 1 : 0,
 				'gateway'            => (string) ( $order['gateway'] ?? '' ),
 				'created_at'         => $now,
@@ -148,6 +152,17 @@ final class Orders {
 				);
 			}
 		}//end foreach
+
+		// The gift card is spent last, under a lock; if its balance went
+		// elsewhere meanwhile, the order is not placed.
+		$card = (int) ( $quote['gift_card']['id'] ?? 0 );
+		if ( $card && ! GiftCards::reserve( $card, $id, (int) $quote['gift_card']['amount'] ) ) {
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom tables.
+			$wpdb->delete( Schema::items(), [ 'order_id' => $id ] );
+			$wpdb->delete( Schema::orders(), [ 'id' => $id ] );
+			// phpcs:enable
+			return new WP_Error( 'slashphoto_gift_card_changed', __( 'The gift card balance has changed. Check your cart and try again.', 'slashphoto' ), [ 'status' => 409 ] );
+		}
 		return $id;
 	}
 
@@ -273,6 +288,58 @@ final class Orders {
 			foreach ( $rows as $row ) {
 				$before = (int) $row['id'];
 				yield $row;
+			}
+		} while ( $more );
+	}
+
+	/**
+	 * Paid orders (paid, completed or refunded) whose payment arrived between
+	 * two dates, oldest first, with what they contained. For VAT reports.
+	 *
+	 * @param string $from First day, Y-m-d (UTC).
+	 * @param string $to   Last day, Y-m-d (UTC), inclusive.
+	 * @return \Generator<array{id: int, paid_at: string, status: string, tax_country: string, tax_rate: float, currency: string, tax: int, total: int, kinds: string, vouchers: int, gift_card: int}>
+	 */
+	public static function tax_rows( string $from, string $to ): \Generator {
+		global $wpdb;
+		$orders = Schema::orders();
+		$items  = Schema::items();
+		$after  = 0;
+		$batch  = 250;
+		do {
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom tables.
+			$rows = (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT orders.id, orders.paid_at, orders.status, orders.tax_country, orders.tax_rate, orders.currency, orders.tax, orders.total, orders.gift_card_amount,
+						(SELECT GROUP_CONCAT(DISTINCT kind ORDER BY kind) FROM {$items} WHERE order_id = orders.id AND parent_id = 0 AND kind IN ('download', 'print', 'package', 'giftcard')) AS kinds,
+						(SELECT COALESCE(SUM(total), 0) FROM {$items} WHERE order_id = orders.id AND parent_id = 0 AND kind = 'giftcard') AS vouchers
+					FROM {$orders} orders
+					WHERE orders.status IN ('paid', 'completed', 'refunded') AND orders.paid_at >= %s AND orders.paid_at < %s AND orders.id > %d
+					ORDER BY orders.id ASC LIMIT %d",
+					$from . ' 00:00:00',
+					gmdate( 'Y-m-d', (int) strtotime( $to . ' +1 day' ) ) . ' 00:00:00',
+					$after,
+					$batch
+				),
+				ARRAY_A
+			);
+			// phpcs:enable
+			$more = count( $rows ) === $batch;
+			foreach ( $rows as $row ) {
+				$after = (int) $row['id'];
+				yield [
+					'id'          => $after,
+					'paid_at'     => (string) $row['paid_at'],
+					'status'      => (string) $row['status'],
+					'tax_country' => (string) $row['tax_country'],
+					'tax_rate'    => (float) $row['tax_rate'],
+					'currency'    => (string) $row['currency'],
+					'tax'         => (int) $row['tax'],
+					'total'       => (int) $row['total'],
+					'kinds'       => (string) $row['kinds'],
+					'vouchers'    => (int) $row['vouchers'],
+					'gift_card'   => (int) $row['gift_card_amount'],
+				];
 			}
 		} while ( $more );
 	}
@@ -462,8 +529,8 @@ final class Orders {
 	 * @param array $row Row.
 	 */
 	private static function hydrate( array $row ): array {
-		foreach ( [ 'id', 'user_id', 'subtotal', 'discount', 'shipping', 'tax', 'total' ] as $key ) {
-			$row[ $key ] = (int) $row[ $key ];
+		foreach ( [ 'id', 'user_id', 'subtotal', 'discount', 'shipping', 'tax', 'total', 'gift_card_id', 'gift_card_amount' ] as $key ) {
+			$row[ $key ] = (int) ( $row[ $key ] ?? 0 );
 		}
 		$row['tax_rate']           = (float) $row['tax_rate'];
 		$row['prices_include_tax'] = (bool) $row['prices_include_tax'];

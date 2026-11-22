@@ -44,6 +44,9 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
   client accounts or any signed-in account. Add expiry dates and terms that
   visitors must accept. Sub-galleries follow their ancestors' access rules.
   Send a gallery link from the **Invite** tab in a published gallery.
+  Clients can sign in with a one-time emailed link instead of a password.
+  **Make new copies** applies changed watermark and display settings to
+  photos uploaded earlier and moves older uploads to private paths.
   See [gallery access and privacy](docs/security-and-privacy.md).
 - **Full-size originals.** Upload one full-resolution file per image through
   the gallery editor's **Upload photos** panel. Chunked uploads can handle
@@ -71,8 +74,10 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
   transfer or Swish) or connect Stripe Checkout, PayPal or Mollie. SlashPhoto
   charges no platform fee. Manage orders, export a print production CSV, send
   status emails and offer printable receipts and invoices. Private download
-  links work for paid orders during the configured download period. See [shop
-  setup](docs/shop.md).
+  links work for paid orders during the configured download period. Optional
+  VAT rates by country (for EU OSS) come with a quarterly VAT report, and gift
+  cards can be sold and redeemed at checkout. See
+  [shop setup](docs/shop.md).
 - **Import from Sunshine Photo Cart.** Copies galleries with their access
   settings, images, price levels and orders, in repeatable steps, without
   changing Sunshine's data. See [docs/import-sunshine.md](docs/import-sunshine.md).

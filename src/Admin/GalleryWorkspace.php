@@ -11,6 +11,7 @@ use SlashPhoto\Access\Access;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Gallery\GalleryRepository;
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Media\Reprocessor;
 use SlashPhoto\Shop\PriceLists;
 use WP_Post;
 
@@ -144,6 +145,9 @@ final class GalleryWorkspace {
 			$this->upload->enqueue_uploader();
 			$file = 'assets/js/admin-workspace.js';
 			wp_enqueue_script( 'slashphoto-workspace', SLASHPHOTO_URL . $file, [ UploadPanel::UPLOADER ], Assets::version( $file ), true );
+			$file = 'assets/js/admin-reprocess.js';
+			wp_enqueue_script( 'slashphoto-reprocess', SLASHPHOTO_URL . $file, [ 'wp-api-fetch', 'wp-i18n' ], Assets::version( $file ), true );
+			wp_set_script_translations( 'slashphoto-reprocess', 'slashphoto', SLASHPHOTO_DIR . 'languages' );
 		}
 	}
 
@@ -251,9 +255,18 @@ final class GalleryWorkspace {
 				<?php if ( $arrange ) : ?>
 					<a class="button" href="<?php echo esc_url( add_query_arg( 'photo_page', $page, $base ) ); ?>"><?php esc_html_e( 'Done', 'slashphoto' ); ?></a>
 				<?php else : ?>
-					<a class="button" data-reorder-photos href="<?php echo esc_url( add_query_arg( 'photo_page', $page, $order ) ); ?>" <?php echo $total < 2 ? 'hidden' : ''; ?>><?php esc_html_e( 'Reorder photos', 'slashphoto' ); ?></a>
+					<div class="slashphoto-workspace__photo-actions">
+						<a class="button" data-reorder-photos href="<?php echo esc_url( add_query_arg( 'photo_page', $page, $order ) ); ?>" <?php echo $total < 2 ? 'hidden' : ''; ?>><?php esc_html_e( 'Reorder photos', 'slashphoto' ); ?></a>
+						<?php if ( $total && Reprocessor::can( $gallery->ID ) ) : ?>
+							<button type="button" class="button" data-reprocess-photos data-gallery="<?php echo esc_attr( (string) $gallery->ID ); ?>" aria-describedby="slashphoto-reprocess-help"><?php esc_html_e( 'Make new copies', 'slashphoto' ); ?></button>
+						<?php endif; ?>
+					</div>
 				<?php endif; ?>
 			</div>
+			<?php if ( ! $arrange && $total && Reprocessor::can( $gallery->ID ) ) : ?>
+				<p class="description" id="slashphoto-reprocess-help"><?php esc_html_e( 'Make new copies remakes the web copies of every photo in this gallery from the originals, with the current watermark, display size and image-processing settings. The originals are not changed.', 'slashphoto' ); ?></p>
+				<div class="slashphoto-workspace__reprocess" data-reprocess-status role="status" hidden></div>
+			<?php endif; ?>
 			<?php if ( $arrange ) : ?>
 				<?php
 				$messages = [

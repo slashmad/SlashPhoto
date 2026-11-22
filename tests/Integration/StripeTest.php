@@ -263,6 +263,38 @@ final class StripeTest extends AccessTestCase {
 		$this->assertSame( 28125, $quote['total'] );
 	}
 
+	public function test_gift_card_is_part_of_the_one_time_coupon(): void {
+		$this->connect();
+		$code    = \SlashPhoto\Shop\GiftCards::create( 5000 );
+		$items   = [
+			[
+				'image'   => $this->image,
+				'product' => 'cccc0001',
+			],
+		];
+		$quote   = Plugin::instance()->shop()->quote( $items, '', '', '', $code );
+		$request = new \WP_REST_Request( 'POST', '/slashphoto/v1/shop/orders' );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body(
+			(string) wp_json_encode(
+				[
+					'items'     => $items,
+					'total'     => $quote['total'],
+					'email'     => 'kim@example.org',
+					'name'      => 'Kim',
+					'gateway'   => 'stripe',
+					'gift_card' => $code,
+				]
+			)
+		);
+		$this->assertSame( 200, rest_get_server()->dispatch( $request )->get_status() );
+		$coupon = $this->calls[ count( $this->calls ) - 2 ];
+		$this->assertStringEndsWith( '/v1/coupons', $coupon['url'] );
+		$this->assertSame( '5000', $coupon['body']['amount_off'] );
+		$this->assertSame( 'Gift card', $coupon['body']['name'] );
+		$this->assertSame( 0, \SlashPhoto\Shop\GiftCards::find( $code )['balance'] );
+	}
+
 	public function test_signed_webhook_marks_the_order_paid(): void {
 		$this->connect();
 		$order = $this->checkout();

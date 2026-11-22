@@ -8,6 +8,7 @@
 namespace SlashPhoto\Shop\Gateways;
 
 use SlashPhoto\Secrets;
+use SlashPhoto\Shop\GiftCards;
 use SlashPhoto\Shop\Money;
 use SlashPhoto\Shop\Orders;
 use SlashPhoto\Shop\ShopPage;
@@ -194,7 +195,7 @@ final class PayPalGateway implements Gateway {
 				'name'        => mb_substr( $item['name'] . ( '' !== $item['file_label'] ? ' – ' . $item['file_label'] : '' ), 0, 127 ),
 				'quantity'    => (string) $item['quantity'],
 				'unit_amount' => self::money( (int) $item['unit_price'], $currency ),
-				'category'    => 'download' === $item['kind'] ? 'DIGITAL_GOODS' : 'PHYSICAL_GOODS',
+				'category'    => 'print' === $item['kind'] ? 'PHYSICAL_GOODS' : 'DIGITAL_GOODS',
 			];
 			$sum    += (int) $item['unit_price'] * (int) $item['quantity'];
 		}
@@ -205,8 +206,10 @@ final class PayPalGateway implements Gateway {
 		if ( ! $order['prices_include_tax'] && $order['tax'] > 0 ) {
 			$breakdown['tax_total'] = self::money( (int) $order['tax'], $currency );
 		}
-		if ( $order['discount'] > 0 ) {
-			$breakdown['discount'] = self::money( (int) $order['discount'], $currency );
+		// A gift card pays like a discount as far as PayPal is concerned.
+		$reduction = (int) $order['discount'] + (int) $order['gift_card_amount'];
+		if ( $reduction > 0 ) {
+			$breakdown['discount'] = self::money( $reduction, $currency );
 		}
 		$body   = [
 			'intent'         => 'CAPTURE',
@@ -217,7 +220,7 @@ final class PayPalGateway implements Gateway {
 					'invoice_id'   => 'slashphoto-' . $order['id'] . '-' . substr( (string) $order['token'], 0, 8 ),
 					/* translators: %d: order number */
 					'description'  => sprintf( __( 'Order %d', 'slashphoto' ), $order['id'] ),
-					'amount'       => array_merge( self::money( (int) $order['total'], $currency ), [ 'breakdown' => $breakdown ] ),
+					'amount'       => array_merge( self::money( GiftCards::due( $order ), $currency ), [ 'breakdown' => $breakdown ] ),
 					'items'        => $lines,
 				],
 			],

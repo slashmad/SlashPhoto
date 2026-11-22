@@ -8,6 +8,7 @@
 namespace SlashPhoto\Admin;
 
 use SlashPhoto\Access\Access;
+use SlashPhoto\Access\SignInLinks;
 use SlashPhoto\Gallery\PostType;
 use WP_Post;
 
@@ -121,6 +122,7 @@ final class GalleryInvitations {
 			}
 		}
 		$requires_account = ! $this->access->account_allowed( $gallery, 0 );
+		$recipient        = null;
 		if ( $requires_account ) {
 			$recipient = get_user_by( 'email', $email );
 			if ( ! $recipient || ! $this->access->account_allowed( $gallery, $recipient->ID ) ) {
@@ -147,7 +149,10 @@ final class GalleryInvitations {
 		/* translators: %s: Gallery title. */
 		$body = [ sprintf( __( 'You are invited to view %s.', 'slashphoto' ), $title ), $url ];
 		if ( $requires_account ) {
-			$body[] = __( 'Sign in with the WordPress account registered to this email address.', 'slashphoto' );
+			$signin = SignInLinks::enabled() && $recipient ? SignInLinks::create( $recipient, $gallery, SignInLinks::INVITE_TTL ) : '';
+			$body[] = '' !== $signin
+				? __( 'Sign in without a password with this link. It works once, within seven days:', 'slashphoto' ) . "\n" . $signin
+				: __( 'Sign in with the WordPress account registered to this email address.', 'slashphoto' );
 		}
 		if ( $this->access->password_source( $gallery ) ) {
 			$body[] = __( 'Use the gallery password shared with you separately.', 'slashphoto' );

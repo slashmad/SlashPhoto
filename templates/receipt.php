@@ -27,6 +27,8 @@ $slashphoto_order = $args['order'];
 $slashphoto_money = $args['money'];
 $slashphoto_date  = $args['date'];
 $slashphoto_rate  = number_format_i18n( (float) $slashphoto_order['tax_rate'], floor( (float) $slashphoto_order['tax_rate'] ) === (float) $slashphoto_order['tax_rate'] ? 0 : 1 );
+// VAT charged for another country's rate names that country (VAT by country).
+$slashphoto_vat_in = '' !== (string) ( $slashphoto_order['tax_country'] ?? '' ) ? ' · ' . \SlashPhoto\Shop\Countries::name( (string) $slashphoto_order['tax_country'] ) : '';
 ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
@@ -157,19 +159,31 @@ $slashphoto_rate  = number_format_i18n( (float) $slashphoto_order['tax_rate'], f
 					<th colspan="3">
 						<?php
 						/* translators: %s: VAT rate */
-						echo esc_html( sprintf( __( 'VAT %s %%', 'slashphoto' ), $slashphoto_rate ) );
+						echo esc_html( sprintf( __( 'VAT %s %%', 'slashphoto' ), $slashphoto_rate ) . $slashphoto_vat_in );
 						?>
 					</th>
 					<td class="num"><?php echo esc_html( $slashphoto_money( $slashphoto_order['tax'] ) ); ?></td>
 				</tr>
 			<?php endif; ?>
 			<tr class="total"><th colspan="3"><?php esc_html_e( 'Total', 'slashphoto' ); ?></th><td class="num"><?php echo esc_html( $slashphoto_money( $slashphoto_order['total'] ) ); ?></td></tr>
+			<?php if ( (int) ( $slashphoto_order['gift_card_amount'] ?? 0 ) > 0 ) : ?>
+				<tr>
+					<th colspan="3">
+						<?php
+						/* translators: %s: last four characters of the gift card code */
+						echo esc_html( sprintf( __( 'Paid with gift card (…%s)', 'slashphoto' ), $slashphoto_order['gift_card_hint'] ) );
+						?>
+					</th>
+					<td class="num"><?php echo esc_html( '−' . $slashphoto_money( (int) $slashphoto_order['gift_card_amount'] ) ); ?></td>
+				</tr>
+				<tr><th colspan="3"><?php echo esc_html( 'receipt' === $args['type'] ? __( 'Paid', 'slashphoto' ) : __( 'To pay', 'slashphoto' ) ); ?></th><td class="num"><?php echo esc_html( $slashphoto_money( \SlashPhoto\Shop\GiftCards::due( $slashphoto_order ) ) ); ?></td></tr>
+			<?php endif; ?>
 			<?php if ( $slashphoto_order['prices_include_tax'] && $slashphoto_order['tax'] > 0 ) : ?>
 				<tr>
 					<th colspan="3">
 						<?php
 						/* translators: 1: VAT rate, 2: amount before VAT */
-						echo esc_html( sprintf( __( 'Of which VAT %1$s %% (on %2$s)', 'slashphoto' ), $slashphoto_rate, $slashphoto_money( $slashphoto_order['total'] - $slashphoto_order['tax'] ) ) );
+						echo esc_html( sprintf( __( 'Of which VAT %1$s %% (on %2$s)', 'slashphoto' ), $slashphoto_rate, $slashphoto_money( $slashphoto_order['total'] - $slashphoto_order['tax'] ) ) . $slashphoto_vat_in );
 						?>
 					</th>
 					<td class="num"><?php echo esc_html( $slashphoto_money( $slashphoto_order['tax'] ) ); ?></td>

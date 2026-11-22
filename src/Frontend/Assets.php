@@ -275,6 +275,10 @@ final class Assets {
 					'couponApplied'     => __( 'Code %s applied.', 'slashphoto' ),
 					/* translators: %s: discount code */
 					'discount'          => __( 'Discount (%s)', 'slashphoto' ),
+					'giftCardApplied'   => __( 'Gift card applied.', 'slashphoto' ),
+					/* translators: %s: last four characters of the gift card code */
+					'giftCardRow'       => __( 'Gift card (…%s)', 'slashphoto' ),
+					'due'               => __( 'To pay', 'slashphoto' ),
 					'error'             => __( 'Something went wrong. Check your connection and try again.', 'slashphoto' ),
 				],
 			]

@@ -103,7 +103,41 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 		<?php endif; ?>
 		<dt class="slashphoto-order__total"><?php esc_html_e( 'Total', 'slashphoto' ); ?></dt>
 		<dd class="slashphoto-order__total"><?php echo esc_html( $slashphoto_money( $slashphoto_order['total'] ) ); ?></dd>
+		<?php if ( (int) ( $slashphoto_order['gift_card_amount'] ?? 0 ) > 0 ) : ?>
+			<dt>
+				<?php
+				/* translators: %s: last four characters of the gift card code */
+				echo esc_html( sprintf( __( 'Gift card (…%s)', 'slashphoto' ), $slashphoto_order['gift_card_hint'] ) );
+				?>
+			</dt>
+			<dd><?php echo esc_html( '−' . $slashphoto_money( (int) $slashphoto_order['gift_card_amount'] ) ); ?></dd>
+			<dt class="slashphoto-order__total"><?php esc_html_e( 'To pay', 'slashphoto' ); ?></dt>
+			<dd class="slashphoto-order__total"><?php echo esc_html( $slashphoto_money( \SlashPhoto\Shop\GiftCards::due( $slashphoto_order ) ) ); ?></dd>
+		<?php endif; ?>
 	</dl>
+
+	<?php $slashphoto_codes = in_array( $slashphoto_order['status'], [ 'paid', 'completed' ], true ) ? \SlashPhoto\Shop\GiftCards::codes( $slashphoto_order ) : []; ?>
+	<?php if ( $slashphoto_codes ) : ?>
+		<h3 class="slashphoto-order__subtitle"><?php esc_html_e( 'Your gift cards', 'slashphoto' ); ?></h3>
+		<ul class="slashphoto-order__gift-cards">
+			<?php foreach ( $slashphoto_codes as $slashphoto_code ) : ?>
+				<li>
+					<code><?php echo esc_html( $slashphoto_code['code'] ); ?></code>
+					<?php
+					echo esc_html(
+						' – ' . $slashphoto_money( $slashphoto_code['card']['amount'] )
+						. ( null !== $slashphoto_code['card']['expires_at']
+							/* translators: %s: date */
+							? ', ' . sprintf( __( 'valid until %s', 'slashphoto' ), wp_date( (string) get_option( 'date_format' ), (int) strtotime( $slashphoto_code['card']['expires_at'] . ' UTC' ) ) )
+							: '' )
+						/* translators: %s: amount left */
+						. ( $slashphoto_code['card']['balance'] < $slashphoto_code['card']['amount'] ? ', ' . sprintf( __( '%s left', 'slashphoto' ), $slashphoto_money( $slashphoto_code['card']['balance'] ) ) : '' )
+					);
+					?>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+	<?php endif; ?>
 
 	<?php if ( $slashphoto_order['address'] ) : ?>
 		<h3 class="slashphoto-order__subtitle"><?php esc_html_e( 'Delivery address', 'slashphoto' ); ?></h3>

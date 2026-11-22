@@ -22,7 +22,8 @@ defined( 'ABSPATH' ) || exit;
  * 360° panoramas are not watermarked: a flat stamp would be distorted on
  * the sphere.
  *
- * Applies to images uploaded after watermarks are switched on.
+ * Applies to images uploaded after watermarks are switched on, and to
+ * earlier ones when the gallery's photos are processed again (Reprocessor).
  */
 final class Watermark {
 

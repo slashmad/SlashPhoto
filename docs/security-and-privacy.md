@@ -77,6 +77,31 @@ parent gallery, only someone who can edit the parent may send it. Share
 gallery passwords separately. SlashPhoto passes invitations to WordPress
 mail without keeping an invitation log.
 
+## Sign-in links
+
+Clients can sign in with an emailed link instead of a password (switch:
+**Settings → Visitors → Sign-in links**, on by default).
+
+- Only accounts that cannot edit content get links (filter
+  `slashphoto_signin_link_allowed`). Photographers and administrators always
+  use their password and any two-factor plugin, so a stolen mailbox cannot
+  open the dashboard. An account that gains editing rights can no longer use
+  links it was sent earlier.
+- A client-only gallery offers "Email me a sign-in link" to visitors who are
+  not logged in. The page answers the same way whether or not the address
+  has an account, sends only to accounts allowed in that gallery, and sends
+  at most one link per account a minute. The request itself is not stored.
+- Invitations to galleries that need an account include a link that works
+  for seven days; requested links work for one hour.
+- A link is `/?slashphoto_signin=<user ID>-<48 hex characters>` and works
+  once. Only an HMAC of the token (with the site's auth salt), its expiry
+  and the gallery to open are kept in the client's user meta, at most five
+  at a time; they are removed when used or expired.
+- Opening the link shows a confirmation page (no-cache, noindex, no
+  referrer). Signing in needs its button, a POST, so mail scanners that open
+  links in advance do not use them up. The session is a normal WordPress
+  login that ends when the browser closes.
+
 ## Image files
 
 Images uploaded to a gallery are stored as
@@ -136,7 +161,9 @@ downloads are streamed only for paid orders, and Stripe webhooks need a
 valid, fresh signature. Receipts and invoices use the same order key and
 headers as the order page. Discount codes are counted from orders, not
 from visitors; there is no rate limit by IP address, so use codes that are
-not easy to guess. Stripe Checkout is hosted by Stripe: card details
+not easy to guess. Gift card codes have 80 random-looking bits, are derived
+from the order with the site's salt and are stored only as an HMAC, and
+their balance is spent under a database lock. Stripe Checkout is hosted by Stripe: card details
 never reach the site and no Stripe script is loaded on its pages. Stripe
 keys are stored encrypted like the SnapOtter key.
 
@@ -148,7 +175,31 @@ the "-scaled" display copy and all generated sizes. For these galleries
 WordPress is made to create a separate display copy even for small images,
 so the stamp never touches the original, which is moved out of reach as
 above. 360° panoramas are not stamped. Images uploaded before watermarks
-were switched on are not changed.
+were switched on are not changed until the gallery's photos are processed
+again (see below).
+
+## Processing existing photos again
+
+Settings for watermarks, display size and quality and SnapOtter apply when
+a photo is uploaded. **Make new copies** on a gallery's Photos tab (or
+`wp slashphoto reprocess <gallery ID>…` / `--all`) applies the current
+settings to the photos already in that gallery (not its sub-galleries):
+
+- The display copy and all sizes are made again from the original, so a
+  watermark switched on later is stamped and a changed display size is
+  used. The original itself is never stamped or re-encoded.
+- The files move into the gallery's random folder with new random names,
+  and the original into a new protected folder. Older uploads with ordinary
+  WordPress paths, or with the original still next to the display copy,
+  become private. Old addresses stop working, which also clears caches.
+- The photo keeps its ID, title, caption, position, cover role, client
+  selections and orders. Smaller download copies are made again when next
+  bought.
+- The old files are deleted only after the original in its new place has
+  been compared byte for byte. If anything fails, the photo stays exactly
+  as it was and the failure is listed.
+- It needs the right to upload files and to edit the gallery. RAW, HEIC,
+  TIFF and PSD originals need a connected SnapOtter server.
 
 Known limits:
 
@@ -157,7 +208,8 @@ Known limits:
   streamed through PHP, only for paid orders, during the download period and
   with the order's secret key (see below).
 - Images uploaded before this feature (or uploaded outside a gallery and
-  attached later) keep their old WordPress paths.
+  attached later) keep their old WordPress paths until the gallery's photos
+  are processed again.
 - Someone with access to the server's file system is outside this model.
 
 ## Privacy: what is stored about visitors
@@ -197,6 +249,7 @@ Changed by D-021 at the user's request (before, nothing was stored); see
   keeps paid ones as bookkeeping records. Stripe receives the customer's
   email address and the order lines when they choose to pay online.
 - Client accounts are ordinary WordPress users; WordPress' personal data
-  export and erase tools apply to them.
+  export and erase tools apply to them. Unused sign-in link tokens (hashes
+  with an expiry) are kept in user meta until used or expired.
 - SlashPhoto adds suggested text for the site's privacy policy under
   Settings → Privacy.

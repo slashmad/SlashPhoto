@@ -837,6 +837,10 @@ html.slashphoto-lightbox-open {
 	margin: 0 0 0.75rem;
 }
 
+.slashphoto .slashphoto-field[hidden] {
+	display: none;
+}
+
 .slashphoto .slashphoto-field input,
 .slashphoto .slashphoto-field select,
 .slashphoto .slashphoto-field textarea {
@@ -887,6 +891,23 @@ html.slashphoto-lightbox-open {
 
 :where(.slashphoto-checkout__error, .slashphoto-checkout__notice) {
 	color: #b32d2e;
+}
+
+/* Access notice: some themes render button links inline, so their padding would cover the text above. */
+.slashphoto-notice .slashphoto-notice__action {
+	display: inline-block;
+}
+
+.slashphoto-notice > p + p {
+	margin-block-start: 1em;
+}
+
+.slashphoto-notice .slashphoto-signin {
+	margin-block-start: 1.5em;
+}
+
+.slashphoto-notice .slashphoto-signin label {
+	display: block;
 }
 
 /* Honeypot for bots: off-screen, never shown to people. */
@@ -1246,4 +1267,22 @@ html.slashphoto-lightbox-open {
 		min-height: 0;
 		aspect-ratio: 16 / 10;
 	}
+}
+
+/* Gift cards for sale. */
+.slashphoto .slashphoto-gift-cards__amounts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 0 0 1rem;
+	padding: 0;
+	list-style: none;
+}
+
+.slashphoto .slashphoto-gift-cards__status:empty {
+	display: none;
+}
+
+.slashphoto .slashphoto-gift-cards [hidden] {
+	display: none;
 }

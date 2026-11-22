@@ -114,6 +114,67 @@ cancelled orders give the use back. Customers type the code in the cart;
 the discount is shown before VAT and shipping are worked out. With Stripe,
 the discount is sent as a one-time coupon on the Checkout page.
 
+## VAT by country
+
+By default one VAT rate applies to every order. When you sell to other
+countries at their own rates, for example under the EU One-Stop Shop
+(OSS), list them under **Shop settings → Prices → VAT by country**, one per
+line: `DE 19`, `FI 25.5`, `NO 0`. Countries not listed use the general
+rate.
+
+- Orders with prints are charged the rate of the delivery country.
+- Orders with only downloads ask for the country the customer lives in;
+  the checkout shows the matching VAT as soon as it is chosen, and the
+  order cannot be placed without it.
+- With prices that include VAT, customers pay the same price everywhere and
+  only the VAT part changes; with prices before VAT, the country's rate is
+  added on top.
+- The order stores the country and the rate (shown on the order screen and
+  the receipt), so later changes to the rates never change past orders.
+- **Orders → VAT report** downloads a CSV of the orders paid in a period
+  (the previous quarter is filled in): order number, payment date, status,
+  VAT country, rate, currency, net, VAT, total and whether it contained
+  prints, downloads or packages. It has no names or addresses. Sum it per
+  country for the OSS return. Refunded orders are listed with their status
+  so you can correct them.
+
+SlashPhoto does not decide which rules apply to you (thresholds, reverse
+charge for businesses, exports outside the EU); check with your tax
+authority or accountant and enter the rates accordingly.
+
+## Gift cards
+
+Switch them on under **Shop settings → Gift cards**, enter the amounts
+(for example `500, 1000, 2000`) and how many months they are valid (0 for
+no end date), and put `[slashphoto_gift_cards]` on a page. Customers add a
+card to the cart there and pay for it like any order.
+
+- A gift card is a voucher, not a sale: it has no VAT, discount codes do
+  not apply to it and it needs no shipping. VAT is charged on what it is
+  later spent on. The VAT report lists gift cards sold and the part of an
+  order a gift card paid in separate columns.
+- When the order is paid, each card gets a code like `7K2M-QX9D-4RTB-WN3C`.
+  The buyer sees the codes on the order page and in the payment email; the
+  shop owner's email does not include them. Codes are derived from the
+  order with the site's salt and are never stored: the database only holds
+  a hash to look them up, so a copy of the database does not reveal usable
+  codes.
+- At checkout the customer enters the code under **Gift card code**. It
+  pays as much of the order as its balance allows; the rest is paid with
+  the chosen payment method, or nothing when the card covers everything.
+  The payment providers receive the remaining amount (Stripe and PayPal
+  see the card as a discount).
+- Gift cards cannot pay for gift cards. The balance is checked again under
+  a database lock when the order is placed, so one card cannot be spent
+  twice at the same time.
+- If an order that used a card is cancelled, fails, is refunded or is
+  deleted as abandoned, its part goes back to the card. Refunding or
+  cancelling the order that bought cards voids them.
+- **SlashPhoto → Gift cards** lists every card with its balance and the
+  orders that used it, voids or reactivates cards, and creates a card by
+  hand (for prizes or cards you sell in person). A card made by hand shows
+  its code once, to you, and never again.
+
 ## Receipts and invoices
 
 Every order has a printable page: an **invoice** while a manual payment is
@@ -279,4 +340,4 @@ when the customer returns.
 
 ## Not yet
 
-Tax per country, print-lab integrations and gift cards are planned.
+Print-lab integrations are planned.

@@ -12,6 +12,7 @@
 const DATA_ID = 'wp-script-module-data-@slashphoto/shop';
 const CART_KEY = 'slashphoto-cart';
 const COUPON_KEY = 'slashphoto-coupon';
+const GIFT_KEY = 'slashphoto-gift-card';
 const MAX_PACKAGE = 500;
 const MAX_LINES = 200;
 const MAX_QTY = 99;
@@ -56,6 +57,12 @@ function readCart() {
 		}
 		return value
 			.map( ( item ) => {
+				if ( item && item.giftcard ) {
+					return {
+						giftcard: parseInt( item.giftcard, 10 ) || 0,
+						qty: Math.min( MAX_QTY, Math.max( 1, parseInt( item.qty, 10 ) || 1 ) ),
+					};
+				}
 				if ( item && item.package ) {
 					return {
 						package: String( item.package ).replace( /[^a-z0-9]/g, '' ).slice( 0, 20 ),
@@ -72,7 +79,7 @@ function readCart() {
 					qty: Math.min( MAX_QTY, Math.max( 1, parseInt( item?.qty, 10 ) || 1 ) ),
 				};
 			} )
-			.filter( ( item ) => /^[a-f0-9]{8}$/.test( item.product ) && ( item.package ? item.package.length > 0 : item.image > 0 ) )
+			.filter( ( item ) => ( item.giftcard ? item.giftcard > 0 : /^[a-f0-9]{8}$/.test( item.product ) && ( item.package ? item.package.length > 0 : item.image > 0 ) ) )
 			.slice( 0, MAX_LINES );
 	} catch {
 		return [];
@@ -101,6 +108,9 @@ function setCart( items ) {
 }
 
 function lineKey( item ) {
+	if ( item.giftcard ) {
+		return 'gc:' + item.giftcard;
+	}
 	if ( item.package ) {
 		return 'pkg:' + item.package;
 	}
@@ -156,6 +166,45 @@ function newId() {
 	return Math.random().toString( 36 ).slice( 2, 12 ) || 'p' + Date.now();
 }
 
+/**
+ * Adds a gift card of an amount (minor units) to the cart.
+ *
+ * @param {number} amount Amount.
+ */
+function addGiftCard( amount ) {
+	const items = getCart();
+	const existing = items.find( ( item ) => item.giftcard === amount );
+	if ( existing ) {
+		existing.qty = Math.min( MAX_QTY, existing.qty + 1 );
+	} else {
+		items.push( { giftcard: amount, qty: 1 } );
+	}
+	setCart( items );
+}
+
+let memoryGift = ''; // Used when storage is disabled.
+
+function getGift() {
+	try {
+		return window.localStorage.getItem( GIFT_KEY ) || '';
+	} catch {
+		return memoryGift;
+	}
+}
+
+function setGift( code ) {
+	memoryGift = code;
+	try {
+		if ( code ) {
+			window.localStorage.setItem( GIFT_KEY, code );
+		} else {
+			window.localStorage.removeItem( GIFT_KEY );
+		}
+	} catch {
+		// Kept in memory for this page view.
+	}
+}
+
 function cartCount( items = getCart() ) {
 	return items.reduce( ( sum, item ) => sum + ( item.package ? 1 : item.qty ), 0 );
 }
@@ -200,6 +249,7 @@ async function api( path, body ) {
 	if ( ! response.ok ) {
 		const error = new Error( data.message || i18n.error || 'Error' );
 		error.status = response.status;
+		error.code = data.code || '';
 		error.data = data.data || {};
 		throw error;
 	}
@@ -436,6 +486,8 @@ class Checkout {
 		this.error = root.querySelector( '[data-slashphoto-checkout-error]' );
 		this.address = root.querySelector( '[data-slashphoto-address]' );
 		this.coupon = root.querySelector( '[data-slashphoto-coupon]' );
+		this.gift = root.querySelector( '[data-slashphoto-gift-card-code]' );
+		this.residence = root.querySelector( '[data-slashphoto-residence]' );
 		this.quote = null;
 		this.notice = '';
 		this.busy = false;
@@ -456,6 +508,30 @@ class Checkout {
 			} );
 		}
 
+		if ( this.gift ) {
+			const input = this.gift.querySelector( 'input' );
+			input.value = getGift();
+			const applyGift = () => {
+				setGift( input.value.trim().toUpperCase() );
+				this.refresh();
+			};
+			this.gift.querySelector( 'button' ).addEventListener( 'click', applyGift );
+			input.addEventListener( 'keydown', ( event ) => {
+				if ( 'Enter' === event.key ) {
+					event.preventDefault();
+					applyGift();
+				}
+			} );
+		}
+
+		// VAT can depend on the country: the delivery country for prints,
+		// otherwise the country the customer lives in.
+		this.form?.addEventListener( 'change', ( event ) => {
+			if ( [ 'country', 'residence' ].includes( event.target.name ) && this.quote?.taxByCountry ) {
+				this.refresh();
+			}
+		} );
+
 		this.form?.addEventListener( 'submit', ( event ) => {
 			event.preventDefault();
 			this.submit();
@@ -473,10 +549,28 @@ class Checkout {
 			return;
 		}
 		try {
-			this.apply( await api( 'quote', { items, coupon: getCoupon() } ) );
+			const quote = await api( 'quote', { items, coupon: getCoupon(), country: this.country(), gift_card: getGift() } );
+			// The first quote tells whether prints decide the country; ask again if so.
+			if ( quote.taxByCountry && quote.taxCountry !== this.country( quote ) && this.country( quote ) ) {
+				this.quote = quote;
+				return this.refresh();
+			}
+			this.apply( quote );
 		} catch ( error ) {
 			this.cart.textContent = error.message;
 		}
+	}
+
+	/**
+	 * The country VAT is charged for: the delivery country when prints are
+	 * in the cart, otherwise the country the customer lives in.
+	 *
+	 * @param {Object|null} quote Quote to decide by (default: the current one).
+	 * @return {string} Country code or ''.
+	 */
+	country( quote = this.quote ) {
+		const field = ( name ) => this.form?.elements.namedItem( name )?.value || '';
+		return quote?.needsShipping ? field( 'country' ) : field( 'residence' );
 	}
 
 	apply( quote ) {
@@ -520,7 +614,17 @@ class Checkout {
 			if ( this.coupon ) {
 				this.coupon.hidden = true;
 			}
+			if ( this.gift ) {
+				this.gift.hidden = true;
+			}
 			return;
+		}
+		if ( this.gift ) {
+			const message = this.gift.querySelector( '.slashphoto-coupon__message' );
+			this.gift.hidden = ! quote.giftCards;
+			message.classList.toggle( 'is-error', !! quote.giftCardError );
+			message.textContent = quote.giftCardError || ( quote.giftCard ? i18n.giftCardApplied || 'Gift card applied.' : '' );
+			message.hidden = ! getGift();
 		}
 		if ( this.coupon ) {
 			this.coupon.hidden = false;
@@ -559,11 +663,25 @@ class Checkout {
 			row( quote.taxLabel, quote.tax );
 		}
 		row( i18n.total || 'Total', quote.total, 'slashphoto-cart__total' );
+		if ( quote.giftCard ) {
+			row( format( i18n.giftCardRow || 'Gift card (…%s)', quote.giftCardHint ), quote.giftCard );
+			row( i18n.due || 'To pay', quote.due, 'slashphoto-cart__total' );
+		}
 
 		this.cart.append( list, totals );
 		if ( this.form ) {
 			this.form.hidden = false;
 			this.address.hidden = ! quote.needsShipping;
+			// Nothing to pay (a gift card covers it, or a free order): no payment method.
+			const gateways = this.form.querySelector( '[data-slashphoto-gateways]' );
+			if ( gateways ) {
+				gateways.hidden = 0 === quote.dueMinor;
+			}
+			if ( this.residence ) {
+				const ask = !! quote.taxByCountry && ! quote.needsShipping;
+				this.residence.hidden = ! ask;
+				this.residence.querySelector( 'select' ).required = ask;
+			}
 			[ 'line1', 'postcode', 'city', 'country' ].forEach( ( name ) => {
 				const field = this.form.elements.namedItem( name );
 				if ( field ) {
@@ -665,7 +783,7 @@ class Checkout {
 		li.querySelector( '.slashphoto-cart__title' ).textContent = line.title;
 		li.querySelector( '.slashphoto-cart__price' ).textContent = line.total;
 		const qtyCell = li.querySelector( '.slashphoto-cart__qty' );
-		if ( 'print' === line.kind ) {
+		if ( 'print' === line.kind || 'giftcard' === line.kind ) {
 			const uid = 'slashphoto-cart-qty-' + line.key.replaceAll( ':', '-' );
 			const label = document.createElement( 'label' );
 			label.className = 'screen-reader-text';
@@ -724,12 +842,15 @@ class Checkout {
 			phone: value( 'phone' ),
 			note: value( 'note' ),
 			coupon: getCoupon(),
+			gift_card: getGift(),
 			website: value( 'website' ),
 			gateway: this.form.querySelector( 'input[name="gateway"]:checked' )?.value || '',
 			terms: !! this.form.querySelector( 'input[name="terms"]' )?.checked,
 		};
 		if ( this.quote.needsShipping ) {
 			body.address = { line1: value( 'line1' ), line2: value( 'line2' ), postcode: value( 'postcode' ), city: value( 'city' ), country: value( 'country' ) };
+		} else if ( this.quote.taxByCountry ) {
+			body.country = value( 'residence' );
 		}
 
 		const button = this.form.querySelector( '[type="submit"]' );
@@ -746,10 +867,11 @@ class Checkout {
 				this.quote = error.data.quote;
 				this.render();
 			}
-			if ( 'coupon' === error.data?.field ) {
+			if ( 'coupon' === error.data?.field || 'gift_card' === error.data?.field || 'slashphoto_gift_card_changed' === error.code ) {
 				this.refresh();
 			}
-			this.showError( error.message, 'coupon' === error.data?.field ? null : error.data?.field );
+			const field = 'billing_country' === error.data?.field ? 'residence' : error.data?.field;
+			this.showError( error.message, [ 'coupon', 'gift_card' ].includes( field ) ? null : field );
 		}
 	}
 }
@@ -762,6 +884,23 @@ function init() {
 		if ( ! gallery.dataset.slashphotoShopReady && offerFor( gallery ).length ) {
 			buildBar( gallery );
 		}
+	} );
+	document.querySelectorAll( '[data-slashphoto-gift-cards]' ).forEach( ( root ) => {
+		if ( root.dataset.slashphotoGiftCardsReady ) {
+			return;
+		}
+		root.dataset.slashphotoGiftCardsReady = '1';
+		const status = root.querySelector( '[data-slashphoto-gift-card-status]' );
+		const link = root.querySelector( '[data-slashphoto-gift-card-link]' );
+		root.querySelectorAll( '[data-slashphoto-gift-card]' ).forEach( ( button ) => {
+			button.addEventListener( 'click', () => {
+				addGiftCard( parseInt( button.dataset.slashphotoGiftCard, 10 ) );
+				status.textContent = format( i18n.added || 'Added: %s.', button.dataset.name );
+				if ( link ) {
+					link.hidden = false;
+				}
+			} );
+		} );
 	} );
 	document.querySelectorAll( '[data-slashphoto-checkout]' ).forEach( ( root ) => {
 		if ( ! root.dataset.slashphotoCheckoutReady ) {

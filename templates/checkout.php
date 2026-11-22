@@ -12,6 +12,8 @@
  * @var array $args {
  *     @type array[]  $gateways   Payment methods: { id, title, description }.
  *     @type string[] $countries  Country codes prints can be sent to.
+ *     @type string[] $residence  Countries a customer can say they live in, when VAT
+ *                                depends on the country (empty otherwise).
  *     @type int      $terms_page Page with the terms of purchase, or 0.
  *     @type string   $login_url  Log-in address that returns here.
  * }
@@ -21,6 +23,7 @@ defined( 'ABSPATH' ) || exit;
 
 $slashphoto_gateways  = $args['gateways'] ?? [];
 $slashphoto_countries = $args['countries'] ?? [];
+$slashphoto_residence = $args['residence'] ?? [];
 $slashphoto_terms     = (int) ( $args['terms_page'] ?? 0 );
 $slashphoto_names     = function_exists( 'locale_get_display_region' );
 ?>
@@ -37,6 +40,15 @@ $slashphoto_names     = function_exists( 'locale_get_display_region' );
 			<input type="text" id="slashphoto-coupon" name="coupon" maxlength="50" autocomplete="off" autocapitalize="characters" spellcheck="false">
 		</p>
 		<button type="button" class="slashphoto-coupon__apply wp-element-button"><?php esc_html_e( 'Apply', 'slashphoto' ); ?></button>
+		<p class="slashphoto-coupon__message" role="status" hidden></p>
+	</div>
+
+	<div class="slashphoto-coupon slashphoto-gift-code" data-slashphoto-gift-card-code hidden>
+		<p class="slashphoto-field">
+			<label for="slashphoto-gift-card"><?php esc_html_e( 'Gift card code', 'slashphoto' ); ?></label>
+			<input type="text" id="slashphoto-gift-card" name="gift_card" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false">
+		</p>
+		<button type="button" class="slashphoto-coupon__apply wp-element-button"><?php esc_html_e( 'Use', 'slashphoto' ); ?></button>
 		<p class="slashphoto-coupon__message" role="status" hidden></p>
 	</div>
 
@@ -60,6 +72,19 @@ $slashphoto_names     = function_exists( 'locale_get_display_region' );
 			<label for="slashphoto-phone"><?php esc_html_e( 'Phone (optional)', 'slashphoto' ); ?></label>
 			<input type="tel" id="slashphoto-phone" name="phone" autocomplete="tel" maxlength="50">
 		</p>
+
+		<?php if ( $slashphoto_residence ) : ?>
+			<p class="slashphoto-field" data-slashphoto-residence hidden>
+				<label for="slashphoto-residence"><?php esc_html_e( 'Country you live in', 'slashphoto' ); ?></label>
+				<select id="slashphoto-residence" name="residence" autocomplete="country" aria-describedby="slashphoto-residence-hint">
+					<option value=""><?php esc_html_e( 'Choose…', 'slashphoto' ); ?></option>
+					<?php foreach ( $slashphoto_residence as $slashphoto_code ) : ?>
+						<option value="<?php echo esc_attr( $slashphoto_code ); ?>"><?php echo esc_html( $slashphoto_names ? (string) locale_get_display_region( '-' . $slashphoto_code, determine_locale() ) : $slashphoto_code ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<span class="slashphoto-checkout__hint" id="slashphoto-residence-hint"><?php esc_html_e( 'Digital downloads are charged the VAT of the country you live in.', 'slashphoto' ); ?></span>
+			</p>
+		<?php endif; ?>
 
 		<fieldset class="slashphoto-checkout__address" data-slashphoto-address hidden>
 			<legend><?php esc_html_e( 'Delivery address for prints', 'slashphoto' ); ?></legend>

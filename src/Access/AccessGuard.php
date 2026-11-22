@@ -126,6 +126,7 @@ final class AccessGuard {
 			[
 				'gallery' => $post,
 				'type'    => $notice,
+				'signin'  => 'login' === $notice ? SignInLinks::form() : null,
 			]
 		);
 	}

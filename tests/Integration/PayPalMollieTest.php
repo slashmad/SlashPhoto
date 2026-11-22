@@ -184,6 +184,38 @@ final class PayPalMollieTest extends ShopTestCase {
 		$this->assertSame( 'paid', $gateway->on_return( $order, [ 'token' => '5O190127TN364715T' ] )['status'] );
 	}
 
+	public function test_a_gift_card_lowers_what_paypal_and_mollie_charge(): void {
+		PayPalGateway::save( self::CLIENT, self::SECRET, true, '' );
+		MollieGateway::save( self::MOLLIE );
+		$image = $this->image( $this->shop_gallery() );
+		$items = [
+			[
+				'image'   => $image,
+				'product' => 'aaaa0002',
+				'qty'     => 2,
+			],
+		];
+		foreach ( [ 'paypal', 'mollie' ] as $gateway ) {
+			$code     = \SlashPhoto\Shop\GiftCards::create( 10000 );
+			$response = $this->post(
+				'orders',
+				$this->order_body(
+					$items,
+					[
+						'gateway'   => $gateway,
+						'gift_card' => $code,
+					]
+				)
+			);
+			$this->assertSame( 200, $response->get_status(), (string) wp_json_encode( $response->get_data() ) );
+		}
+		$paypal = array_values( array_filter( $this->calls, static fn( array $call ): bool => str_ends_with( $call['url'], '/v2/checkout/orders' ) ) )[0]['body']['purchase_units'][0]['amount'];
+		$this->assertSame( '347.00', $paypal['value'], '447 minus a gift card of 100.' );
+		$this->assertSame( '100.00', $paypal['breakdown']['discount']['value'] );
+		$mollie = array_values( array_filter( $this->calls, static fn( array $call ): bool => str_ends_with( $call['url'], '/v2/payments' ) ) )[0]['body'];
+		$this->assertSame( '347.00', $mollie['amount']['value'] );
+	}
+
 	public function test_paypal_declined_capture_and_verified_webhook(): void {
 		PayPalGateway::save( self::CLIENT, self::SECRET, true, 'WH1234567890ABCDEF' );
 		$image          = $this->image( $this->shop_gallery() );

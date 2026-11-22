@@ -20,12 +20,12 @@ This is an early development version. Galleries, panoramas, client access, proof
 * Galleries and sub-galleries that use your theme's own layout, colors and fonts, in both block themes and classic themes.
 * 360° panoramas are detected automatically from camera and stitcher metadata, and are kept at high resolution.
 * Wide panoramas are shown across the full gallery width.
-* Client galleries: password, secret share links, selected client accounts, end dates and terms to accept, inherited by sub-galleries. Protected galleries and their images do not leak through the REST API, attachment pages, sitemaps, search or caches, and images get unguessable addresses.
+* Client galleries: password, secret share links, selected client accounts, end dates and terms to accept, inherited by sub-galleries. Clients can sign in with a one-time emailed link instead of a password. Protected galleries and their images do not leak through the REST API, attachment pages, sitemaps, search or caches, and images get unguessable addresses.
 * Upload full-size originals of any size from the gallery editor (sent in pieces, so the server's upload limit does not apply). Every image gets a display copy; originals are stored privately.
 * Optional: connect your own SnapOtter server to import RAW, HEIC, TIFF and PSD files and to process very large images.
-* Watermarked previews; originals are kept where preview addresses cannot lead to them.
+* Watermarked previews; originals are kept where preview addresses cannot lead to them. Make new copies applies changed watermark and display settings to photos uploaded earlier.
 * Proofing: clients mark favourites, add notes and send their selection; you get an email and a list with file names for Lightroom, and the client gets a copy. Visitors without an account keep favourites in their own browser only.
-* Shop: sell downloads of your originals or smaller web-size copies, and prints in your own sizes, with price lists per gallery. Guest checkout, manual payment (invoice, transfer, Swish) or Stripe Checkout with no platform fee, order emails, and downloads that open only for paid orders.
+* Shop: sell downloads of your originals or smaller web-size copies, and prints in your own sizes, with price lists per gallery. Guest checkout, manual payment (invoice, transfer, Swish) or Stripe Checkout with no platform fee, order emails, and downloads that open only for paid orders. Optional VAT rates by country (EU OSS) with a VAT report, and gift cards.
 * Packages (a number of photos or the whole gallery for one price), discount codes, and printable receipts and invoices.
 * Paper and framing options on individual prints. Each size can offer its own combinations and prices, and the customer's choice is recorded on the order.
 * Import from Sunshine Photo Cart: galleries, access settings, images, prices and orders, without changing Sunshine's data.

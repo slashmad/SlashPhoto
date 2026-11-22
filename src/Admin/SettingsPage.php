@@ -133,7 +133,7 @@ final class SettingsPage {
 				<input type="hidden" name="<?php echo esc_attr( $name ); ?>[_section]" value="<?php echo esc_attr( 'general_' . $tab ); ?>">
 				<?php if ( 'watermark' === $tab ) : ?>
 					<h2><?php esc_html_e( 'Watermark', 'slashphoto' ); ?></h2>
-					<p><?php esc_html_e( 'The watermark is stamped on the web copies of images uploaded to galleries that use it. Originals are never changed. Changes apply to images uploaded afterwards. 360° panoramas are not watermarked.', 'slashphoto' ); ?></p>
+					<p><?php esc_html_e( 'The watermark is stamped on the web copies of images uploaded to galleries that use it. Originals are never changed. Changes apply to images uploaded afterwards; for earlier photos, use Make new copies on a gallery’s Photos tab. 360° panoramas are not watermarked.', 'slashphoto' ); ?></p>
 					<table class="form-table" role="presentation">
 						<tr>
 							<th scope="row"><label for="slashphoto-watermark-id"><?php esc_html_e( 'Watermark image', 'slashphoto' ); ?></label></th>
@@ -201,7 +201,7 @@ final class SettingsPage {
 					</table>
 				<?php elseif ( 'copies' === $tab ) : ?>
 					<h2><?php esc_html_e( 'Display copies', 'slashphoto' ); ?></h2>
-					<p><?php esc_html_e( 'Upload one full-size original per image. Visitors see a display copy; the original is stored privately for downloads and sales. Changes apply to images uploaded afterwards.', 'slashphoto' ); ?></p>
+					<p><?php esc_html_e( 'Upload one full-size original per image. Visitors see a display copy; the original is stored privately for downloads and sales. Changes apply to images uploaded afterwards; for earlier photos, use Make new copies on a gallery’s Photos tab.', 'slashphoto' ); ?></p>
 					<table class="form-table" role="presentation">
 						<tr>
 							<th scope="row"><label for="slashphoto-display-size"><?php esc_html_e( 'Longest side (pixels)', 'slashphoto' ); ?></label></th>
@@ -277,6 +277,13 @@ final class SettingsPage {
 							<td>
 								<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[terms_ask_email]" value="1" <?php checked( $settings['terms_ask_email'] ); ?>> <?php esc_html_e( 'Ask visitors who are not logged in for their email address when they accept a gallery’s terms', 'slashphoto' ); ?></label>
 								<p class="description"><?php esc_html_e( 'Every acceptance is logged with the date, the wording that was accepted and the account or email address, so you can show who agreed to what.', 'slashphoto' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Sign-in links', 'slashphoto' ); ?></th>
+							<td>
+								<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[signin_links]" value="1" <?php checked( $settings['signin_links'] ); ?>> <?php esc_html_e( 'Let clients sign in with an emailed link instead of a password', 'slashphoto' ); ?></label>
+								<p class="description"><?php esc_html_e( 'Client-only galleries offer to email a sign-in link, and invitations to them include one. Links work once and expire. Accounts that can edit content, such as yours, always use their password.', 'slashphoto' ); ?></p>
 							</td>
 						</tr>
 						<tr>

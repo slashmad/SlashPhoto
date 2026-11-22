@@ -25,7 +25,9 @@ defined( 'ABSPATH' ) || exit;
 final class ShopPage {
 
 	public const SHORTCODE = 'slashphoto_checkout';
-	public const CREATE    = 'slashphoto_create_shop_page';
+
+	public const GIFT_CARDS = 'slashphoto_gift_cards';
+	public const CREATE     = 'slashphoto_create_shop_page';
 
 	/**
 	 * Templates.
@@ -48,6 +50,7 @@ final class ShopPage {
 	 */
 	public function register_hooks(): void {
 		add_shortcode( self::SHORTCODE, [ $this, 'render' ] );
+		add_shortcode( self::GIFT_CARDS, [ $this, 'gift_cards' ] );
 		add_action( 'template_redirect', [ $this, 'headers' ] );
 		add_filter( 'wp_robots', [ $this, 'robots' ] );
 		add_action( 'admin_post_' . self::CREATE, [ $this, 'create_page' ] );
@@ -142,8 +145,38 @@ final class ShopPage {
 			[
 				'gateways'   => $gateways,
 				'countries'  => $countries,
+				// Countries with their own VAT rate first, then the rest.
+				'residence'  => Settings::get( 'tax_rates' ) ? Countries::options( array_values( array_unique( array_merge( $countries, array_keys( (array) Settings::get( 'tax_rates' ) ) ) ) ) ) : [],
 				'terms_page' => self::terms_page(),
 				'login_url'  => wp_login_url( self::url() ),
+			]
+		);
+	}
+
+	/**
+	 * Gift cards for sale ([slashphoto_gift_cards]); empty when not sold.
+	 */
+	public function gift_cards(): string {
+		if ( ! GiftCards::enabled() ) {
+			return '';
+		}
+		wp_enqueue_style( Assets::STYLE_HANDLE );
+		wp_enqueue_script_module( Assets::SHOP_MODULE );
+		$currency = (string) Settings::get( 'currency' );
+		$months   = (int) Settings::get( 'gift_card_months' );
+		return $this->templates->render(
+			'gift-cards.php',
+			[
+				'cards'    => array_map(
+					static fn( int $amount ): array => [
+						'amount' => $amount,
+						'label'  => Money::format( $amount, $currency ),
+						'name'   => GiftCards::name( $amount, $currency ),
+					],
+					GiftCards::amounts()
+				),
+				'months'   => $months,
+				'cart_url' => self::page_id() ? self::url() : '',
 			]
 		);
 	}

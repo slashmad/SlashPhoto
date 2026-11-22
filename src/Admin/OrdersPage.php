@@ -15,6 +15,7 @@ use SlashPhoto\Shop\Downloads;
 use SlashPhoto\Shop\Emails;
 use SlashPhoto\Shop\Gateways\Gateways;
 use SlashPhoto\Shop\Money;
+use SlashPhoto\Shop\GiftCards;
 use SlashPhoto\Shop\Orders;
 use SlashPhoto\Shop\Receipts;
 
@@ -50,6 +51,7 @@ final class OrdersPage {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue' ] );
 		add_action( 'admin_post_' . self::ACTION, [ $this, 'handle' ] );
 		( new PrintExport() )->register_hooks();
+		( new TaxExport() )->register_hooks();
 	}
 
 	/**
@@ -137,6 +139,7 @@ final class OrdersPage {
 					<a class="button" href="<?php echo esc_url( add_query_arg( 'view', 'list', $base ) ); ?>"><?php esc_html_e( 'List view', 'slashphoto' ); ?></a>
 				</div>
 			</header>
+			<?php TaxExport::form(); ?>
 			<div class="slashphoto-gallery-overview__groups">
 				<?php foreach ( $groups as $status => $color ) : ?>
 					<?php $orders = $counts[ $status ] ? Orders::query( $status, '', 4, 1 )['rows'] : []; ?>
@@ -296,7 +299,7 @@ final class OrdersPage {
 									<td><?php echo esc_html( (string) $item['quantity'] ); ?></td>
 									<td><?php echo esc_html( $item['parent_id'] ? __( 'In package', 'slashphoto' ) : $money( $item['total'] ) ); ?></td>
 									<td>
-										<?php if ( 'package' === $item['kind'] ) : ?>
+										<?php if ( in_array( $item['kind'], [ 'package', 'giftcard' ], true ) ) : ?>
 											&nbsp;
 										<?php elseif ( get_post( $item['image_id'] ) ) : ?>
 											<a href="<?php echo esc_url( Downloads::admin_url( $item['image_id'] ) ); ?>"><?php esc_html_e( 'Download', 'slashphoto' ); ?></a>
@@ -315,9 +318,13 @@ final class OrdersPage {
 								<tr><th colspan="3"><?php esc_html_e( 'Shipping', 'slashphoto' ); ?></th><td colspan="2"><?php echo esc_html( $money( $order['shipping'] ) ); ?></td></tr>
 							<?php endif; ?>
 							<?php if ( $order['tax'] > 0 ) : ?>
-								<tr><th colspan="3"><?php echo esc_html( $order['prices_include_tax'] ? __( 'Including VAT', 'slashphoto' ) : __( 'VAT', 'slashphoto' ) ); ?></th><td colspan="2"><?php echo esc_html( $money( $order['tax'] ) ); ?></td></tr>
+								<tr><th colspan="3"><?php echo esc_html( ( $order['prices_include_tax'] ? __( 'Including VAT', 'slashphoto' ) : __( 'VAT', 'slashphoto' ) ) . ' ' . rtrim( rtrim( number_format_i18n( (float) $order['tax_rate'], 3 ), '0' ), '.,' ) . ' %' . ( '' !== (string) ( $order['tax_country'] ?? '' ) ? ' (' . $order['tax_country'] . ')' : '' ) ); ?></th><td colspan="2"><?php echo esc_html( $money( $order['tax'] ) ); ?></td></tr>
 							<?php endif; ?>
 							<tr><th colspan="3"><strong><?php esc_html_e( 'Total', 'slashphoto' ); ?></strong></th><td colspan="2"><strong><?php echo esc_html( $money( $order['total'] ) ); ?></strong></td></tr>
+							<?php if ( $order['gift_card_amount'] > 0 ) : ?>
+								<tr><th colspan="3"><a href="<?php echo esc_url( GiftCardsPage::url() ); ?>"><?php echo esc_html( sprintf( /* translators: %s: last four characters of the code */ __( 'Gift card (…%s)', 'slashphoto' ), $order['gift_card_hint'] ) ); ?></a></th><td colspan="2"><?php echo esc_html( '−' . $money( $order['gift_card_amount'] ) ); ?></td></tr>
+								<tr><th colspan="3"><strong><?php esc_html_e( 'To pay', 'slashphoto' ); ?></strong></th><td colspan="2"><strong><?php echo esc_html( $money( GiftCards::due( $order ) ) ); ?></strong></td></tr>
+							<?php endif; ?>
 						</tfoot>
 					</table>
 					<?php if ( '' !== (string) $order['customer_note'] ) : ?>

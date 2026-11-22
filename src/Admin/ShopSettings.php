@@ -338,6 +338,7 @@ final class ShopSettings {
 			'prints'    => __( 'Print templates', 'slashphoto' ),
 			'shipping'  => __( 'Shipping', 'slashphoto' ),
 			'downloads' => __( 'Downloads', 'slashphoto' ),
+			'giftcards' => __( 'Gift cards', 'slashphoto' ),
 			'receipts'  => __( 'Receipts', 'slashphoto' ),
 			'payments'  => __( 'Payments', 'slashphoto' ),
 		];
@@ -431,7 +432,14 @@ final class ShopSettings {
 							<th scope="row"><label for="slashphoto-tax-rate"><?php esc_html_e( 'VAT rate (%)', 'slashphoto' ); ?></label></th>
 							<td>
 								<input type="number" id="slashphoto-tax-rate" min="0" max="100" step="0.01" name="<?php echo esc_attr( $field( 'tax_rate' ) ); ?>" value="<?php echo esc_attr( (string) $s['tax_rate'] ); ?>">
-								<p class="description"><?php esc_html_e( 'One rate for everything; 0 if you do not charge VAT. Shown on receipts. Check the rules for your country.', 'slashphoto' ); ?></p>
+								<p class="description"><?php esc_html_e( 'The rate for your own country and for every country without a rate of its own below; 0 if you do not charge VAT. Shown on receipts. Check the rules for your country.', 'slashphoto' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="slashphoto-tax-rates"><?php esc_html_e( 'VAT by country', 'slashphoto' ); ?></label></th>
+							<td>
+								<textarea id="slashphoto-tax-rates" class="large-text code" rows="4" name="<?php echo esc_attr( $field( 'tax_rates' ) ); ?>" placeholder="DE 19&#10;FI 25.5&#10;NO 0" aria-describedby="slashphoto-tax-rates-help"><?php echo esc_textarea( Settings::tax_rates_text( (array) $s['tax_rates'] ) ); ?></textarea>
+								<p class="description" id="slashphoto-tax-rates-help"><?php esc_html_e( 'Optional, for example when you sell across the EU through the One-Stop Shop (OSS): one country code and rate per line. Prints are charged the rate of the delivery country; for downloads, customers choose the country they live in at checkout. Leave empty to use the rate above everywhere. Prices that include VAT stay the same; the VAT part changes.', 'slashphoto' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -497,6 +505,43 @@ final class ShopSettings {
 							<td>
 								<input type="number" id="slashphoto-download-days" min="0" max="3650" name="<?php echo esc_attr( $field( 'download_days' ) ); ?>" value="<?php echo esc_attr( (string) $s['download_days'] ); ?>">
 								<p class="description"><?php esc_html_e( 'Counted from payment; 0 means no end date. Customers download the original file you uploaded, through a private link that only works for paid orders.', 'slashphoto' ); ?></p>
+							</td>
+						</tr>
+					</table>
+				<?php elseif ( 'giftcards' === $tab ) : ?>
+					<h2><?php esc_html_e( 'Gift cards', 'slashphoto' ); ?></h2>
+					<p>
+						<?php
+						printf(
+							/* translators: %s: shortcode */
+							esc_html__( 'Customers buy gift cards on any page that contains %s, pay for them like other orders and receive the codes when the payment has arrived. A gift card pays for photos, prints and shipping at checkout; it is not a sale itself, so no VAT is charged on it and discount codes do not apply.', 'slashphoto' ),
+							'<code>[slashphoto_gift_cards]</code>'
+						);
+						?>
+					</p>
+					<p><a href="<?php echo esc_url( GiftCardsPage::url() ); ?>"><?php esc_html_e( 'See gift cards and create one by hand', 'slashphoto' ); ?></a></p>
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Sell gift cards', 'slashphoto' ); ?></th>
+							<td><label><input type="checkbox" name="<?php echo esc_attr( $field( 'gift_cards' ) ); ?>" value="1" <?php checked( $s['gift_cards'] ); ?>> <?php esc_html_e( 'Offer gift cards in the shop', 'slashphoto' ); ?></label></td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="slashphoto-gift-card-amounts">
+								<?php
+								/* translators: %s: currency code */
+								echo esc_html( sprintf( __( 'Amounts (%s)', 'slashphoto' ), (string) $s['currency'] ) );
+								?>
+							</label></th>
+							<td>
+								<input type="text" class="regular-text" id="slashphoto-gift-card-amounts" name="<?php echo esc_attr( $field( 'gift_card_amounts' ) ); ?>" value="<?php echo esc_attr( implode( ', ', array_map( static fn( int $amount ): string => Money::to_input( $amount, (string) $s['currency'] ), (array) $s['gift_card_amounts'] ) ) ); ?>" placeholder="500, 1000, 2000" aria-describedby="slashphoto-gift-card-amounts-help">
+								<p class="description" id="slashphoto-gift-card-amounts-help"><?php esc_html_e( 'Up to eight amounts, separated by commas.', 'slashphoto' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="slashphoto-gift-card-months"><?php esc_html_e( 'Valid for (months)', 'slashphoto' ); ?></label></th>
+							<td>
+								<input type="number" id="slashphoto-gift-card-months" min="0" max="120" name="<?php echo esc_attr( $field( 'gift_card_months' ) ); ?>" value="<?php echo esc_attr( (string) $s['gift_card_months'] ); ?>">
+								<p class="description"><?php esc_html_e( 'Counted from issue; 0 means they never expire. Check the minimum your country requires.', 'slashphoto' ); ?></p>
 							</td>
 						</tr>
 					</table>

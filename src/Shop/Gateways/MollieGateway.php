@@ -8,6 +8,7 @@
 namespace SlashPhoto\Shop\Gateways;
 
 use SlashPhoto\Secrets;
+use SlashPhoto\Shop\GiftCards;
 use SlashPhoto\Shop\Money;
 use SlashPhoto\Shop\Orders;
 use SlashPhoto\Shop\ShopPage;
@@ -152,7 +153,7 @@ final class MollieGateway implements Gateway {
 		$body = [
 			'amount'      => [
 				'currency' => strtoupper( (string) $order['currency'] ),
-				'value'    => Money::to_input( (int) $order['total'], (string) $order['currency'] ),
+				'value'    => Money::to_input( GiftCards::due( $order ), (string) $order['currency'] ),
 			],
 			/* translators: 1: order number, 2: site name */
 			'description' => mb_substr( sprintf( __( 'Order %1$d, %2$s', 'slashphoto' ), $order['id'], wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES ) ), 0, 255 ),
@@ -209,7 +210,7 @@ final class MollieGateway implements Gateway {
 			Orders::set_status( (int) $order['id'], 'failed' );
 		}
 		$refunded = (int) Money::parse( (string) ( $payment['amountRefunded']['value'] ?? '0' ), (string) $order['currency'] );
-		if ( $refunded > 0 && $refunded >= (int) $order['total'] && in_array( $order['status'], Orders::PAID, true ) ) {
+		if ( $refunded > 0 && $refunded >= GiftCards::due( $order ) && in_array( $order['status'], Orders::PAID, true ) ) {
 			Orders::set_status( (int) $order['id'], 'refunded' );
 		}
 	}

@@ -113,8 +113,10 @@ final class CheckoutRest {
 				'callback'            => [ $this, 'quote' ],
 				'permission_callback' => '__return_true',
 				'args'                => [
-					'items'  => $items,
-					'coupon' => $text( 50 ),
+					'items'     => $items,
+					'coupon'    => $text( 50 ),
+					'country'   => $text( 2 ),
+					'gift_card' => $text( 30 ),
 				],
 			]
 		);
@@ -127,15 +129,15 @@ final class CheckoutRest {
 				'callback'            => [ $this, 'create_order' ],
 				'permission_callback' => '__return_true',
 				'args'                => [
-					'items'   => $items,
-					'total'   => [
+					'items'     => $items,
+					'total'     => [
 						'type'     => 'integer',
 						'required' => true,
 					],
-					'email'   => $text( 200, true ),
-					'name'    => $text( 200, true ),
-					'phone'   => $text( 50 ),
-					'address' => [
+					'email'     => $text( 200, true ),
+					'name'      => $text( 200, true ),
+					'phone'     => $text( 50 ),
+					'address'   => [
 						'type'       => 'object',
 						'properties' => [
 							'line1'    => $text( 200 ),
@@ -145,12 +147,15 @@ final class CheckoutRest {
 							'country'  => $text( 2 ),
 						],
 					],
-					'note'    => $text( 2000 ),
-					'coupon'  => $text( 50 ),
-					'gateway' => $text( 30, true ),
-					'terms'   => [ 'type' => 'boolean' ],
+					'note'      => $text( 2000 ),
+					// The customer's country when nothing is shipped (VAT by country).
+					'country'   => $text( 2 ),
+					'coupon'    => $text( 50 ),
+					'gift_card' => $text( 30 ),
+					'gateway'   => $text( 30, true ),
+					'terms'     => [ 'type' => 'boolean' ],
 					// Honeypot: people never see or fill this field.
-					'website' => $text( 200 ),
+					'website'   => $text( 200 ),
 				],
 			]
 		);
@@ -162,7 +167,7 @@ final class CheckoutRest {
 	 * @param WP_REST_Request $request Request.
 	 */
 	public function quote( WP_REST_Request $request ): WP_REST_Response {
-		$response = rest_ensure_response( self::present( $this->shop->quote( (array) $request['items'], (string) $request['coupon'] ) ) );
+		$response = rest_ensure_response( self::present( $this->shop->quote( (array) $request['items'], (string) $request['coupon'], '', (string) $request['country'], (string) $request['gift_card'] ) ) );
 		$response->header( 'Cache-Control', 'no-store' );
 		return $response;
 	}
@@ -180,7 +185,16 @@ final class CheckoutRest {
 
 		$email = sanitize_email( (string) $request['email'] );
 		$code  = (string) $request['coupon'];
-		$quote = $this->shop->quote( (array) $request['items'], $code, $email );
+		// VAT follows the delivery country for prints, otherwise the country
+		// the customer chose; the quote shows whether prints are included.
+		$raw     = (array) $request['address'];
+		$shipped = strtoupper( sanitize_text_field( (string) ( $raw['country'] ?? '' ) ) );
+		$billing = strtoupper( sanitize_text_field( (string) $request['country'] ) );
+		$gift    = (string) $request['gift_card'];
+		$quote   = $this->shop->quote( (array) $request['items'], $code, $email, $billing, $gift );
+		if ( $quote['needs_shipping'] ) {
+			$quote = $this->shop->quote( (array) $request['items'], $code, $email, $shipped, $gift );
+		}
 		if ( ! $quote['lines'] ) {
 			return new WP_Error( 'slashphoto_cart_empty', __( 'Your cart is empty.', 'slashphoto' ), [ 'status' => 400 ] );
 		}
@@ -198,6 +212,12 @@ final class CheckoutRest {
 		if ( '' !== $quote['coupon_error'] ) {
 			return self::invalid( 'coupon', $quote['coupon_error'] );
 		}
+		if ( '' !== $quote['gift_card']['error'] ) {
+			return self::invalid( 'gift_card', $quote['gift_card']['error'] );
+		}
+		if ( $quote['tax_by_country'] && ! $quote['needs_shipping'] && '' === $quote['tax_country'] ) {
+			return self::invalid( 'billing_country', __( 'Choose the country you live in.', 'slashphoto' ) );
+		}
 		$name = sanitize_text_field( (string) $request['name'] );
 		if ( ! is_email( $email ) ) {
 			return self::invalid( 'email', __( 'Enter a valid email address.', 'slashphoto' ) );
@@ -208,7 +228,6 @@ final class CheckoutRest {
 
 		$address = [];
 		if ( $quote['needs_shipping'] ) {
-			$raw     = (array) $request['address'];
 			$address = [
 				'line1'    => sanitize_text_field( (string) ( $raw['line1'] ?? '' ) ),
 				'line2'    => sanitize_text_field( (string) ( $raw['line2'] ?? '' ) ),
@@ -230,7 +249,7 @@ final class CheckoutRest {
 			return self::invalid( 'terms', __( 'Accept the terms of purchase to place the order.', 'slashphoto' ) );
 		}
 
-		$free    = 0 === $quote['total'];
+		$free    = 0 === $quote['due'];
 		$gateway = Gateways::available()[ (string) $request['gateway'] ] ?? null;
 		if ( ! $gateway && ! $free ) {
 			return self::invalid( 'gateway', __( 'Choose how to pay.', 'slashphoto' ) );
@@ -350,7 +369,15 @@ final class CheckoutRest {
 				: sprintf( __( 'VAT (%s %%)', 'slashphoto' ), $percent ),
 			'total'         => $money( $quote['total'] ),
 			'totalMinor'    => $quote['total'],
+			'giftCard'      => $quote['gift_card']['amount'] > 0 ? '−' . $money( $quote['gift_card']['amount'] ) : '',
+			'giftCardHint'  => $quote['gift_card']['hint'],
+			'giftCardError' => $quote['gift_card']['error'],
+			'due'           => $quote['gift_card']['amount'] > 0 ? $money( $quote['due'] ) : '',
+			'dueMinor'      => $quote['due'],
+			'giftCards'     => GiftCards::accepted(),
 			'needsShipping' => $quote['needs_shipping'],
+			'taxByCountry'  => $quote['tax_by_country'],
+			'taxCountry'    => $quote['tax_country'],
 		];
 	}
 }
