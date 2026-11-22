@@ -322,7 +322,7 @@ final class OrdersPage {
 							<?php endif; ?>
 							<tr><th colspan="3"><strong><?php esc_html_e( 'Total', 'slashphoto' ); ?></strong></th><td colspan="2"><strong><?php echo esc_html( $money( $order['total'] ) ); ?></strong></td></tr>
 							<?php if ( $order['gift_card_amount'] > 0 ) : ?>
-								<tr><th colspan="3"><a href="<?php echo esc_url( GiftCardsPage::url() ); ?>"><?php echo esc_html( sprintf( /* translators: %s: last four characters of the code */ __( 'Gift card (…%s)', 'slashphoto' ), $order['gift_card_hint'] ) ); ?></a></th><td colspan="2"><?php echo esc_html( '−' . $money( $order['gift_card_amount'] ) ); ?></td></tr>
+								<tr><th colspan="3"><a href="<?php echo esc_url( GiftCardsPage::url() ); ?>"><?php echo esc_html( sprintf( /* translators: %s: last four characters of the gift card code */ __( 'Gift card (…%s)', 'slashphoto' ), $order['gift_card_hint'] ) ); ?></a></th><td colspan="2"><?php echo esc_html( '−' . $money( $order['gift_card_amount'] ) ); ?></td></tr>
 								<tr><th colspan="3"><strong><?php esc_html_e( 'To pay', 'slashphoto' ); ?></strong></th><td colspan="2"><strong><?php echo esc_html( $money( GiftCards::due( $order ) ) ); ?></strong></td></tr>
 							<?php endif; ?>
 						</tfoot>

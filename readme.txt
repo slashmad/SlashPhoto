@@ -76,6 +76,9 @@ No. Galleries, images and orders are kept when the plugin is removed.
 == Changelog ==
 
 = 0.1.0-dev =
+* Swedish translation (sv_SE) included.
+* Client sign-in links, reprocessing of existing photos, VAT by country with a VAT report, and gift cards.
+* Price list field in the classic editor.
 * Print options for paper and framing with a price per combination.
 * Gallery post type with sub-galleries.
 * Theme compatibility layer and overridable templates.

@@ -112,6 +112,7 @@ npm run seed           # replaces demo galleries in the local test site
 npm run test:e2e       # Playwright browser tests (needs the seeded site)
 npm run vendor         # copy three.js / Photo Sphere Viewer from node_modules to assets/vendor
 npm run i18n:pot       # regenerate languages/slashphoto.pot
+npm run i18n:build     # POT, then update and compile the bundled translations (sv_SE)
 npm run package:beta   # requires zip; build an installable archive in dist/
 npm run env:stop
 ```

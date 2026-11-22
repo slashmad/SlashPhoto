@@ -135,7 +135,7 @@ final class UploadPanel {
 				);
 				?>
 			</p>
-			<input type="file" multiple accept="<?php echo esc_attr( $accept ); ?>" aria-label="<?php esc_attr_e( 'Choose photos to upload', 'slashphoto' ); ?>">
+			<input type="file" multiple style="max-width:100%" accept="<?php echo esc_attr( $accept ); ?>" aria-label="<?php esc_attr_e( 'Choose photos to upload', 'slashphoto' ); ?>">
 			<ul class="slashphoto-upload-list"></ul>
 		</div>
 		<?php

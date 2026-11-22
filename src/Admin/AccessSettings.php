@@ -36,6 +36,22 @@ final class AccessSettings {
 		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor' ] );
 		add_action( 'add_meta_boxes_' . PostType::POST_TYPE, [ $this, 'add_meta_box' ] );
 		add_action( 'save_post_' . PostType::POST_TYPE, [ $this, 'save_meta_box' ] );
+		add_filter( 'redirect_post_location', [ $this, 'stay_in_editor' ], 10, 2 );
+	}
+
+	/**
+	 * After saving in the classic editor, returns there instead of to the
+	 * gallery workspace, which normal edit links open.
+	 *
+	 * @param string $location Redirect address.
+	 * @param int    $post_id  Saved post.
+	 */
+	public function stay_in_editor( $location, $post_id ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- only keeps the user on the same screen; core checked the save.
+		if ( PostType::POST_TYPE === get_post_type( (int) $post_id ) && ! empty( $_POST['slashphoto_content'] ) ) {
+			return add_query_arg( 'slashphoto_content', '1', (string) $location );
+		}
+		return $location;
 	}
 
 	/**
@@ -150,6 +166,28 @@ final class AccessSettings {
 			<label for="slashphoto-proofing-max"><?php esc_html_e( 'Maximum images per selection (0 = no limit)', 'slashphoto' ); ?></label>
 			<input type="number" min="0" id="slashphoto-proofing-max" name="slashphoto_proofing_max" class="small-text" value="<?php echo esc_attr( (string) (int) get_post_meta( $post->ID, Proofing::META_MAX, true ) ); ?>">
 		</p>
+		<?php if ( empty( $box['workspace'] ) ) : ?>
+			<input type="hidden" name="slashphoto_content" value="1">
+			<?php
+			// The gallery workspace has its own price list field.
+			$slashphoto_list  = (string) get_post_meta( $post->ID, PriceLists::GALLERY_META, true );
+			$slashphoto_lists = [
+				''               => __( 'Site default or parent gallery', 'slashphoto' ),
+				PriceLists::NONE => __( 'Not for sale', 'slashphoto' ),
+			] + PriceLists::all();
+			if ( ! isset( $slashphoto_lists[ $slashphoto_list ] ) ) {
+				$slashphoto_lists[ $slashphoto_list ] = __( 'Current price list unavailable', 'slashphoto' );
+			}
+			?>
+			<p>
+				<label for="slashphoto-price-list"><?php esc_html_e( 'Price list', 'slashphoto' ); ?></label>
+				<select id="slashphoto-price-list" name="slashphoto_price_list" class="widefat">
+					<?php foreach ( $slashphoto_lists as $slashphoto_id => $slashphoto_label ) : ?>
+						<option value="<?php echo esc_attr( (string) $slashphoto_id ); ?>" <?php selected( $slashphoto_list, (string) $slashphoto_id ); ?>><?php echo esc_html( $slashphoto_label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</p>
+		<?php endif; ?>
 		<p>
 			<label for="slashphoto-clients"><?php esc_html_e( 'Clients (user names or emails, comma separated)', 'slashphoto' ); ?></label>
 			<input type="text" id="slashphoto-clients" name="slashphoto_clients" class="widefat" value="<?php echo esc_attr( $logins ); ?>">
@@ -220,5 +258,13 @@ final class AccessSettings {
 
 		$terms = isset( $_POST['slashphoto_terms'] ) ? wp_kses_post( wp_unslash( $_POST['slashphoto_terms'] ) ) : '';
 		update_post_meta( $post_id, Terms::META_TERMS, $terms );
+
+		// Only the classic editor sends this field; the workspace saves its own.
+		if ( isset( $_POST['slashphoto_price_list'] ) ) {
+			$list = sanitize_text_field( wp_unslash( $_POST['slashphoto_price_list'] ) );
+			if ( '' === $list || PriceLists::NONE === $list || isset( PriceLists::all()[ (int) $list ] ) ) {
+				update_post_meta( $post_id, PriceLists::GALLERY_META, $list );
+			}
+		}
 	}
 }

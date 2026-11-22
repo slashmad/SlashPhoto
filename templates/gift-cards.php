@@ -22,7 +22,7 @@ $slashphoto_months = (int) ( $args['months'] ?? 0 );
 	<ul class="slashphoto-gift-cards__amounts">
 		<?php foreach ( $args['cards'] as $slashphoto_card ) : ?>
 			<li>
-				<button type="button" class="wp-element-button" data-slashphoto-gift-card="<?php echo esc_attr( (string) $slashphoto_card['amount'] ); ?>" data-name="<?php echo esc_attr( $slashphoto_card['name'] ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: gift card name */ __( 'Add %s to cart', 'slashphoto' ), $slashphoto_card['name'] ) ); ?>"><?php echo esc_html( $slashphoto_card['label'] ); ?></button>
+				<button type="button" class="wp-element-button" data-slashphoto-gift-card="<?php echo esc_attr( (string) $slashphoto_card['amount'] ); ?>" data-name="<?php echo esc_attr( $slashphoto_card['name'] ); ?>" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: product name */ __( 'Add %s to cart', 'slashphoto' ), $slashphoto_card['name'] ) ); ?>"><?php echo esc_html( $slashphoto_card['label'] ); ?></button>
 			</li>
 		<?php endforeach; ?>
 	</ul>

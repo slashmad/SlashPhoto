@@ -13,6 +13,7 @@
 		"lint:php": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto composer lint",
 		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/slashphoto composer test",
 		"i18n:pot": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto wp i18n make-pot . languages/slashphoto.pot --exclude=vendor,node_modules,tests",
+		"i18n:build": "npm run i18n:pot && wp-env run cli --env-cwd=wp-content/plugins/slashphoto bash -c 'wp i18n update-po languages/slashphoto.pot languages/ && wp i18n make-mo languages/ && wp i18n make-php languages/ && wp i18n make-json languages/ --no-purge'",
 		"seed": "wp-env run cli --env-cwd=wp-content/plugins/slashphoto wp eval-file bin/dev-seed.php",
 		"vendor": "node bin/vendor.mjs",
 		"package:beta": "node bin/package.mjs",

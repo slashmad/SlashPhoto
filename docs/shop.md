@@ -22,7 +22,8 @@ There are no platform fees, no paid add-ons and no WooCommerce dependency.
    to deliver the original. A new list suggests a full-size download, a
    2048 px web download and three print sizes; rows without a price are not
    saved.
-3. **In the gallery editor**, open the "Shop" panel and choose the price
+3. **In the gallery's Settings tab** (or the "Shop" panel of the block
+   editor, or the Access box of the classic editor) choose the price
    list. Sub-galleries use the same list unless they choose another or "Not
    for sale". A default price list in the shop settings covers top-level
    galleries without their own choice.
