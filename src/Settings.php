@@ -40,10 +40,11 @@ final class Settings {
 	public const SECTIONS   = [
 		'general_watermark' => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity' ],
 		'general_galleries' => [ 'gallery_directory_page' ],
-		'general_copies'    => [ 'display_size', 'display_quality' ],
+		'general_copies'    => [ 'display_size', 'display_quality', 'display_format' ],
 		'general_snapotter' => [ 'snapotter_mode', 'snapotter_min_mp' ],
 		'general_visitors'  => [ 'stats_enabled', 'visitor_retention_days', 'terms_ask_email', 'signin_links' ],
 		'general_proofing'  => [ 'selection_client_email' ],
+		'general_inbox'     => [ 'inbox_enabled' ],
 		'shop_pages'        => [ 'shop_page', 'shop_terms_page' ],
 		'shop_prices'       => [ 'currency', 'prices_include_tax', 'tax_rate', 'tax_rates', 'shop_price_list' ],
 		'shop_prints'       => [ 'print_presets' ],
@@ -52,10 +53,10 @@ final class Settings {
 		'shop_giftcards'    => [ 'gift_cards', 'gift_card_amounts', 'gift_card_months' ],
 		'shop_receipts'     => [ 'business_name', 'business_details', 'receipt_note' ],
 		'shop_payments'     => [ 'shop_email', 'manual_enabled', 'manual_title', 'manual_instructions' ],
-		'general'           => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity', 'display_size', 'display_quality', 'snapotter_mode', 'snapotter_min_mp', 'stats_enabled', 'visitor_retention_days', 'terms_ask_email', 'signin_links', 'selection_client_email' ],
+		'general'           => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity', 'display_size', 'display_quality', 'display_format', 'snapotter_mode', 'snapotter_min_mp', 'stats_enabled', 'visitor_retention_days', 'terms_ask_email', 'signin_links', 'selection_client_email' ],
 		'shop'              => [ 'currency', 'prices_include_tax', 'tax_rate', 'tax_rates', 'shipping_flat', 'free_shipping_over', 'shipping_countries', 'download_days', 'shop_page', 'shop_terms_page', 'shop_email', 'shop_price_list', 'manual_enabled', 'manual_title', 'manual_instructions', 'business_name', 'business_details', 'receipt_note' ],
 	];
-	public const CHECKBOXES = [ 'watermark_default', 'prices_include_tax', 'manual_enabled', 'stats_enabled', 'terms_ask_email', 'signin_links', 'selection_client_email', 'gift_cards' ];
+	public const CHECKBOXES = [ 'watermark_default', 'prices_include_tax', 'manual_enabled', 'stats_enabled', 'terms_ask_email', 'signin_links', 'selection_client_email', 'gift_cards', 'inbox_enabled' ];
 	public const AMOUNTS    = [ 'shipping_flat', 'free_shipping_over' ];
 
 	/**
@@ -74,6 +75,7 @@ final class Settings {
 			'watermark_opacity'      => 60,
 			'display_size'           => 2560,
 			'display_quality'        => 90,
+			'display_format'         => 'jpeg',
 			'snapotter_mode'         => 'heavy',
 			'snapotter_min_mp'       => 40,
 			'stats_enabled'          => true,
@@ -81,6 +83,8 @@ final class Settings {
 			'terms_ask_email'        => true,
 			'selection_client_email' => true,
 			'signin_links'           => true,
+			'inbox_enabled'          => false,
+			'inbox_user'             => 0,
 			'currency'               => $swedish ? 'SEK' : 'EUR',
 			'prices_include_tax'     => true,
 			'tax_rate'               => 25.0,
@@ -150,6 +154,10 @@ final class Settings {
 			$saved = get_option( self::OPTION, [] );
 			$form  = $input;
 			$input = is_array( $saved ) ? $saved : [];
+			// New galleries made by the import folder belong to whoever switched it on.
+			if ( 'general_inbox' === (string) $form['_section'] && ! empty( $form['inbox_enabled'] ) ) {
+				$input['inbox_user'] = get_current_user_id();
+			}
 			foreach ( $keys as $key ) {
 				if ( in_array( $key, self::CHECKBOXES, true ) ) {
 					$input[ $key ] = ! empty( $form[ $key ] );
@@ -185,6 +193,7 @@ final class Settings {
 			'watermark_opacity'      => min( 100, max( 5, (int) $value( 'watermark_opacity' ) ) ),
 			'display_size'           => min( 8192, max( 1024, (int) $value( 'display_size' ) ) ),
 			'display_quality'        => min( 100, max( 60, (int) $value( 'display_quality' ) ) ),
+			'display_format'         => in_array( $value( 'display_format' ), [ 'jpeg', 'webp', 'avif' ], true ) ? (string) $value( 'display_format' ) : 'jpeg',
 			'snapotter_mode'         => in_array( $input['snapotter_mode'] ?? '', self::SNAPOTTER_MODES, true ) ? $input['snapotter_mode'] : $defaults['snapotter_mode'],
 			'snapotter_min_mp'       => min( 1000, max( 1, (int) $value( 'snapotter_min_mp' ) ) ),
 			'stats_enabled'          => (bool) $value( 'stats_enabled' ),
@@ -192,6 +201,8 @@ final class Settings {
 			'terms_ask_email'        => (bool) $value( 'terms_ask_email' ),
 			'selection_client_email' => (bool) $value( 'selection_client_email' ),
 			'signin_links'           => (bool) $value( 'signin_links' ),
+			'inbox_enabled'          => (bool) $value( 'inbox_enabled' ),
+			'inbox_user'             => absint( $value( 'inbox_user' ) ),
 			'currency'               => $currency,
 			'prices_include_tax'     => (bool) $value( 'prices_include_tax' ),
 			'tax_rate'               => self::rate( $value( 'tax_rate' ) ),

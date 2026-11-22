@@ -1286,3 +1286,21 @@ html.slashphoto-lightbox-open {
 .slashphoto .slashphoto-gift-cards [hidden] {
 	display: none;
 }
+
+/* Licences of downloads: product note in the lightbox and terms at checkout. */
+.slashphoto-lightbox__product-licence {
+	opacity: 0.8;
+}
+
+.slashphoto .slashphoto-checkout__licences {
+	margin-block-end: 1.25rem;
+}
+
+.slashphoto .slashphoto-checkout__licences[hidden] {
+	display: none;
+}
+
+.slashphoto .slashphoto-checkout__licence-text {
+	white-space: pre-line;
+	font-size: var(--slashphoto-caption-size);
+}

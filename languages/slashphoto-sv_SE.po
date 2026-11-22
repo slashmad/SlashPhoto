@@ -119,14 +119,14 @@ msgstr "Nej, inte för det här galleriet"
 
 #: src/Admin/AccessSettings.php:150
 #: src/Admin/SettingsPage.php:101
-#: src/Admin/SettingsPage.php:135
+#: src/Admin/SettingsPage.php:136
 #: assets/js/editor-access.js:188
 msgid "Watermark"
 msgstr "Vattenstämpel"
 
 #: src/Admin/AccessSettings.php:153
 #: src/Admin/AccessSettings.php:175
-#: src/Admin/GalleryWorkspace.php:361
+#: src/Admin/GalleryWorkspace.php:393
 #: assets/js/editor-access.js:192
 msgid "Site default or parent gallery"
 msgstr "Webbplatsens standard eller överordnat galleri"
@@ -158,18 +158,18 @@ msgid "Maximum images per selection (0 = no limit)"
 msgstr "Högsta antal bilder per urval (0 = ingen gräns)"
 
 #: src/Admin/AccessSettings.php:176
-#: src/Admin/GalleryWorkspace.php:362
+#: src/Admin/GalleryWorkspace.php:394
 #: assets/js/editor-access.js:284
 msgid "Not for sale"
 msgstr "Inte till salu"
 
 #: src/Admin/AccessSettings.php:179
-#: src/Admin/GalleryWorkspace.php:365
+#: src/Admin/GalleryWorkspace.php:397
 msgid "Current price list unavailable"
 msgstr "Den valda prislistan finns inte längre"
 
 #: src/Admin/AccessSettings.php:183
-#: src/Admin/GalleryWorkspace.php:369
+#: src/Admin/GalleryWorkspace.php:401
 #: src/Shop/PriceLists.php:58
 #: assets/js/editor-access.js:279
 msgid "Price list"
@@ -243,7 +243,7 @@ msgid "Publish the gallery and its parent galleries and check their expiry dates
 msgstr "Publicera galleriet och gallerierna ovanför och kontrollera deras slutdatum innan du skickar en inbjudan."
 
 #: src/Admin/GalleryInvitations.php:47
-#: src/Shop/CheckoutRest.php:223
+#: src/Shop/CheckoutRest.php:224
 msgid "Enter a valid email address."
 msgstr "Ange en giltig e-postadress."
 
@@ -386,14 +386,14 @@ msgid "List view"
 msgstr "Listvy"
 
 #: src/Admin/GalleryOverview.php:128
-#: src/Admin/GalleryWorkspace.php:68
-#: src/Admin/GalleryWorkspace.php:178
+#: src/Admin/GalleryWorkspace.php:69
+#: src/Admin/GalleryWorkspace.php:179
 #: src/Gallery/PostType.php:53
 msgid "Add new gallery"
 msgstr "Lägg till nytt galleri"
 
 #: src/Admin/GalleryOverview.php:196
-#: src/Admin/GalleryWorkspace.php:178
+#: src/Admin/GalleryWorkspace.php:179
 #: src/Admin/VisitorsPage.php:421
 msgid "(Untitled gallery)"
 msgstr "(Galleri utan namn)"
@@ -407,159 +407,159 @@ msgstr "Visa lista"
 msgid "No galleries in this group yet."
 msgstr "Inga gallerier i den här gruppen ännu."
 
-#: src/Admin/GalleryWorkspace.php:67
+#: src/Admin/GalleryWorkspace.php:68
 msgid "Gallery workspace"
 msgstr "Galleriets arbetsyta"
 
-#: src/Admin/GalleryWorkspace.php:162
+#: src/Admin/GalleryWorkspace.php:163
 msgid "You cannot edit this gallery."
 msgstr "Du kan inte redigera det här galleriet."
 
-#: src/Admin/GalleryWorkspace.php:165
-#: src/Admin/GalleryWorkspace.php:252
-#: src/Shop/PriceLists.php:405
+#: src/Admin/GalleryWorkspace.php:166
+#: src/Admin/GalleryWorkspace.php:258
+#: src/Shop/PriceLists.php:409
 msgid "Photos"
 msgstr "Bilder"
 
-#: src/Admin/GalleryWorkspace.php:166
+#: src/Admin/GalleryWorkspace.php:167
 #: src/Admin/SettingsPage.php:48
 msgid "Settings"
 msgstr "Inställningar"
 
-#: src/Admin/GalleryWorkspace.php:167
+#: src/Admin/GalleryWorkspace.php:168
 #: src/Admin/SelectionsBox.php:75
 #: src/Admin/SelectionsPage.php:48
 #: src/Admin/SelectionsPage.php:49
 #: src/Admin/SelectionsPage.php:119
-#: src/Admin/SettingsPage.php:254
+#: src/Admin/SettingsPage.php:273
 #: src/Proofing/Selections.php:57
 #: assets/js/editor-access.js:225
 msgid "Client selections"
 msgstr "Kundernas urval"
 
-#: src/Admin/GalleryWorkspace.php:170
+#: src/Admin/GalleryWorkspace.php:171
 msgid "Invite"
 msgstr "Bjud in"
 
-#: src/Admin/GalleryWorkspace.php:175
+#: src/Admin/GalleryWorkspace.php:176
 msgid "← All galleries"
 msgstr "← Alla gallerier"
 
-#: src/Admin/GalleryWorkspace.php:185
+#: src/Admin/GalleryWorkspace.php:186
 msgid "Edit page content"
 msgstr "Redigera sidans innehåll"
 
-#: src/Admin/GalleryWorkspace.php:187
+#: src/Admin/GalleryWorkspace.php:188
 #: src/Gallery/PostType.php:56
 msgid "View gallery"
 msgstr "Visa galleriet"
 
-#: src/Admin/GalleryWorkspace.php:191
+#: src/Admin/GalleryWorkspace.php:192
 msgid "Publish gallery"
 msgstr "Publicera galleriet"
 
-#: src/Admin/GalleryWorkspace.php:198
+#: src/Admin/GalleryWorkspace.php:199
 msgid "Gallery settings saved."
 msgstr "Galleriets inställningar har sparats."
 
-#: src/Admin/GalleryWorkspace.php:203
+#: src/Admin/GalleryWorkspace.php:204
 msgid "Gallery sections"
 msgstr "Galleriets avsnitt"
 
-#: src/Admin/GalleryWorkspace.php:209
+#: src/Admin/GalleryWorkspace.php:210
 msgid "View selections across galleries"
 msgstr "Visa urval i alla gallerier"
 
-#: src/Admin/GalleryWorkspace.php:245
+#: src/Admin/GalleryWorkspace.php:251
 #: src/Admin/UploadPanel.php:111
 #: assets/js/editor-upload.js:53
 msgid "Upload photos"
 msgstr "Ladda upp bilder"
 
-#: src/Admin/GalleryWorkspace.php:252
-#: src/Admin/GalleryWorkspace.php:259
+#: src/Admin/GalleryWorkspace.php:258
+#: src/Admin/GalleryWorkspace.php:265
 msgid "Reorder photos"
 msgstr "Ändra ordning på bilderna"
 
-#: src/Admin/GalleryWorkspace.php:256
+#: src/Admin/GalleryWorkspace.php:262
 msgid "Done"
 msgstr "Klar"
 
-#: src/Admin/GalleryWorkspace.php:261
+#: src/Admin/GalleryWorkspace.php:267
 msgid "Make new copies"
 msgstr "Gör nya kopior"
 
-#: src/Admin/GalleryWorkspace.php:267
+#: src/Admin/GalleryWorkspace.php:295
 msgid "Make new copies remakes the web copies of every photo in this gallery from the originals, with the current watermark, display size and image-processing settings. The originals are not changed."
 msgstr "Gör nya kopior skapar om webbkopiorna av alla bilder i galleriet från originalen, med nuvarande vattenstämpel, visningsstorlek och bildbehandling. Originalen ändras inte."
 
-#: src/Admin/GalleryWorkspace.php:273
+#: src/Admin/GalleryWorkspace.php:301
 msgid "Photo order saved."
 msgstr "Bildordningen har sparats."
 
-#: src/Admin/GalleryWorkspace.php:274
+#: src/Admin/GalleryWorkspace.php:302
 msgid "The photo order could not be saved. Review the current order and try again."
 msgstr "Bildordningen kunde inte sparas. Kontrollera den nuvarande ordningen och försök igen."
 
-#: src/Admin/GalleryWorkspace.php:275
+#: src/Admin/GalleryWorkspace.php:303
 msgid "Choose a photo in this gallery and a position within the photo count."
 msgstr "Välj en bild i galleriet och en position inom antalet bilder."
 
-#: src/Admin/GalleryWorkspace.php:282
+#: src/Admin/GalleryWorkspace.php:310
 msgid "Enter a position and select Move. Position 1 is the first photo visitors see."
 msgstr "Ange en position och välj Flytta. Position 1 är den första bilden besökarna ser."
 
-#: src/Admin/GalleryWorkspace.php:285
+#: src/Admin/GalleryWorkspace.php:313
 msgid "This gallery has no photos yet."
 msgstr "Galleriet har inga bilder ännu."
 
-#: src/Admin/GalleryWorkspace.php:288
+#: src/Admin/GalleryWorkspace.php:316
 msgid "(Untitled photo)"
 msgstr "(Bild utan namn)"
 
 #. translators: %s: photo title.
-#: src/Admin/GalleryWorkspace.php:298
+#: src/Admin/GalleryWorkspace.php:330
 #, php-format
 msgid "Position for %s"
 msgstr "Position för %s"
 
 #. translators: %s: photo title.
-#: src/Admin/GalleryWorkspace.php:300
+#: src/Admin/GalleryWorkspace.php:332
 #, php-format
 msgid "Move %s"
 msgstr "Flytta %s"
 
 #. translators: %s: photo title.
-#: src/Admin/GalleryWorkspace.php:300
+#: src/Admin/GalleryWorkspace.php:332
 msgid "Move"
 msgstr "Flytta"
 
-#: src/Admin/GalleryWorkspace.php:336
+#: src/Admin/GalleryWorkspace.php:368
 msgid "Gallery name"
 msgstr "Galleriets namn"
 
-#: src/Admin/GalleryWorkspace.php:340
+#: src/Admin/GalleryWorkspace.php:372
 msgid "Access and proofing"
 msgstr "Åtkomst och bildurval"
 
-#: src/Admin/GalleryWorkspace.php:342
+#: src/Admin/GalleryWorkspace.php:374
 #: assets/js/editor-access.js:277
 msgid "Shop"
 msgstr "Butik"
 
-#: src/Admin/GalleryWorkspace.php:346
+#: src/Admin/GalleryWorkspace.php:378
 msgid "Start with a draft. You can upload photos and choose who can see the gallery before publishing."
 msgstr "Börja med ett utkast. Du kan ladda upp bilder och välja vem som ser galleriet innan du publicerar."
 
-#: src/Admin/GalleryWorkspace.php:347
+#: src/Admin/GalleryWorkspace.php:379
 msgid "Create draft and add photos"
 msgstr "Skapa utkast och lägg till bilder"
 
-#: src/Admin/GalleryWorkspace.php:437
+#: src/Admin/GalleryWorkspace.php:469
 msgid "You cannot make this change to the gallery."
 msgstr "Du kan inte göra den här ändringen i galleriet."
 
-#: src/Admin/GalleryWorkspace.php:485
+#: src/Admin/GalleryWorkspace.php:517
 msgid "Enter a name for the gallery."
 msgstr "Ange ett namn på galleriet."
 
@@ -654,8 +654,8 @@ msgid "Valid until"
 msgstr "Giltigt till"
 
 #: src/Admin/GiftCardsPage.php:158
-#: src/Admin/OrdersPage.php:377
-#: src/Admin/OrdersPage.php:382
+#: src/Admin/OrdersPage.php:385
+#: src/Admin/OrdersPage.php:390
 #: src/Admin/OrdersTable.php:50
 #: src/Admin/ShopSettings.php:217
 #: src/Admin/ShopSettings.php:280
@@ -914,140 +914,140 @@ msgid "Quantity"
 msgstr "Antal"
 
 #: src/Admin/OrdersPage.php:270
-#: src/Admin/OrdersPage.php:323
+#: src/Admin/OrdersPage.php:331
 #: src/Admin/OrdersTable.php:51
 #: src/Frontend/Assets.php:251
 #: src/Privacy.php:243
-#: templates/order.php:104
+#: templates/order.php:112
 #: templates/receipt.php:168
 msgid "Total"
 msgstr "Totalt"
 
 #: src/Admin/OrdersPage.php:271
-#: src/Shop/PriceLists.php:416
+#: src/Shop/PriceLists.php:420
 msgid "Original"
 msgstr "Original"
 
 #. translators: %d: longest side in pixels
-#: src/Admin/OrdersPage.php:292
+#: src/Admin/OrdersPage.php:300
 #, php-format
 msgid "Delivered at %d px on the longest side"
 msgstr "Levereras med %d px på längsta sidan"
 
-#: src/Admin/OrdersPage.php:293
+#: src/Admin/OrdersPage.php:301
 msgid "Delivered as the full-size original"
 msgstr "Levereras som originalet i full storlek"
 
-#: src/Admin/OrdersPage.php:300
-#: templates/order.php:74
+#: src/Admin/OrdersPage.php:308
+#: templates/order.php:82
 msgid "In package"
 msgstr "I paket"
 
-#: src/Admin/OrdersPage.php:305
+#: src/Admin/OrdersPage.php:313
 #: src/Shop/Downloads.php:130
-#: src/Shop/PriceLists.php:396
-#: templates/order.php:76
+#: src/Shop/PriceLists.php:400
+#: templates/order.php:84
 msgid "Download"
 msgstr "Ladda ner"
 
-#: src/Admin/OrdersPage.php:307
+#: src/Admin/OrdersPage.php:315
 msgid "Deleted"
 msgstr "Raderad"
 
 #. translators: %s: discount code
-#: src/Admin/OrdersPage.php:315
+#: src/Admin/OrdersPage.php:323
 #: src/Frontend/Assets.php:277
-#: templates/order.php:89
+#: templates/order.php:97
 #: templates/receipt.php:146
 #, php-format
 msgid "Discount (%s)"
 msgstr "Rabatt (%s)"
 
 #. translators: %s: discount code
-#: src/Admin/OrdersPage.php:315
+#: src/Admin/OrdersPage.php:323
 #: src/Shop/Coupons.php:299
 #: src/Shop/Coupons.php:351
 #: src/Shop/Coupons.php:368
 #: src/Shop/Gateways/StripeGateway.php:222
-#: templates/order.php:90
+#: templates/order.php:98
 #: templates/receipt.php:147
 msgid "Discount"
 msgstr "Rabatt"
 
-#: src/Admin/OrdersPage.php:318
+#: src/Admin/OrdersPage.php:326
 #: src/Admin/ShopSettings.php:339
 #: src/Frontend/Assets.php:250
 #: src/Shop/Coupons.php:389
 #: src/Shop/Gateways/StripeGateway.php:204
-#: templates/order.php:97
+#: templates/order.php:105
 #: templates/receipt.php:155
 msgid "Shipping"
 msgstr "Frakt"
 
-#: src/Admin/OrdersPage.php:321
-#: templates/order.php:101
+#: src/Admin/OrdersPage.php:329
+#: templates/order.php:109
 msgid "Including VAT"
 msgstr "Varav moms"
 
-#: src/Admin/OrdersPage.php:321
-#: templates/order.php:101
+#: src/Admin/OrdersPage.php:329
+#: templates/order.php:109
 msgid "VAT"
 msgstr "Moms"
 
 #. translators: %s: last four characters of the gift card code
-#: src/Admin/OrdersPage.php:325
+#: src/Admin/OrdersPage.php:333
 #: src/Frontend/Assets.php:280
-#: templates/order.php:110
+#: templates/order.php:118
 #, php-format
 msgid "Gift card (…%s)"
 msgstr "Presentkort (…%s)"
 
 #. translators: %s: last four characters of the gift card code
-#: src/Admin/OrdersPage.php:326
+#: src/Admin/OrdersPage.php:334
 #: src/Frontend/Assets.php:281
-#: templates/order.php:114
+#: templates/order.php:122
 #: templates/receipt.php:179
 msgid "To pay"
 msgstr "Att betala"
 
-#: src/Admin/OrdersPage.php:331
+#: src/Admin/OrdersPage.php:339
 msgid "Message from the customer"
 msgstr "Meddelande från kunden"
 
-#: src/Admin/OrdersPage.php:338
+#: src/Admin/OrdersPage.php:346
 #: src/Admin/OrdersTable.php:49
 #: templates/receipt.php:103
 msgid "Customer"
 msgstr "Kund"
 
-#: src/Admin/OrdersPage.php:347
+#: src/Admin/OrdersPage.php:355
 #: src/Privacy.php:231
-#: templates/order.php:143
+#: templates/order.php:170
 #: templates/receipt.php:108
 msgid "Delivery address"
 msgstr "Leveransadress"
 
 #. translators: 1: date, 2: payment method
-#: src/Admin/OrdersPage.php:355
+#: src/Admin/OrdersPage.php:363
 #, php-format
 msgid "Placed %1$s · %2$s"
 msgstr "Lagd %1$s · %2$s"
 
 #. translators: %s: date
-#: src/Admin/OrdersPage.php:364
+#: src/Admin/OrdersPage.php:372
 #, php-format
 msgid "Paid %s"
 msgstr "Betald %s"
 
-#: src/Admin/OrdersPage.php:389
+#: src/Admin/OrdersPage.php:397
 msgid "The customer gets an email when the order becomes paid, completed, cancelled or refunded. Marking it paid opens the downloads. Refunds through Stripe are made in the Stripe Dashboard."
 msgstr "Kunden får ett mejl när ordern blir betald, klar, avbruten eller återbetald. När du markerar den som betald öppnas nedladdningarna. Återbetalningar via Stripe görs i Stripes instrumentpanel."
 
-#: src/Admin/OrdersPage.php:391
+#: src/Admin/OrdersPage.php:399
 msgid "Private note"
 msgstr "Privat anteckning"
 
-#: src/Admin/OrdersPage.php:394
+#: src/Admin/OrdersPage.php:402
 msgid "Update order"
 msgstr "Uppdatera ordern"
 
@@ -1185,7 +1185,7 @@ msgid "Review selection"
 msgstr "Granska urvalet"
 
 #: src/Admin/SettingsPage.php:47
-#: src/Admin/SettingsPage.php:128
+#: src/Admin/SettingsPage.php:129
 msgid "SlashPhoto settings"
 msgstr "Inställningar för SlashPhoto"
 
@@ -1214,7 +1214,7 @@ msgid "Repeated across the image"
 msgstr "Upprepad över hela bilden"
 
 #: src/Admin/SettingsPage.php:103
-#: src/Admin/SettingsPage.php:203
+#: src/Admin/SettingsPage.php:204
 msgid "Display copies"
 msgstr "Visningskopior"
 
@@ -1226,187 +1226,184 @@ msgstr "SnapOtter"
 msgid "Proofing"
 msgstr "Bildurval"
 
-#: src/Admin/SettingsPage.php:106
-#: src/Admin/SettingsPage.php:265
+#: src/Admin/SettingsPage.php:107
+#: src/Admin/SettingsPage.php:338
 #: src/Admin/VisitorsPage.php:56
 #: src/Admin/VisitorsPage.php:115
 msgid "Visitors"
 msgstr "Besökare"
 
-#: src/Admin/SettingsPage.php:129
+#: src/Admin/SettingsPage.php:130
 #: src/Admin/ShopSettings.php:364
 msgid "Settings sections"
 msgstr "Avsnitt i inställningarna"
 
-#: src/Admin/SettingsPage.php:136
+#: src/Admin/SettingsPage.php:137
 msgid "The watermark is stamped on the web copies of images uploaded to galleries that use it. Originals are never changed. Changes apply to images uploaded afterwards; for earlier photos, use Make new copies on a gallery’s Photos tab. 360° panoramas are not watermarked."
 msgstr "Vattenstämpeln läggs på webbkopiorna av bilder som laddas upp till gallerier som använder den. Originalen ändras aldrig. Ändringar gäller bilder som laddas upp efteråt; för tidigare bilder använder du Gör nya kopior på galleriets flik Bilder. 360°-panoramor får ingen vattenstämpel."
 
-#: src/Admin/SettingsPage.php:139
+#: src/Admin/SettingsPage.php:140
 msgid "Watermark image"
 msgstr "Bild för vattenstämpel"
 
-#: src/Admin/SettingsPage.php:142
+#: src/Admin/SettingsPage.php:143
+#: src/Shop/PriceLists.php:426
 msgid "None"
 msgstr "Ingen"
 
-#: src/Admin/SettingsPage.php:147
+#: src/Admin/SettingsPage.php:148
 msgid "A PNG with a transparent background, uploaded to the media library."
 msgstr "En PNG med genomskinlig bakgrund, uppladdad till mediabiblioteket."
 
-#: src/Admin/SettingsPage.php:150
+#: src/Admin/SettingsPage.php:151
 msgid "Watermark preview"
 msgstr "Förhandsvisning av vattenstämpeln"
 
-#: src/Admin/SettingsPage.php:161
+#: src/Admin/SettingsPage.php:162
 msgid "Use by default"
 msgstr "Använd som standard"
 
-#: src/Admin/SettingsPage.php:162
+#: src/Admin/SettingsPage.php:163
 msgid "Watermark new galleries unless a gallery says otherwise"
 msgstr "Vattenstämpla nya gallerier om inte galleriet säger något annat"
 
-#: src/Admin/SettingsPage.php:165
+#: src/Admin/SettingsPage.php:166
 msgid "Position"
 msgstr "Placering"
 
-#: src/Admin/SettingsPage.php:175
+#: src/Admin/SettingsPage.php:176
 msgid "Size (% of image width)"
 msgstr "Storlek (% av bildens bredd)"
 
-#: src/Admin/SettingsPage.php:179
+#: src/Admin/SettingsPage.php:180
 msgid "Opacity (%)"
 msgstr "Opacitet (%)"
 
-#: src/Admin/SettingsPage.php:184
+#: src/Admin/SettingsPage.php:185
 msgid "Public gallery directory"
 msgstr "Offentlig gallerikatalog"
 
-#: src/Admin/SettingsPage.php:187
+#: src/Admin/SettingsPage.php:188
 msgid "Gallery directory page"
 msgstr "Sida för gallerikatalogen"
 
-#: src/Admin/SettingsPage.php:190
+#: src/Admin/SettingsPage.php:191
 msgid "Use the theme’s gallery archive"
 msgstr "Använd temats galleriarkiv"
 
-#: src/Admin/SettingsPage.php:196
+#: src/Admin/SettingsPage.php:197
 msgid "Choose a public page with the following shortcode. Visitors who open the gallery archive will land on that page."
 msgstr "Välj en offentlig sida med följande kortkod. Besökare som öppnar galleriarkivet hamnar på den sidan."
 
-#: src/Admin/SettingsPage.php:204
+#: src/Admin/SettingsPage.php:205
 msgid "Upload one full-size original per image. Visitors see a display copy; the original is stored privately for downloads and sales. Changes apply to images uploaded afterwards; for earlier photos, use Make new copies on a gallery’s Photos tab."
 msgstr "Ladda upp ett original i full storlek per bild. Besökarna ser en visningskopia; originalet sparas privat för nedladdningar och försäljning. Ändringar gäller bilder som laddas upp efteråt; för tidigare bilder använder du Gör nya kopior på galleriets flik Bilder."
 
-#: src/Admin/SettingsPage.php:207
+#: src/Admin/SettingsPage.php:208
 msgid "Longest side (pixels)"
 msgstr "Längsta sida (pixlar)"
 
-#: src/Admin/SettingsPage.php:210
+#: src/Admin/SettingsPage.php:211
 msgid "2560 suits most screens. 360° panoramas keep up to 8192 pixels."
 msgstr "2560 passar de flesta skärmar. 360°-panoramor behåller upp till 8192 pixlar."
 
-#: src/Admin/SettingsPage.php:214
-msgid "JPEG quality"
-msgstr "JPEG-kvalitet"
-
-#: src/Admin/SettingsPage.php:218
+#: src/Admin/SettingsPage.php:237
 msgid "Upload size"
 msgstr "Uppladdningsstorlek"
 
 #. translators: %s: size such as "8 MB"
-#: src/Admin/SettingsPage.php:225
+#: src/Admin/SettingsPage.php:244
 #, php-format
 msgid "The gallery’s photo uploader transfers files in pieces. The WordPress media library uses this server’s normal upload limit of %s."
 msgstr "Galleriets bilduppladdare skickar filer i delar. WordPress mediabibliotek använder serverns vanliga uppladdningsgräns på %s."
 
-#: src/Admin/SettingsPage.php:235
+#: src/Admin/SettingsPage.php:254
 msgid "Image processing with SnapOtter"
 msgstr "Bildbehandling med SnapOtter"
 
-#: src/Admin/SettingsPage.php:238
+#: src/Admin/SettingsPage.php:257
 msgid "Use SnapOtter for"
 msgstr "Använd SnapOtter för"
 
-#: src/Admin/SettingsPage.php:241
+#: src/Admin/SettingsPage.php:260
 msgid "RAW, HEIC, TIFF, PSD and very large images"
 msgstr "RAW, HEIC, TIFF, PSD och mycket stora bilder"
 
-#: src/Admin/SettingsPage.php:242
+#: src/Admin/SettingsPage.php:261
 msgid "All gallery uploads"
 msgstr "Alla uppladdningar till gallerier"
 
-#: src/Admin/SettingsPage.php:243
+#: src/Admin/SettingsPage.php:262
 msgid "Nothing (WordPress makes all display copies)"
 msgstr "Ingenting (WordPress gör alla visningskopior)"
 
-#: src/Admin/SettingsPage.php:245
+#: src/Admin/SettingsPage.php:264
 msgid "Applies when a SnapOtter server is connected. If SnapOtter cannot be reached, WordPress makes the copy itself for JPEG, PNG, WebP and AVIF."
 msgstr "Gäller när en SnapOtter-server är ansluten. Om SnapOtter inte kan nås gör WordPress kopian själv för JPEG, PNG, WebP och AVIF."
 
-#: src/Admin/SettingsPage.php:249
+#: src/Admin/SettingsPage.php:268
 msgid "“Very large” from (megapixels)"
 msgstr "”Mycket stor” från (megapixlar)"
 
-#: src/Admin/SettingsPage.php:257
+#: src/Admin/SettingsPage.php:276
 msgid "Confirmation"
 msgstr "Bekräftelse"
 
-#: src/Admin/SettingsPage.php:259
+#: src/Admin/SettingsPage.php:278
 msgid "Email clients a copy of the selection they send"
 msgstr "Mejla kunderna en kopia av urvalet de skickar"
 
-#: src/Admin/SettingsPage.php:260
+#: src/Admin/SettingsPage.php:279
 msgid "Goes to the email address of the client’s account and lists the chosen file names, notes and message. Replies go to the gallery’s author. You are always emailed when a selection arrives."
 msgstr "Skickas till e-postadressen för kundens konto och listar de valda filnamnen, anteckningarna och meddelandet. Svar går till galleriets författare. Du får alltid ett mejl när ett urval kommer in."
 
-#: src/Admin/SettingsPage.php:266
+#: src/Admin/SettingsPage.php:339
 msgid "SlashPhoto never stores IP addresses or browser details. What it can store about visitors is listed here and in the suggested privacy policy text."
 msgstr "SlashPhoto sparar aldrig IP-adresser eller uppgifter om webbläsare. Det som kan sparas om besökare står här och i det föreslagna texten för integritetspolicyn."
 
-#: src/Admin/SettingsPage.php:269
+#: src/Admin/SettingsPage.php:342
 #: src/Admin/VisitorsPage.php:57
 #: src/Admin/VisitorsPage.php:332
 msgid "Statistics"
 msgstr "Statistik"
 
-#: src/Admin/SettingsPage.php:271
+#: src/Admin/SettingsPage.php:344
 msgid "Count how often galleries and photos are viewed"
 msgstr "Räkna hur ofta gallerier och bilder visas"
 
-#: src/Admin/SettingsPage.php:272
+#: src/Admin/SettingsPage.php:345
 msgid "Anonymous daily totals only: no cookies, no IP addresses, nothing that identifies a visitor. Your own views and those of search robots are not counted."
 msgstr "Bara anonyma dagliga totaler: inga kakor, inga IP-adresser, inget som identifierar en besökare. Dina egna visningar och sökrobotars räknas inte."
 
-#: src/Admin/SettingsPage.php:276
+#: src/Admin/SettingsPage.php:349
 msgid "Terms"
 msgstr "Villkor"
 
-#: src/Admin/SettingsPage.php:278
+#: src/Admin/SettingsPage.php:351
 msgid "Ask visitors who are not logged in for their email address when they accept a gallery’s terms"
 msgstr "Be besökare som inte är inloggade om e-postadress när de godkänner ett galleris villkor"
 
-#: src/Admin/SettingsPage.php:279
+#: src/Admin/SettingsPage.php:352
 msgid "Every acceptance is logged with the date, the wording that was accepted and the account or email address, so you can show who agreed to what."
 msgstr "Varje godkännande loggas med datum, den text som godkändes och kontot eller e-postadressen, så att du kan visa vem som godkände vad."
 
-#: src/Admin/SettingsPage.php:283
+#: src/Admin/SettingsPage.php:356
 msgid "Sign-in links"
 msgstr "Inloggningslänkar"
 
-#: src/Admin/SettingsPage.php:285
+#: src/Admin/SettingsPage.php:358
 msgid "Let clients sign in with an emailed link instead of a password"
 msgstr "Låt kunder logga in med en länk i ett mejl i stället för ett lösenord"
 
-#: src/Admin/SettingsPage.php:286
+#: src/Admin/SettingsPage.php:359
 msgid "Client-only galleries offer to email a sign-in link, and invitations to them include one. Links work once and expire. Accounts that can edit content, such as yours, always use their password."
 msgstr "Gallerier för utvalda kunder erbjuder att mejla en inloggningslänk, och inbjudningar till dem innehåller en. Länkarna fungerar en gång och går ut. Konton som kan redigera innehåll, som ditt, använder alltid sitt lösenord."
 
-#: src/Admin/SettingsPage.php:290
+#: src/Admin/SettingsPage.php:363
 msgid "Keep the visitor log for (days)"
 msgstr "Spara besöksloggen i (dagar)"
 
-#: src/Admin/SettingsPage.php:293
+#: src/Admin/SettingsPage.php:366
 msgid "Email addresses given to open a gallery and terms acceptances are deleted after this many days; 0 keeps them. View counts contain nothing personal and are kept."
 msgstr "E-postadresser som lämnats för att öppna ett galleri och godkända villkor raderas efter så här många dagar; 0 sparar dem. Visningsräkningar innehåller inget personligt och sparas."
 
@@ -1420,6 +1417,7 @@ msgstr "Butiksinställningar"
 #: src/Admin/ShopSettings.php:84
 #: src/Admin/ShopSettings.php:151
 #: src/Admin/SnapOtterSettings.php:36
+#: src/Gallery/Inbox.php:356
 #: src/Shop/ShopPage.php:227
 msgid "You are not allowed to change these settings."
 msgstr "Du har inte behörighet att ändra de här inställningarna."
@@ -2011,8 +2009,8 @@ msgstr "Posterna sparas tills du raderar dem (Inställningar → Besökare)."
 
 #: src/Admin/VisitorsPage.php:135
 #: src/Shop/Coupons.php:371
-#: src/Shop/PriceLists.php:326
-#: src/Shop/PriceLists.php:394
+#: src/Shop/PriceLists.php:330
+#: src/Shop/PriceLists.php:398
 msgid "Type"
 msgstr "Typ"
 
@@ -2336,7 +2334,7 @@ msgid "Paper and framing, %s"
 msgstr "Papper och inramning, %s"
 
 #: src/Frontend/Assets.php:244
-#: src/Shop/CheckoutRest.php:199
+#: src/Shop/CheckoutRest.php:200
 msgid "Your cart is empty."
 msgstr "Varukorgen är tom."
 
@@ -2345,8 +2343,8 @@ msgid "Some photos or options are no longer available and were removed from the 
 msgstr "Vissa bilder eller alternativ finns inte längre och har tagits bort från varukorgen."
 
 #: src/Frontend/Assets.php:246
-#: src/Shop/PriceLists.php:334
-#: src/Shop/PriceLists.php:443
+#: src/Shop/PriceLists.php:338
+#: src/Shop/PriceLists.php:457
 msgid "Remove"
 msgstr "Ta bort"
 
@@ -2439,7 +2437,7 @@ msgstr "Koden %s har lagts till."
 msgid "Gift card applied."
 msgstr "Presentkortet har lagts till."
 
-#: src/Frontend/Assets.php:282
+#: src/Frontend/Assets.php:284
 msgid "Something went wrong. Check your connection and try again."
 msgstr "Något gick fel. Kontrollera anslutningen och försök igen."
 
@@ -2815,46 +2813,46 @@ msgstr "Galleriet hittades inte."
 msgid "Your selection has been sent. Ask the photographer if you want to change it."
 msgstr "Ditt urval har skickats. Fråga fotografen om du vill ändra det."
 
-#: src/Shop/CheckoutRest.php:183
+#: src/Shop/CheckoutRest.php:184
 msgid "The order could not be placed."
 msgstr "Ordern kunde inte läggas."
 
-#: src/Shop/CheckoutRest.php:204
+#: src/Shop/CheckoutRest.php:205
 msgid "Your cart has changed: some prices or images are no longer the same. Check it and try again."
 msgstr "Varukorgen har ändrats: vissa priser eller bilder är inte längre desamma. Kontrollera den och försök igen."
 
-#: src/Shop/CheckoutRest.php:219
+#: src/Shop/CheckoutRest.php:220
 msgid "Choose the country you live in."
 msgstr "Välj landet du bor i."
 
-#: src/Shop/CheckoutRest.php:226
+#: src/Shop/CheckoutRest.php:227
 msgid "Enter your name."
 msgstr "Ange ditt namn."
 
-#: src/Shop/CheckoutRest.php:240
+#: src/Shop/CheckoutRest.php:241
 msgid "Enter the delivery address for your prints."
 msgstr "Ange leveransadressen för dina prints."
 
-#: src/Shop/CheckoutRest.php:244
+#: src/Shop/CheckoutRest.php:245
 msgid "Prints cannot be sent to that country."
 msgstr "Prints kan inte skickas till det landet."
 
-#: src/Shop/CheckoutRest.php:249
+#: src/Shop/CheckoutRest.php:253
 msgid "Accept the terms of purchase to place the order."
 msgstr "Godkänn köpvillkoren för att lägga ordern."
 
-#: src/Shop/CheckoutRest.php:255
+#: src/Shop/CheckoutRest.php:259
 msgid "Choose how to pay."
 msgstr "Välj hur du vill betala."
 
 #. translators: %s: tax rate
-#: src/Shop/CheckoutRest.php:367
+#: src/Shop/CheckoutRest.php:371
 #, php-format
 msgid "Including VAT (%s %%)"
 msgstr "Varav moms (%s %%)"
 
 #. translators: %s: tax rate
-#: src/Shop/CheckoutRest.php:369
+#: src/Shop/CheckoutRest.php:373
 #, php-format
 msgid "VAT (%s %%)"
 msgstr "Moms (%s %%)"
@@ -3093,7 +3091,7 @@ msgstr "Dina presentkort:"
 
 #. translators: %s: date
 #: src/Shop/Emails.php:112
-#: templates/order.php:131
+#: templates/order.php:158
 #, php-format
 msgid "valid until %s"
 msgstr "giltigt till %s"
@@ -3127,58 +3125,58 @@ msgid "Open the order:"
 msgstr "Öppna ordern:"
 
 #. translators: 1: discount code, 2: amount
-#: src/Shop/Emails.php:168
+#: src/Shop/Emails.php:170
 #, php-format
 msgid "Discount (%1$s): −%2$s"
 msgstr "Rabatt (%1$s): −%2$s"
 
 #. translators: %s: amount
-#: src/Shop/Emails.php:170
+#: src/Shop/Emails.php:172
 #, php-format
 msgid "Discount: −%s"
 msgstr "Rabatt: −%s"
 
 #. translators: %s: amount
-#: src/Shop/Emails.php:174
+#: src/Shop/Emails.php:176
 #, php-format
 msgid "Shipping: %s"
 msgstr "Frakt: %s"
 
 #. translators: %s: amount
-#: src/Shop/Emails.php:179
+#: src/Shop/Emails.php:181
 #, php-format
 msgid "Including VAT: %s"
 msgstr "Varav moms: %s"
 
 #. translators: %s: amount
-#: src/Shop/Emails.php:181
+#: src/Shop/Emails.php:183
 #, php-format
 msgid "VAT: %s"
 msgstr "Moms: %s"
 
 #. translators: %s: amount
-#: src/Shop/Emails.php:184
+#: src/Shop/Emails.php:186
 #, php-format
 msgid "Total: %s"
 msgstr "Totalt: %s"
 
 #. translators: 1: last four characters of the gift card code, 2: amount
-#: src/Shop/Emails.php:187
+#: src/Shop/Emails.php:189
 #, php-format
 msgid "Gift card (…%1$s): −%2$s"
 msgstr "Presentkort (…%1$s): −%2$s"
 
 #. translators: %s: amount
-#: src/Shop/Emails.php:189
+#: src/Shop/Emails.php:191
 #, php-format
 msgid "To pay: %s"
 msgstr "Att betala: %s"
 
-#: src/Shop/Emails.php:198
+#: src/Shop/Emails.php:200
 msgid "Delivery address:"
 msgstr "Leveransadress:"
 
-#: src/Shop/Emails.php:203
+#: src/Shop/Emails.php:205
 msgid "Message from the customer:"
 msgstr "Meddelande från kunden:"
 
@@ -3393,7 +3391,7 @@ msgid_plural "%d photos"
 msgstr[0] "%d bild"
 msgstr[1] "%d bilder"
 
-#: src/Shop/Orders.php:164
+#: src/Shop/Orders.php:168
 msgid "The gift card balance has changed. Check your cart and try again."
 msgstr "Presentkortets saldo har ändrats. Kontrollera varukorgen och försök igen."
 
@@ -3428,131 +3426,131 @@ msgstr "Inga prislistor hittades."
 msgid "No price lists found in Trash."
 msgstr "Inga prislistor hittades i papperskorgen."
 
-#: src/Shop/PriceLists.php:236
+#: src/Shop/PriceLists.php:240
 msgid "Unframed"
 msgstr "Utan ram"
 
-#: src/Shop/PriceLists.php:263
+#: src/Shop/PriceLists.php:267
 msgid "Products"
 msgstr "Produkter"
 
-#: src/Shop/PriceLists.php:276
+#: src/Shop/PriceLists.php:280
 msgid "Digital download, full resolution"
 msgstr "Digital nedladdning, full upplösning"
 
-#: src/Shop/PriceLists.php:282
+#: src/Shop/PriceLists.php:286
 msgid "Digital download, web size (2048 px)"
 msgstr "Digital nedladdning, webbstorlek (2048 px)"
 
-#: src/Shop/PriceLists.php:289
+#: src/Shop/PriceLists.php:293
 msgid "Print 13 × 18 cm"
 msgstr "Print 13 × 18 cm"
 
-#: src/Shop/PriceLists.php:295
+#: src/Shop/PriceLists.php:299
 msgid "Print 20 × 30 cm"
 msgstr "Print 20 × 30 cm"
 
-#: src/Shop/PriceLists.php:301
+#: src/Shop/PriceLists.php:305
 msgid "Print 30 × 45 cm"
 msgstr "Print 30 × 45 cm"
 
-#: src/Shop/PriceLists.php:321
+#: src/Shop/PriceLists.php:325
 msgid "Customers choose one of these for each image. Downloads deliver the original file you uploaded, or a smaller copy of it when you set the longest side. You make and send the prints. Enter a price or configure print options. Use 0 for something free."
 msgstr "Kunderna väljer en av de här för varje bild. Nedladdningar levererar originalfilen du laddade upp, eller en mindre kopia av den om du anger längsta sidan. Du gör och skickar prints själv. Ange ett pris eller ställ in printalternativ. Använd 0 för något som är gratis."
 
-#: src/Shop/PriceLists.php:322
+#: src/Shop/PriceLists.php:326
 msgid "A package is a number of photos the customer chooses, each with the same download or print, for one price, e.g. “10 downloads”. Set the number to 0 for every photo in the gallery. Save new downloads and prints before choosing them in a package."
 msgstr "Ett paket är ett antal bilder som kunden väljer, var och en med samma nedladdning eller print, för ett pris, t.ex. ”10 nedladdningar”. Ange 0 som antal för alla bilder i galleriet. Spara nya nedladdningar och prints innan du väljer dem i ett paket."
 
-#: src/Shop/PriceLists.php:327
-#: src/Shop/PriceLists.php:402
+#: src/Shop/PriceLists.php:331
+#: src/Shop/PriceLists.php:406
 msgid "Name shown to customers"
 msgstr "Namn som visas för kunderna"
 
 #. translators: %s: currency code such as SEK
-#: src/Shop/PriceLists.php:331
+#: src/Shop/PriceLists.php:335
 #, php-format
 msgid "Price (%s)"
 msgstr "Pris (%s)"
 
-#: src/Shop/PriceLists.php:361
+#: src/Shop/PriceLists.php:365
 msgid "Add product"
 msgstr "Lägg till produkt"
 
-#: src/Shop/PriceLists.php:366
+#: src/Shop/PriceLists.php:370
 msgid "Prices include VAT, as set under SlashPhoto → Settings."
 msgstr "Priserna inkluderar moms, enligt SlashPhoto → Inställningar."
 
-#: src/Shop/PriceLists.php:367
+#: src/Shop/PriceLists.php:371
 msgid "VAT is added on top of these prices, as set under SlashPhoto → Settings."
 msgstr "Moms läggs på de här priserna, enligt SlashPhoto → Inställningar."
 
-#: src/Shop/PriceLists.php:397
+#: src/Shop/PriceLists.php:401
 msgid "Print"
 msgstr "Print"
 
-#: src/Shop/PriceLists.php:398
+#: src/Shop/PriceLists.php:402
 msgid "Package"
 msgstr "Paket"
 
-#: src/Shop/PriceLists.php:407
+#: src/Shop/PriceLists.php:411
 msgid "each with"
 msgstr "var och en med"
 
-#: src/Shop/PriceLists.php:415
+#: src/Shop/PriceLists.php:419
 msgid "Longest side (px)"
 msgstr "Längsta sida (px)"
 
-#: src/Shop/PriceLists.php:417
+#: src/Shop/PriceLists.php:421
 msgid "Leave empty for the full-size original. Smaller originals are never enlarged."
 msgstr "Lämna tomt för originalet i full storlek. Mindre original förstoras aldrig."
 
-#: src/Shop/PriceLists.php:420
+#: src/Shop/PriceLists.php:434
 msgid "Paper and framing options"
 msgstr "Alternativ för papper och inramning"
 
-#: src/Shop/PriceLists.php:423
+#: src/Shop/PriceLists.php:437
 msgid "Print template"
 msgstr "Printmall"
 
-#: src/Shop/PriceLists.php:425
+#: src/Shop/PriceLists.php:439
 msgid "Choose a template"
 msgstr "Välj en mall"
 
-#: src/Shop/PriceLists.php:430
+#: src/Shop/PriceLists.php:444
 msgid "Add combinations"
 msgstr "Lägg till kombinationer"
 
-#: src/Shop/PriceLists.php:434
+#: src/Shop/PriceLists.php:448
 msgid "Print options"
 msgstr "Printalternativ"
 
-#: src/Shop/PriceLists.php:436
+#: src/Shop/PriceLists.php:450
 msgid "Enter one available combination per line as Paper | Frame | Full price. Leave the frame blank for an unframed print. The first combination is selected by default."
 msgstr "Ange en tillgänglig kombination per rad som Papper | Ram | Fullt pris. Lämna ramen tom för en print utan ram. Den första kombinationen är förvald."
 
-#: src/Shop/PriceLists.php:440
+#: src/Shop/PriceLists.php:454
 #: templates/receipt.php:119
 msgid "Price"
 msgstr "Pris"
 
-#: src/Shop/PriceLists.php:529
+#: src/Shop/PriceLists.php:543
 msgid "The price list was kept as it was. Enter each paper and frame combination once, with a price of zero or more. A print can have up to 24 combinations and each paper or frame name can be up to 36 characters."
 msgstr "Prislistan behölls som den var. Ange varje kombination av papper och ram en gång, med ett pris på noll eller mer. En print kan ha upp till 24 kombinationer och varje namn på papper eller ram kan vara upp till 36 tecken."
 
-#: src/Shop/PriceLists.php:552
+#: src/Shop/PriceLists.php:566
 msgid "Combinations added. Enter a price for each new row."
 msgstr "Kombinationerna har lagts till. Ange ett pris för varje ny rad."
 
-#: src/Shop/PriceLists.php:553
+#: src/Shop/PriceLists.php:567
 msgid "These combinations are already in this print."
 msgstr "De här kombinationerna finns redan för den här printen."
 
-#: src/Shop/PriceLists.php:554
+#: src/Shop/PriceLists.php:568
 msgid "This template would exceed the maximum of 24 combinations per print."
 msgstr "Mallen skulle överskrida högst 24 kombinationer per print."
 
-#: src/Shop/PriceLists.php:555
+#: src/Shop/PriceLists.php:569
 msgid "Enter a price for every paper and frame combination before saving."
 msgstr "Ange ett pris för varje kombination av papper och ram innan du sparar."
 
@@ -3616,7 +3614,7 @@ msgstr "Faktura %d"
 msgid "No payment needed"
 msgstr "Ingen betalning behövs"
 
-#: src/Shop/Shop.php:268
+#: src/Shop/Shop.php:281
 msgid "Gift cards cannot be paid for with a gift card."
 msgstr "Presentkort kan inte betalas med ett presentkort."
 
@@ -3809,20 +3807,20 @@ msgid "Ordering is not open at the moment."
 msgstr "Det går inte att beställa just nu."
 
 #. translators: %s: link to the terms of purchase
-#: templates/checkout.php:153
+#: templates/checkout.php:161
 #, php-format
 msgid "I accept the %s"
 msgstr "Jag godkänner %s"
 
-#: templates/checkout.php:154
+#: templates/checkout.php:162
 msgid "terms of purchase"
 msgstr "köpvillkoren"
 
-#: templates/checkout.php:162
+#: templates/checkout.php:170
 msgid "Place order"
 msgstr "Lägg ordern"
 
-#: templates/checkout.php:163
+#: templates/checkout.php:171
 msgid "We store your details with the order only to deliver it and for our bookkeeping. Orders that are never paid are deleted after a week."
 msgstr "Vi sparar dina uppgifter med ordern bara för att leverera den och för vår bokföring. Ordrar som aldrig betalas raderas efter en vecka."
 
@@ -3932,25 +3930,25 @@ msgstr "Nedladdningsperioden för ordern är slut. Kontakta oss om du behöver f
 msgid "Downloads appear here when the payment has arrived."
 msgstr "Nedladdningarna visas här när betalningen har kommit in."
 
-#: templates/order.php:121
+#: templates/order.php:148
 msgid "Your gift cards"
 msgstr "Dina presentkort"
 
 #. translators: %s: amount left
-#: templates/order.php:134
+#: templates/order.php:161
 #, php-format
 msgid "%s left"
 msgstr "%s kvar"
 
-#: templates/order.php:152
+#: templates/order.php:179
 msgid "Receipt (print or save as PDF)"
 msgstr "Kvitto (skriv ut eller spara som PDF)"
 
-#: templates/order.php:152
+#: templates/order.php:179
 msgid "Invoice (print or save as PDF)"
 msgstr "Faktura (skriv ut eller spara som PDF)"
 
-#: templates/order.php:156
+#: templates/order.php:183
 msgid "Keep the link to this page to yourself: anyone who has it can see the order and download the files."
 msgstr "Behåll länken till den här sidan för dig själv: alla som har den kan se ordern och ladda ner filerna."
 
@@ -4281,3 +4279,176 @@ msgstr "panorama"
 msgctxt "block keyword"
 msgid "360"
 msgstr "360"
+
+#: src/Admin/GalleryWorkspace.php:277
+msgid "Search photos"
+msgstr "Sök bilder"
+
+#: src/Admin/GalleryWorkspace.php:279
+msgid "Search"
+msgstr "Sök"
+
+#: src/Admin/GalleryWorkspace.php:281
+msgid "Show all"
+msgstr "Visa alla"
+
+#: src/Admin/GalleryWorkspace.php:284
+msgid "Title, caption, file name, keywords, camera, lens, copyright or date (2025-07-31). Several words must all match."
+msgstr "Titel, bildtext, filnamn, nyckelord, kamera, objektiv, upphovsrätt eller datum (2025-07-31). Flera ord måste alla matcha."
+
+#. translators: 1: number of matching photos, 2: photos in the gallery, 3: search text
+#: src/Admin/GalleryWorkspace.php:289
+#, php-format
+msgid "Photos matching “%3$s”: %1$d of %2$d."
+msgstr "Bilder som matchar ”%3$s”: %1$d av %2$d."
+
+#. translators: %s: licence name
+#: src/Admin/OrdersPage.php:290
+#: src/Frontend/Assets.php:283
+#: src/Shop/Emails.php:165
+#: templates/order.php:76
+#: templates/receipt.php:129
+#, php-format
+msgid "Licence: %s"
+msgstr "Licens: %s"
+
+#: src/Admin/SettingsPage.php:106
+#: src/Admin/SettingsPage.php:285
+msgid "Import folder"
+msgstr "Importmapp"
+
+#: src/Admin/SettingsPage.php:215
+msgid "Quality"
+msgstr "Kvalitet"
+
+#: src/Admin/SettingsPage.php:219
+msgid "File type"
+msgstr "Filtyp"
+
+#: src/Admin/SettingsPage.php:224
+msgid "JPEG (works everywhere)"
+msgstr "JPEG (fungerar överallt)"
+
+#: src/Admin/SettingsPage.php:225
+msgid "WebP (smaller files)"
+msgstr "WebP (mindre filer)"
+
+#: src/Admin/SettingsPage.php:226
+msgid "AVIF (smallest files)"
+msgstr "AVIF (minsta filerna)"
+
+#: src/Admin/SettingsPage.php:230
+msgid "not supported by this server"
+msgstr "stöds inte av den här servern"
+
+#: src/Admin/SettingsPage.php:233
+msgid "For the display copy and all sizes of JPEG uploads. All current browsers show WebP and AVIF. Originals and downloads keep their own format. Applies to new uploads; use Make new copies for earlier photos."
+msgstr "För visningskopian och alla storlekar av JPEG-uppladdningar. Alla aktuella webbläsare visar WebP och AVIF. Original och nedladdningar behåller sitt eget format. Gäller nya uppladdningar; använd Gör nya kopior för tidigare bilder."
+
+#: src/Admin/SettingsPage.php:286
+msgid "Copy originals into a folder on the server, with SFTP, FTP, a synced folder or a script, instead of uploading them in the browser. Each sub-folder is a gallery: name it after the gallery’s ID or slug to add photos to it, or give it a new name to create an unpublished gallery with that title. Photos are imported like uploads and removed from the folder; other files are left alone."
+msgstr "Kopiera original till en mapp på servern, med SFTP, FTP, en synkroniserad mapp eller ett skript, i stället för att ladda upp dem i webbläsaren. Varje undermapp är ett galleri: ge den galleriets ID eller slug för att lägga till bilder i det, eller ett nytt namn för att skapa ett opublicerat galleri med den titeln. Bilderna importeras som uppladdningar och tas bort från mappen; andra filer lämnas orörda."
+
+#: src/Admin/SettingsPage.php:289
+msgid "Folder"
+msgstr "Mapp"
+
+#: src/Admin/SettingsPage.php:292
+msgid "Inside the uploads folder it is protected against web access on Apache and LiteSpeed. To use a folder outside the web root, define SLASHPHOTO_INBOX_DIR in wp-config.php."
+msgstr "Inuti uppladdningsmappen skyddas den mot webbåtkomst på Apache och LiteSpeed. För att använda en mapp utanför webbroten definierar du SLASHPHOTO_INBOX_DIR i wp-config.php."
+
+#: src/Admin/SettingsPage.php:296
+msgid "Automatic import"
+msgstr "Automatisk import"
+
+#: src/Admin/SettingsPage.php:298
+msgid "Look for new photos every five minutes"
+msgstr "Leta efter nya bilder var femte minut"
+
+#: src/Admin/SettingsPage.php:299
+msgid "Files changed in the last minute wait for the next run, so copies in progress are not imported half-way. New galleries belong to you. WP-CLI: wp slashphoto inbox."
+msgstr "Filer som ändrats den senaste minuten väntar till nästa körning, så att kopior som pågår inte importeras halvvägs. Nya gallerier tillhör dig. WP-CLI: wp slashphoto inbox."
+
+#: src/Admin/SettingsPage.php:304
+msgid "Last run"
+msgstr "Senaste körning"
+
+#. translators: 1: date and time, 2: photos imported, 3: photos waiting, 4: files ignored
+#: src/Admin/SettingsPage.php:313
+#, php-format
+msgid "%1$s: %2$d imported, %3$d waiting, %4$d other files left alone."
+msgstr "%1$s: %2$d importerade, %3$d väntar, %4$d andra filer lämnades orörda."
+
+#: src/Admin/SettingsPage.php:326
+msgid "Not imported (moved to the _failed folder):"
+msgstr "Inte importerade (flyttade till mappen _failed):"
+
+#: src/Admin/SettingsPage.php:385
+msgid "Import now"
+msgstr "Importera nu"
+
+#: src/Gallery/Inbox.php:72
+msgid "Every five minutes"
+msgstr "Var femte minut"
+
+#: src/Gallery/Inbox.php:140
+msgid "An import is already running."
+msgstr "En import pågår redan."
+
+#: src/Gallery/Inbox.php:144
+msgid "The import folder cannot be created or written."
+msgstr "Importmappen kan inte skapas eller skrivas till."
+
+#: src/Gallery/Inbox.php:213
+msgid "The file could not be read."
+msgstr "Filen kunde inte läsas."
+
+#: src/Shop/CheckoutRest.php:250
+msgid "Accept the licence terms of the downloads to place the order."
+msgstr "Godkänn licensvillkoren för nedladdningarna för att lägga ordern."
+
+#: src/Shop/Licences.php:44
+#: src/Shop/Licences.php:52
+msgid "Licences"
+msgstr "Licenser"
+
+#: src/Shop/Licences.php:45
+#: src/Shop/PriceLists.php:424
+msgid "Licence"
+msgstr "Licens"
+
+#: src/Shop/Licences.php:46
+msgid "Add licence"
+msgstr "Lägg till licens"
+
+#: src/Shop/Licences.php:47
+msgid "Edit licence"
+msgstr "Redigera licens"
+
+#: src/Shop/Licences.php:48
+msgid "New licence"
+msgstr "Ny licens"
+
+#: src/Shop/Licences.php:49
+msgid "Search licences"
+msgstr "Sök licenser"
+
+#: src/Shop/Licences.php:50
+msgid "No licences found."
+msgstr "Inga licenser hittades."
+
+#: src/Shop/Licences.php:51
+msgid "No licences found in Trash."
+msgstr "Inga licenser hittades i papperskorgen."
+
+#: src/Shop/Licences.php:54
+msgid "Terms customers accept when they buy a download."
+msgstr "Villkor som kunderna godkänner när de köper en nedladdning."
+
+#: templates/checkout.php:149
+msgid "I accept the licence terms for the downloads:"
+msgstr "Jag godkänner licensvillkoren för nedladdningarna:"
+
+#: templates/order.php:137
+msgid "Licence terms"
+msgstr "Licensvillkor"

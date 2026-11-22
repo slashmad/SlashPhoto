@@ -69,6 +69,14 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 				<span class="slashphoto-order__what">
 					<span class="slashphoto-order__name"><?php echo esc_html( $slashphoto_item['name'] ); ?></span>
 					<span class="slashphoto-order__file"><?php echo esc_html( $slashphoto_item['file_label'] ); ?></span>
+					<?php if ( '' !== (string) ( $slashphoto_item['licence_name'] ?? '' ) && ! $slashphoto_item['parent_id'] ) : ?>
+						<span class="slashphoto-order__file">
+							<?php
+							/* translators: %s: licence name */
+							echo esc_html( sprintf( __( 'Licence: %s', 'slashphoto' ), $slashphoto_item['licence_name'] ) );
+							?>
+						</span>
+					<?php endif; ?>
 				</span>
 				<span class="slashphoto-order__qty"><?php echo esc_html( $slashphoto_item['parent_id'] ? '' : '× ' . $slashphoto_item['quantity'] ); ?></span>
 				<span class="slashphoto-order__price"><?php echo esc_html( $slashphoto_item['parent_id'] ? __( 'In package', 'slashphoto' ) : $slashphoto_money( $slashphoto_item['total'] ) ); ?></span>
@@ -115,6 +123,25 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 			<dd class="slashphoto-order__total"><?php echo esc_html( $slashphoto_money( \SlashPhoto\Shop\GiftCards::due( $slashphoto_order ) ) ); ?></dd>
 		<?php endif; ?>
 	</dl>
+
+	<?php
+	// The licence texts as accepted with this order, once each.
+	$slashphoto_licences = [];
+	foreach ( $slashphoto_items as $slashphoto_item ) {
+		if ( '' !== (string) ( $slashphoto_item['licence_name'] ?? '' ) ) {
+			$slashphoto_licences[ $slashphoto_item['licence_name'] . "\0" . $slashphoto_item['licence_text'] ] = $slashphoto_item;
+		}
+	}
+	?>
+	<?php if ( $slashphoto_licences ) : ?>
+		<h3 class="slashphoto-order__subtitle"><?php esc_html_e( 'Licence terms', 'slashphoto' ); ?></h3>
+		<?php foreach ( $slashphoto_licences as $slashphoto_item ) : ?>
+			<details class="slashphoto-order__licence">
+				<summary><?php echo esc_html( (string) $slashphoto_item['licence_name'] ); ?></summary>
+				<p class="slashphoto-checkout__licence-text"><?php echo esc_html( (string) $slashphoto_item['licence_text'] ); ?></p>
+			</details>
+		<?php endforeach; ?>
+	<?php endif; ?>
 
 	<?php $slashphoto_codes = in_array( $slashphoto_order['status'], [ 'paid', 'completed' ], true ) ? \SlashPhoto\Shop\GiftCards::codes( $slashphoto_order ) : []; ?>
 	<?php if ( $slashphoto_codes ) : ?>

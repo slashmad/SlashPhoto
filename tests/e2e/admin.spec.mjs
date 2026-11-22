@@ -211,7 +211,7 @@ test( 'settings tabs show only their own fields and preview the full watermark',
 		expect( bounds.width / bounds.height ).toBeCloseTo( 4, 1 );
 		await page.locator( '.wrap' ).screenshot( { path: testInfo.outputPath( 'watermark-settings.png' ) } );
 		await tabs.getByRole( 'link', { name: 'Display copies' } ).click();
-		await expect( page.getByLabel( 'JPEG quality' ) ).toBeVisible();
+		await expect( page.getByLabel( 'Quality', { exact: true } ) ).toBeVisible();
 		await expect( page.getByLabel( 'Watermark image' ) ).toHaveCount( 0 );
 		await tabs.getByRole( 'link', { name: 'SnapOtter' } ).click();
 		await expect( page.getByRole( 'heading', { name: 'SnapOtter connection' } ) ).toBeVisible();

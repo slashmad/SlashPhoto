@@ -143,6 +143,24 @@ SlashPhoto does not decide which rules apply to you (thresholds, reverse
 charge for businesses, exports outside the EU); check with your tax
 authority or accountant and enter the rates accordingly.
 
+## Licences
+
+Under **SlashPhoto → Licences** write the terms of use for downloads, for
+example "Personal use" and "Commercial use", each as a title and text.
+In a price list, a download can name a licence; sell the same photo under
+two licences by adding two downloads with different prices.
+
+- Customers see the licence under the download in the lightbox. With a
+  licensed download in the cart, checkout lists the licences (the full
+  text opens on click) and the order needs the box "I accept the licence
+  terms for the downloads".
+- Each order line keeps a copy of the licence name and text, so editing or
+  removing a licence later never changes what a customer agreed to. The
+  order page, receipt, order email and order screen show the licence;
+  the order page also shows the full terms.
+- Photos in a package get the licence of the download the package
+  includes. Prints have no licence.
+
 ## Gift cards
 
 Switch them on under **Shop settings → Gift cards**, enter the amounts

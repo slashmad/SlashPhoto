@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Schema {
 
-	public const VERSION = 7;
+	public const VERSION = 8;
 	public const OPTION  = 'slashphoto_db_version';
 
 	/**
@@ -100,7 +100,7 @@ final class Schema {
 		// Version 2 added discount, coupon and parent_id (packages); version 3
 		// the visitor log and anonymous daily view counts (D-021); version 4
 		// print option snapshots; version 5 download_size (D-033); version 6
-		// tax_country (D-036); version 7 gift cards (D-037).
+		// tax_country (D-036); version 7 gift cards (D-037); version 8 licences (D-043).
 		// dbDelta needs two spaces after PRIMARY KEY and one field per line.
 		dbDelta(
 			"CREATE TABLE {$orders} (
@@ -154,6 +154,8 @@ CREATE TABLE {$items} (
 	print_paper varchar(36) NOT NULL DEFAULT '',
 	print_frame varchar(36) NOT NULL DEFAULT '',
 	download_size int(10) unsigned NOT NULL DEFAULT 0,
+	licence_name varchar(200) NOT NULL DEFAULT '',
+	licence_text text NULL,
 	quantity int(11) NOT NULL DEFAULT 1,
 	unit_price bigint(20) NOT NULL DEFAULT 0,
 	total bigint(20) NOT NULL DEFAULT 0,

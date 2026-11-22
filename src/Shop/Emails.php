@@ -160,7 +160,9 @@ final class Emails {
 		foreach ( Orders::items( (int) $order['id'] ) as $item ) {
 			$lines[] = $item['parent_id']
 				? sprintf( '    – %s', $item['file_label'] )
-				: sprintf( '%d × %s – %s: %s', $item['quantity'], $item['name'], $item['file_label'], $money( $item['total'] ) );
+				: sprintf( '%d × %s – %s: %s', $item['quantity'], $item['name'], $item['file_label'], $money( $item['total'] ) )
+					/* translators: %s: licence name */
+					. ( '' !== (string) ( $item['licence_name'] ?? '' ) ? ' (' . sprintf( __( 'Licence: %s', 'slashphoto' ), $item['licence_name'] ) . ')' : '' );
 		}
 		if ( $order['discount'] > 0 ) {
 			$lines[] = '' !== (string) $order['coupon']

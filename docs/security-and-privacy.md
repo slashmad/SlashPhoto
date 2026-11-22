@@ -141,6 +141,32 @@ only the user who started an upload can continue it, and abandoned parts
 are deleted after a day. The file type is checked by extension when the
 upload starts and by content when it is imported.
 
+Display copies and sizes of JPEG uploads can be written as WebP or AVIF
+(Settings → Display copies → File type) when the server's image library
+supports it; the choice is limited to galleries, and originals, PNG files
+and downloads keep their own format. Photo metadata in the display copy
+follows WordPress' usual stripping; the original keeps everything.
+
+## Import folder
+
+Settings → Import folder imports originals copied into
+`wp-content/uploads/slashphoto-inbox/<gallery ID or slug>/` (or the folder
+in the `SLASHPHOTO_INBOX_DIR` constant, which can be outside the web root).
+
+- The folder gets the same deny rules as originals folders; on nginx add
+  the deny rule for it as well, or use a folder outside the web root.
+- Only photo file types are imported; other files are left in place. A
+  file must be unchanged for a minute before it is imported.
+- The importer works on a copy and removes the file only after the photo
+  is in the gallery. Files that fail are moved to `_failed/<folder>/` and
+  listed in the last-run report.
+- A folder that does not match a gallery creates an unpublished draft, so
+  new photos never become public without you. Existing galleries keep
+  their access rules.
+- Automatic import runs every five minutes with WP-Cron when switched on
+  (off by default); "Import now" and `wp slashphoto inbox [--dry-run]` run
+  it on demand. Only administrators can change it.
+
 ## SnapOtter
 
 When a [SnapOtter](https://github.com/snapotter-hq/SnapOtter) server is

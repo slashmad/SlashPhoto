@@ -353,6 +353,12 @@ function openBuyPanel( dialog, opener, id, products ) {
 			<span class="slashphoto-lightbox__product-actions"></span>
 		`;
 		row.querySelector( '.slashphoto-lightbox__product-name' ).textContent = product.name;
+		if ( product.licence ) {
+			const licence = document.createElement( 'small' );
+			licence.className = 'slashphoto-lightbox__product-licence';
+			licence.textContent = format( i18n.licence || 'Licence: %s', product.licence );
+			row.querySelector( '.slashphoto-lightbox__product-name' ).append( document.createElement( 'br' ), licence );
+		}
 		const price = row.querySelector( '.slashphoto-lightbox__product-price' );
 		price.textContent = product.price;
 		const actions = row.querySelector( '.slashphoto-lightbox__product-actions' );
@@ -488,6 +494,7 @@ class Checkout {
 		this.coupon = root.querySelector( '[data-slashphoto-coupon]' );
 		this.gift = root.querySelector( '[data-slashphoto-gift-card-code]' );
 		this.residence = root.querySelector( '[data-slashphoto-residence]' );
+		this.licences = root.querySelector( '[data-slashphoto-licences]' );
 		this.quote = null;
 		this.notice = '';
 		this.busy = false;
@@ -672,6 +679,24 @@ class Checkout {
 		if ( this.form ) {
 			this.form.hidden = false;
 			this.address.hidden = ! quote.needsShipping;
+			if ( this.licences ) {
+				const list = this.licences.querySelector( '[data-slashphoto-licence-list]' );
+				const box = this.licences.querySelector( 'input[name="licences"]' );
+				list.replaceChildren(
+					...( quote.licences || [] ).map( ( licence ) => {
+						const details = document.createElement( 'details' );
+						const summary = document.createElement( 'summary' );
+						const text = document.createElement( 'p' );
+						summary.textContent = licence.name;
+						text.className = 'slashphoto-checkout__licence-text';
+						text.textContent = licence.text;
+						details.append( summary, text );
+						return details;
+					} )
+				);
+				this.licences.hidden = ! quote.licences?.length;
+				box.required = !! quote.licences?.length;
+			}
 			// Nothing to pay (a gift card covers it, or a free order): no payment method.
 			const gateways = this.form.querySelector( '[data-slashphoto-gateways]' );
 			if ( gateways ) {
@@ -846,6 +871,7 @@ class Checkout {
 			website: value( 'website' ),
 			gateway: this.form.querySelector( 'input[name="gateway"]:checked' )?.value || '',
 			terms: !! this.form.querySelector( 'input[name="terms"]' )?.checked,
+			licences: !! this.form.querySelector( 'input[name="licences"]' )?.checked,
 		};
 		if ( this.quote.needsShipping ) {
 			body.address = { line1: value( 'line1' ), line2: value( 'line2' ), postcode: value( 'postcode' ), city: value( 'city' ), country: value( 'country' ) };

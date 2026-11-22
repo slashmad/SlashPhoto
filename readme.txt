@@ -77,6 +77,10 @@ No. Galleries, images and orders are kept when the plugin is removed.
 
 = 0.1.0-dev =
 * Swedish translation (sv_SE) included.
+* Display copies as WebP or AVIF.
+* Photo search by keywords, camera, lens and date in the gallery workspace.
+* Import folder: photos copied to the server with SFTP or FTP are added to galleries automatically.
+* Licences for downloads, accepted at checkout and kept with each order.
 * Client sign-in links, reprocessing of existing photos, VAT by country with a VAT report, and gift cards.
 * Price list field in the classic editor.
 * Print options for paper and framing with a price per combination.

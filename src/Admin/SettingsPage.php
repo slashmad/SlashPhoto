@@ -103,6 +103,7 @@ final class SettingsPage {
 			'copies'    => __( 'Display copies', 'slashphoto' ),
 			'snapotter' => __( 'SnapOtter', 'slashphoto' ),
 			'proofing'  => __( 'Proofing', 'slashphoto' ),
+			'inbox'     => __( 'Import folder', 'slashphoto' ),
 			'visitors'  => __( 'Visitors', 'slashphoto' ),
 		];
 		$tab      = AdminTabs::active( $tabs );
@@ -211,8 +212,26 @@ final class SettingsPage {
 							</td>
 						</tr>
 						<tr>
-							<th scope="row"><label for="slashphoto-display-quality"><?php esc_html_e( 'JPEG quality', 'slashphoto' ); ?></label></th>
+							<th scope="row"><label for="slashphoto-display-quality"><?php esc_html_e( 'Quality', 'slashphoto' ); ?></label></th>
 							<td><input type="number" id="slashphoto-display-quality" min="60" max="100" name="<?php echo esc_attr( $name ); ?>[display_quality]" value="<?php echo esc_attr( (string) $settings['display_quality'] ); ?>"></td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="slashphoto-display-format"><?php esc_html_e( 'File type', 'slashphoto' ); ?></label></th>
+							<td>
+								<select id="slashphoto-display-format" name="<?php echo esc_attr( $name ); ?>[display_format]">
+									<?php
+									$slashphoto_formats = [
+										'jpeg' => __( 'JPEG (works everywhere)', 'slashphoto' ),
+										'webp' => __( 'WebP (smaller files)', 'slashphoto' ),
+										'avif' => __( 'AVIF (smallest files)', 'slashphoto' ),
+									];
+									foreach ( \SlashPhoto\Media\DisplayCopy::formats() as $slashphoto_key => $slashphoto_ok ) :
+										?>
+										<option value="<?php echo esc_attr( $slashphoto_key ); ?>" <?php selected( $settings['display_format'], $slashphoto_key ); ?> <?php disabled( ! $slashphoto_ok ); ?>><?php echo esc_html( $slashphoto_formats[ $slashphoto_key ] . ( $slashphoto_ok ? '' : ' – ' . __( 'not supported by this server', 'slashphoto' ) ) ); ?></option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description"><?php esc_html_e( 'For the display copy and all sizes of JPEG uploads. All current browsers show WebP and AVIF. Originals and downloads keep their own format. Applies to new uploads; use Make new copies for earlier photos.', 'slashphoto' ); ?></p>
+							</td>
 						</tr>
 						<tr>
 							<th scope="row"><?php esc_html_e( 'Upload size', 'slashphoto' ); ?></th>
@@ -261,6 +280,60 @@ final class SettingsPage {
 							</td>
 						</tr>
 					</table>
+				<?php elseif ( 'inbox' === $tab ) : ?>
+					<?php $slashphoto_report = get_option( \SlashPhoto\Gallery\Inbox::STATUS ); ?>
+					<h2><?php esc_html_e( 'Import folder', 'slashphoto' ); ?></h2>
+					<p><?php esc_html_e( 'Copy originals into a folder on the server, with SFTP, FTP, a synced folder or a script, instead of uploading them in the browser. Each sub-folder is a gallery: name it after the gallery’s ID or slug to add photos to it, or give it a new name to create an unpublished gallery with that title. Photos are imported like uploads and removed from the folder; other files are left alone.', 'slashphoto' ); ?></p>
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Folder', 'slashphoto' ); ?></th>
+							<td>
+								<code><?php echo esc_html( \SlashPhoto\Gallery\Inbox::dir() ); ?></code>
+								<p class="description"><?php esc_html_e( 'Inside the uploads folder it is protected against web access on Apache and LiteSpeed. To use a folder outside the web root, define SLASHPHOTO_INBOX_DIR in wp-config.php.', 'slashphoto' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Automatic import', 'slashphoto' ); ?></th>
+							<td>
+								<label><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[inbox_enabled]" value="1" <?php checked( $settings['inbox_enabled'] ); ?>> <?php esc_html_e( 'Look for new photos every five minutes', 'slashphoto' ); ?></label>
+								<p class="description"><?php esc_html_e( 'Files changed in the last minute wait for the next run, so copies in progress are not imported half-way. New galleries belong to you. WP-CLI: wp slashphoto inbox.', 'slashphoto' ); ?></p>
+							</td>
+						</tr>
+						<?php if ( is_array( $slashphoto_report ) ) : ?>
+							<tr>
+								<th scope="row"><?php esc_html_e( 'Last run', 'slashphoto' ); ?></th>
+								<td>
+									<p>
+										<?php
+										echo esc_html(
+											'' !== (string) ( $slashphoto_report['error'] ?? '' )
+												? (string) $slashphoto_report['error']
+												: sprintf(
+													/* translators: 1: date and time, 2: photos imported, 3: photos waiting, 4: files ignored */
+													__( '%1$s: %2$d imported, %3$d waiting, %4$d other files left alone.', 'slashphoto' ),
+													wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $slashphoto_report['time'] ),
+													(int) $slashphoto_report['imported'],
+													(int) $slashphoto_report['waiting'],
+													(int) ( $slashphoto_report['ignored'] ?? 0 )
+												)
+										);
+										?>
+									</p>
+									<?php foreach ( (array) ( $slashphoto_report['galleries'] ?? [] ) as $slashphoto_gallery => $slashphoto_count ) : ?>
+										<p><a href="<?php echo esc_url( \SlashPhoto\Admin\GalleryWorkspace::url( (int) $slashphoto_gallery ) ); ?>"><?php echo esc_html( get_the_title( (int) $slashphoto_gallery ) ); ?></a> <?php echo esc_html( '+' . (int) $slashphoto_count ); ?></p>
+									<?php endforeach; ?>
+									<?php if ( ! empty( $slashphoto_report['failed'] ) ) : ?>
+										<p><?php esc_html_e( 'Not imported (moved to the _failed folder):', 'slashphoto' ); ?></p>
+										<ul>
+											<?php foreach ( (array) $slashphoto_report['failed'] as $slashphoto_failure ) : ?>
+												<li><code><?php echo esc_html( (string) $slashphoto_failure['file'] ); ?></code> <?php echo esc_html( (string) $slashphoto_failure['message'] ); ?></li>
+											<?php endforeach; ?>
+										</ul>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endif; ?>
+					</table>
 				<?php elseif ( 'visitors' === $tab ) : ?>
 					<h2><?php esc_html_e( 'Visitors', 'slashphoto' ); ?></h2>
 					<p><?php esc_html_e( 'SlashPhoto never stores IP addresses or browser details. What it can store about visitors is listed here and in the suggested privacy policy text.', 'slashphoto' ); ?></p>
@@ -305,6 +378,13 @@ final class SettingsPage {
 			 */
 			do_action( 'slashphoto_settings_after_form', $tab );
 			?>
+			<?php if ( 'inbox' === $tab ) : ?>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+					<input type="hidden" name="action" value="<?php echo esc_attr( \SlashPhoto\Gallery\Inbox::ACTION ); ?>">
+					<?php wp_nonce_field( \SlashPhoto\Gallery\Inbox::ACTION ); ?>
+					<?php submit_button( __( 'Import now', 'slashphoto' ), 'secondary', 'submit', false ); ?>
+				</form>
+			<?php endif; ?>
 		</div>
 		<?php
 	}

@@ -60,6 +60,23 @@
 	margin-block-end: 0.75rem;
 }
 
+.slashphoto-workspace__search {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.slashphoto-workspace__search input[type="search"] {
+	flex: 1 1 14rem;
+	max-width: 24rem;
+}
+
+.slashphoto-workspace__photo-meta {
+	display: block;
+	color: #50575e;
+}
+
 .slashphoto-workspace__photo-actions {
 	display: flex;
 	flex-wrap: wrap;

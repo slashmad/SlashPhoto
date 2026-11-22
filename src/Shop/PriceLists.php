@@ -189,6 +189,10 @@ final class PriceLists {
 				if ( $size ) {
 					$product['size'] = $size;
 				}
+				$licence = absint( $row['licence'] ?? 0 );
+				if ( $licence ) {
+					$product['licence'] = $licence;
+				}
 			}
 			if ( 'print' === $kind && ! empty( $row['variants'] ) ) {
 				$product['variants'] = self::clean_variants( (array) $row['variants'] );
@@ -415,6 +419,16 @@ final class PriceLists {
 					<label for="slashphoto-size-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Longest side (px)', 'slashphoto' ); ?></label>
 					<input type="number" min="<?php echo esc_attr( (string) DownloadSizes::MIN ); ?>" max="<?php echo esc_attr( (string) DownloadSizes::MAX ); ?>" step="1" style="width:7em" id="slashphoto-size-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[size]" value="<?php echo esc_attr( ! empty( $row['size'] ) ? (string) $row['size'] : '' ); ?>" placeholder="<?php esc_attr_e( 'Original', 'slashphoto' ); ?>" aria-describedby="slashphoto-size-help-<?php echo esc_attr( $index ); ?>">
 					<span class="description" id="slashphoto-size-help-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Leave empty for the full-size original. Smaller originals are never enlarged.', 'slashphoto' ); ?></span>
+					<?php $licences = Licences::all(); ?>
+					<?php if ( $licences || ! empty( $row['licence'] ) ) : ?>
+						<label for="slashphoto-licence-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Licence', 'slashphoto' ); ?></label>
+						<select id="slashphoto-licence-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[licence]">
+							<option value="0"><?php esc_html_e( 'None', 'slashphoto' ); ?></option>
+							<?php foreach ( $licences as $licence_id => $licence_name ) : ?>
+								<option value="<?php echo esc_attr( (string) $licence_id ); ?>" <?php selected( (int) ( $row['licence'] ?? 0 ), $licence_id ); ?>><?php echo esc_html( $licence_name ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					<?php endif; ?>
 				</p>
 				<details data-slashphoto-print-options <?php echo 'print' === $row['kind'] ? '' : 'hidden'; ?>>
 					<summary><?php esc_html_e( 'Paper and framing options', 'slashphoto' ); ?></summary>

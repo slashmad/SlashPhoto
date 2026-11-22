@@ -11,6 +11,7 @@ use SlashPhoto\Access\Access;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Gallery\GalleryRepository;
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Media\PhotoSearch;
 use SlashPhoto\Media\Reprocessor;
 use SlashPhoto\Shop\PriceLists;
 use WP_Post;
@@ -230,13 +231,18 @@ final class GalleryWorkspace {
 		$arrange = isset( $_GET['arrange'] );
 		$result  = isset( $_GET['photo_order'] ) ? sanitize_key( wp_unslash( $_GET['photo_order'] ) ) : '';
 		$page    = isset( $_GET['photo_page'] ) ? absint( $_GET['photo_page'] ) : 1;
+		$search  = isset( $_GET['photo_search'] ) && ! $arrange ? mb_substr( sanitize_text_field( wp_unslash( $_GET['photo_search'] ) ), 0, 100 ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		$images = $this->repository->images( $gallery->ID );
+		$all    = count( $images );
+		if ( '' !== $search ) {
+			$images = PhotoSearch::filter( $images, $search );
+		}
 		$total  = count( $images );
 		$pages  = max( 1, (int) ceil( $total / self::PHOTOS_PER_PAGE ) );
 		$page   = max( 1, min( $page, $pages ) );
 		$offset = ( $page - 1 ) * self::PHOTOS_PER_PAGE;
-		$base   = self::url( $gallery->ID );
+		$base   = '' !== $search ? add_query_arg( 'photo_search', rawurlencode( $search ), self::url( $gallery->ID ) ) : self::url( $gallery->ID );
 		$order  = add_query_arg( 'arrange', 1, $base );
 		$token  = $arrange ? GalleryRepository::order_token( $images ) : '';
 		?>
@@ -256,13 +262,35 @@ final class GalleryWorkspace {
 					<a class="button" href="<?php echo esc_url( add_query_arg( 'photo_page', $page, $base ) ); ?>"><?php esc_html_e( 'Done', 'slashphoto' ); ?></a>
 				<?php else : ?>
 					<div class="slashphoto-workspace__photo-actions">
-						<a class="button" data-reorder-photos href="<?php echo esc_url( add_query_arg( 'photo_page', $page, $order ) ); ?>" <?php echo $total < 2 ? 'hidden' : ''; ?>><?php esc_html_e( 'Reorder photos', 'slashphoto' ); ?></a>
+						<a class="button" data-reorder-photos href="<?php echo esc_url( add_query_arg( 'photo_page', $page, $order ) ); ?>" <?php echo $total < 2 || '' !== $search ? 'hidden' : ''; ?>><?php esc_html_e( 'Reorder photos', 'slashphoto' ); ?></a>
 						<?php if ( $total && Reprocessor::can( $gallery->ID ) ) : ?>
 							<button type="button" class="button" data-reprocess-photos data-gallery="<?php echo esc_attr( (string) $gallery->ID ); ?>" aria-describedby="slashphoto-reprocess-help"><?php esc_html_e( 'Make new copies', 'slashphoto' ); ?></button>
 						<?php endif; ?>
 					</div>
 				<?php endif; ?>
 			</div>
+			<?php if ( ! $arrange && $all ) : ?>
+				<form class="slashphoto-workspace__search" method="get" action="<?php echo esc_url( admin_url( 'edit.php' ) ); ?>" role="search">
+					<input type="hidden" name="post_type" value="<?php echo esc_attr( PostType::POST_TYPE ); ?>">
+					<input type="hidden" name="page" value="<?php echo esc_attr( self::SLUG ); ?>">
+					<input type="hidden" name="gallery_id" value="<?php echo esc_attr( (string) $gallery->ID ); ?>">
+					<label for="slashphoto-photo-search"><?php esc_html_e( 'Search photos', 'slashphoto' ); ?></label>
+					<input type="search" id="slashphoto-photo-search" name="photo_search" value="<?php echo esc_attr( $search ); ?>" aria-describedby="slashphoto-photo-search-help">
+					<button type="submit" class="button"><?php esc_html_e( 'Search', 'slashphoto' ); ?></button>
+					<?php if ( '' !== $search ) : ?>
+						<a href="<?php echo esc_url( self::url( $gallery->ID ) ); ?>"><?php esc_html_e( 'Show all', 'slashphoto' ); ?></a>
+					<?php endif; ?>
+				</form>
+				<p class="description" id="slashphoto-photo-search-help"><?php esc_html_e( 'Title, caption, file name, keywords, camera, lens, copyright or date (2025-07-31). Several words must all match.', 'slashphoto' ); ?></p>
+				<?php if ( '' !== $search ) : ?>
+					<p role="status">
+						<?php
+						/* translators: 1: number of matching photos, 2: photos in the gallery, 3: search text */
+						echo esc_html( sprintf( __( 'Photos matching “%3$s”: %1$d of %2$d.', 'slashphoto' ), $total, $all, $search ) );
+						?>
+					</p>
+				<?php endif; ?>
+			<?php endif; ?>
 			<?php if ( ! $arrange && $total && Reprocessor::can( $gallery->ID ) ) : ?>
 				<p class="description" id="slashphoto-reprocess-help"><?php esc_html_e( 'Make new copies remakes the web copies of every photo in this gallery from the originals, with the current watermark, display size and image-processing settings. The originals are not changed.', 'slashphoto' ); ?></p>
 				<div class="slashphoto-workspace__reprocess" data-reprocess-status role="status" hidden></div>
@@ -289,6 +317,10 @@ final class GalleryWorkspace {
 					<li data-photo-id="<?php echo esc_attr( (string) $image->ID ); ?>">
 						<?php echo wp_get_attachment_image( $image->ID, 'medium', false, [ 'alt' => '' ] ); ?>
 						<span><?php echo esc_html( $title ); ?></span>
+						<?php $details = PhotoSearch::summary( $image->ID ); ?>
+						<?php if ( '' !== $details ) : ?>
+							<small class="slashphoto-workspace__photo-meta"><?php echo esc_html( $details ); ?></small>
+						<?php endif; ?>
 						<?php if ( $arrange && $total > 1 ) : ?>
 							<form class="slashphoto-workspace__move-photo" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 								<?php $this->fields( 'move_photo', $gallery->ID ); ?>

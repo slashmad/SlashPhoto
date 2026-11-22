@@ -125,6 +125,8 @@ final class Orders {
 					'print_paper'   => $line['print_paper'] ?? '',
 					'print_frame'   => $line['print_frame'] ?? '',
 					'download_size' => $line['download_size'] ?? 0,
+					'licence_name'  => $line['licence']['name'] ?? '',
+					'licence_text'  => $line['licence']['text'] ?? null,
 					'quantity'      => $line['qty'],
 					'unit_price'    => $line['unit'],
 					'total'         => $line['total'],
@@ -145,12 +147,14 @@ final class Orders {
 						'file_label'    => $image['file'],
 						'print_product' => 'print' === $line['includes']['kind'] ? $line['includes']['name'] : '',
 						'download_size' => $line['includes']['size'] ?? 0,
+						'licence_name'  => $line['includes']['licence']['name'] ?? '',
+						'licence_text'  => $line['includes']['licence']['text'] ?? null,
 						'quantity'      => 1,
 						'unit_price'    => 0,
 						'total'         => 0,
 					]
 				);
-			}
+			}//end foreach
 		}//end foreach
 
 		// The gift card is spent last, under a lock; if its balance went

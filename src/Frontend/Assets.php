@@ -279,6 +279,8 @@ final class Assets {
 					/* translators: %s: last four characters of the gift card code */
 					'giftCardRow'       => __( 'Gift card (…%s)', 'slashphoto' ),
 					'due'               => __( 'To pay', 'slashphoto' ),
+					/* translators: %s: licence name */
+					'licence'           => __( 'Licence: %s', 'slashphoto' ),
 					'error'             => __( 'Something went wrong. Check your connection and try again.', 'slashphoto' ),
 				],
 			]

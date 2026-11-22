@@ -154,6 +154,7 @@ final class CheckoutRest {
 					'gift_card' => $text( 30 ),
 					'gateway'   => $text( 30, true ),
 					'terms'     => [ 'type' => 'boolean' ],
+					'licences'  => [ 'type' => 'boolean' ],
 					// Honeypot: people never see or fill this field.
 					'website'   => $text( 200 ),
 				],
@@ -245,6 +246,9 @@ final class CheckoutRest {
 			}
 		}
 
+		if ( $quote['licences'] && ! $request['licences'] ) {
+			return self::invalid( 'licences', __( 'Accept the licence terms of the downloads to place the order.', 'slashphoto' ) );
+		}
 		if ( ShopPage::terms_page() && ! $request['terms'] ) {
 			return self::invalid( 'terms', __( 'Accept the terms of purchase to place the order.', 'slashphoto' ) );
 		}
@@ -377,6 +381,13 @@ final class CheckoutRest {
 			'giftCards'     => GiftCards::accepted(),
 			'needsShipping' => $quote['needs_shipping'],
 			'taxByCountry'  => $quote['tax_by_country'],
+			'licences'      => array_map(
+				static fn( array $licence ): array => [
+					'name' => $licence['name'],
+					'text' => $licence['text'],
+				],
+				$quote['licences']
+			),
 			'taxCountry'    => $quote['tax_country'],
 		];
 	}

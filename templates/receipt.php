@@ -126,7 +126,7 @@ $slashphoto_vat_in = '' !== (string) ( $slashphoto_order['tax_country'] ?? '' ) 
 					<tr class="child"><td colspan="4"><?php echo esc_html( $slashphoto_item['file_label'] ); ?></td></tr>
 				<?php else : ?>
 					<tr>
-						<td><?php echo esc_html( $slashphoto_item['name'] ); ?><br><small><?php echo esc_html( $slashphoto_item['file_label'] ); ?></small></td>
+						<td><?php echo esc_html( $slashphoto_item['name'] ); ?><br><small><?php echo esc_html( $slashphoto_item['file_label'] . ( '' !== (string) ( $slashphoto_item['licence_name'] ?? '' ) ? ' · ' . sprintf( /* translators: %s: licence name */ __( 'Licence: %s', 'slashphoto' ), $slashphoto_item['licence_name'] ) : '' ) ); ?></small></td>
 						<td class="num"><?php echo esc_html( (string) $slashphoto_item['quantity'] ); ?></td>
 						<td class="num"><?php echo esc_html( $slashphoto_money( $slashphoto_item['unit_price'] ) ); ?></td>
 						<td class="num"><?php echo esc_html( $slashphoto_money( $slashphoto_item['total'] ) ); ?></td>

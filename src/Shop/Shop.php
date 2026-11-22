@@ -91,12 +91,16 @@ final class Shop {
 		$currency = (string) Settings::get( 'currency' );
 		$offer    = [];
 		foreach ( PriceLists::products( $list ) as $product ) {
-			$entry = [
+			$entry   = [
 				'id'    => $product['id'],
 				'kind'  => $product['kind'],
 				'name'  => $product['name'],
 				'price' => Money::format( $product['price'], $currency ),
 			];
+			$licence = 'download' === $product['kind'] ? Licences::get( (int) ( $product['licence'] ?? 0 ) ) : null;
+			if ( $licence ) {
+				$entry['licence'] = $licence['name'];
+			}
 			if ( 'package' === $product['kind'] ) {
 				$includes          = PriceLists::product( $list, $product['includes'] );
 				$entry['count']    = $product['count'];
@@ -209,6 +213,15 @@ final class Shop {
 		}
 		$goods = $lines;
 
+		// Licences the customer must accept, once each.
+		$licences = [];
+		foreach ( $lines as $line ) {
+			$licence = $line['licence'] ?? ( $line['includes']['licence'] ?? null );
+			if ( $licence ) {
+				$licences[ $licence['id'] ] = $licence;
+			}
+		}
+
 		// Gift cards: vouchers without VAT, shipping or discounts.
 		$vouchers = 0;
 		foreach ( $cards as $amount => $qty ) {
@@ -285,6 +298,7 @@ final class Shop {
 			'tax'                => $tax,
 			'total'              => $total,
 			'gift_card'          => $card,
+			'licences'           => array_values( $licences ),
 			'due'                => $total - $card['amount'],
 			'tax_rate'           => $rate,
 			// Only recorded when VAT depends on the country.
@@ -384,10 +398,11 @@ final class Shop {
 			'count'    => $product['count'] ? $product['count'] : count( $images ),
 			'images'   => $images,
 			'includes' => [
-				'id'   => $includes['id'],
-				'kind' => $includes['kind'],
-				'name' => $includes['name'],
-				'size' => 'download' === $includes['kind'] ? (int) ( $includes['size'] ?? 0 ) : 0,
+				'id'      => $includes['id'],
+				'kind'    => $includes['kind'],
+				'name'    => $includes['name'],
+				'size'    => 'download' === $includes['kind'] ? (int) ( $includes['size'] ?? 0 ) : 0,
+				'licence' => 'download' === $includes['kind'] ? Licences::get( (int) ( $includes['licence'] ?? 0 ) ) : null,
 			],
 		];
 	}
@@ -446,6 +461,7 @@ final class Shop {
 			'print_paper'   => $variant['paper'] ?? '',
 			'print_frame'   => $variant['frame'] ?? '',
 			'download_size' => 'download' === $product['kind'] ? (int) ( $product['size'] ?? 0 ) : 0,
+			'licence'       => 'download' === $product['kind'] ? Licences::get( (int) ( $product['licence'] ?? 0 ) ) : null,
 		];
 	}
 }

@@ -283,6 +283,14 @@ final class OrdersPage {
 									</td>
 									<td>
 										<?php echo esc_html( $item['name'] ); ?>
+										<?php if ( '' !== (string) ( $item['licence_name'] ?? '' ) ) : ?>
+											<br><span class="description">
+												<?php
+												/* translators: %s: licence name */
+												echo esc_html( sprintf( __( 'Licence: %s', 'slashphoto' ), $item['licence_name'] ) );
+												?>
+											</span>
+										<?php endif; ?>
 										<?php if ( 'download' === $item['kind'] ) : ?>
 											<br><span class="description">
 												<?php

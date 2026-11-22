@@ -51,7 +51,11 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
 - **Full-size originals.** Upload one full-resolution file per image through
   the gallery editor's **Upload photos** panel. Chunked uploads can handle
   originals larger than PHP's per-upload limit. SlashPhoto stores the original
-  privately and creates a separate display copy.
+  privately and creates a separate display copy, as JPEG, WebP or AVIF
+  (Settings → Display copies). The gallery's Photos tab finds photos by
+  title, caption, file name, IPTC keywords, camera, lens or capture date.
+  Originals can also be copied into an import folder on the server (SFTP,
+  FTP, a synced folder): each sub-folder becomes or fills a gallery.
 - **Optional SnapOtter processing.** Connect your own
   [SnapOtter](https://github.com/snapotter-hq/SnapOtter) server (address and
   login, or an API key) to import RAW, HEIC, TIFF and PSD files and to make
@@ -75,8 +79,9 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
   charges no platform fee. Manage orders, export a print production CSV, send
   status emails and offer printable receipts and invoices. Private download
   links work for paid orders during the configured download period. Optional
-  VAT rates by country (for EU OSS) come with a quarterly VAT report, and gift
-  cards can be sold and redeemed at checkout. See
+  VAT rates by country (for EU OSS) come with a quarterly VAT report, gift
+  cards can be sold and redeemed at checkout, and downloads can carry a
+  licence that customers accept. See
   [shop setup](docs/shop.md).
 - **Import from Sunshine Photo Cart.** Copies galleries with their access
   settings, images, price levels and orders, in repeatable steps, without

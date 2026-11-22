@@ -38,6 +38,7 @@ final class DisplayCopy {
 	public function register_hooks(): void {
 		add_filter( 'big_image_size_threshold', [ $this, 'threshold' ], 20, 4 );
 		add_filter( 'wp_editor_set_quality', [ $this, 'quality' ], 10, 2 );
+		add_filter( 'image_editor_output_format', [ $this, 'output_format' ] );
 	}
 
 	/**
@@ -103,5 +104,36 @@ final class DisplayCopy {
 			return $quality;
 		}
 		return (int) Settings::get( 'display_quality' );
+	}
+
+	/**
+	 * Image types for display copies, with whether this server can write them.
+	 *
+	 * @return array<string, bool> Setting value => supported.
+	 */
+	public static function formats(): array {
+		return [
+			'jpeg' => true,
+			'webp' => wp_image_editor_supports( [ 'mime_type' => 'image/webp' ] ),
+			'avif' => wp_image_editor_supports( [ 'mime_type' => 'image/avif' ] ),
+		];
+	}
+
+	/**
+	 * Writes the display copy and sizes of JPEG gallery uploads as WebP or
+	 * AVIF when chosen and supported. Originals are never converted; PNG keeps
+	 * its format. Other images in the media library are not affected.
+	 *
+	 * @param array $formats Map of source type => output type.
+	 * @return array
+	 */
+	public function output_format( $formats ) {
+		$format = (string) Settings::get( 'display_format' );
+		if ( 'jpeg' === $format || ! Uploads::current_gallery() || empty( self::formats()[ $format ] ) ) {
+			return $formats;
+		}
+		$formats               = is_array( $formats ) ? $formats : [];
+		$formats['image/jpeg'] = 'image/' . $format;
+		return $formats;
 	}
 }

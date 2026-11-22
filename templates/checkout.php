@@ -143,6 +143,14 @@ $slashphoto_names     = function_exists( 'locale_get_display_region' );
 			<?php endforeach; ?>
 		</fieldset>
 
+		<div class="slashphoto-checkout__licences" data-slashphoto-licences hidden>
+			<p class="slashphoto-checkout__terms">
+				<input type="checkbox" id="slashphoto-licences" name="licences" value="1">
+				<label for="slashphoto-licences"><?php esc_html_e( 'I accept the licence terms for the downloads:', 'slashphoto' ); ?></label>
+			</p>
+			<div data-slashphoto-licence-list></div>
+		</div>
+
 		<?php if ( $slashphoto_terms ) : ?>
 			<p class="slashphoto-checkout__terms">
 				<input type="checkbox" id="slashphoto-terms" name="terms" value="1" required>

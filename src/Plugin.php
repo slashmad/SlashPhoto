@@ -37,12 +37,14 @@ use SlashPhoto\Frontend\ThemeCompat;
 use SlashPhoto\Gallery\GalleryMeta;
 use SlashPhoto\Gallery\GalleryRenderer;
 use SlashPhoto\Gallery\GalleryRepository;
+use SlashPhoto\Gallery\Inbox;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Gallery\ChunkedUploads;
 use SlashPhoto\Gallery\Importer;
 use SlashPhoto\Gallery\Uploads;
 use SlashPhoto\Media\DisplayCopy;
 use SlashPhoto\Media\Originals;
+use SlashPhoto\Media\PhotoSearch;
 use SlashPhoto\Media\Reprocessor;
 use SlashPhoto\Media\Panorama;
 use SlashPhoto\Media\Watermark;
@@ -54,6 +56,7 @@ use SlashPhoto\Shop\CheckoutRest;
 use SlashPhoto\Shop\Coupons;
 use SlashPhoto\Shop\Downloads;
 use SlashPhoto\Shop\GiftCards;
+use SlashPhoto\Shop\Licences;
 use SlashPhoto\Shop\DownloadSizes;
 use SlashPhoto\Shop\Emails;
 use SlashPhoto\Shop\Gateways\MollieGateway;
@@ -168,6 +171,7 @@ final class Plugin {
 		( new DisplayCopy() )->register_hooks();
 		( new Originals() )->register_hooks();
 		( new Reprocessor() )->register_hooks();
+		( new PhotoSearch() )->register_hooks();
 		( new Watermark( $this->access ) )->register_hooks();
 
 		$this->proofing = new Proofing( $this->access, $terms );
@@ -179,6 +183,7 @@ final class Plugin {
 		( new GalleryMeta() )->register_hooks();
 		( new Uploads() )->register_hooks();
 		( new Importer() )->register_hooks();
+		( new Inbox() )->register_hooks();
 		( new ChunkedUploads() )->register_hooks();
 
 		$this->shop = new Shop( $this->access, $terms );
@@ -191,6 +196,7 @@ final class Plugin {
 		( new Downloads() )->register_hooks();
 		( new DownloadSizes() )->register_hooks();
 		( new GiftCards() )->register_hooks();
+		( new Licences() )->register_hooks();
 		( new Receipts( $this->templates ) )->register_hooks();
 		( new Emails() )->register_hooks();
 		( new StripeGateway() )->register_hooks();
@@ -308,6 +314,7 @@ final class Plugin {
 		wp_clear_scheduled_hook( ChunkedUploads::CRON );
 		wp_clear_scheduled_hook( Orders::CRON );
 		wp_clear_scheduled_hook( VisitorLog::CRON );
+		wp_clear_scheduled_hook( Inbox::CRON );
 		unregister_post_type( PostType::POST_TYPE );
 		flush_rewrite_rules();
 	}
