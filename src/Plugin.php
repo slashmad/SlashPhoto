@@ -21,6 +21,7 @@ use SlashPhoto\Admin\GalleryWorkspace;
 use SlashPhoto\Admin\ImportPage;
 use SlashPhoto\Admin\OrdersPage;
 use SlashPhoto\Admin\SelectionsBox;
+use SlashPhoto\Admin\SelectionsPage;
 use SlashPhoto\Admin\ShopSettings;
 use SlashPhoto\Admin\SnapOtterSettings;
 use SlashPhoto\Admin\UploadPanel;
@@ -203,6 +204,7 @@ final class Plugin {
 		( new GalleryOverview( $gallery_list, $this->access ) )->register_hooks();
 		$selections = new SelectionsBox( $this->proofing );
 		$selections->register_hooks();
+		( new SelectionsPage( $this->proofing ) )->register_hooks();
 		$upload = new UploadPanel();
 		$upload->register_hooks();
 		$invitations = new GalleryInvitations( $this->access );

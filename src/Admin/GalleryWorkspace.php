@@ -19,9 +19,10 @@ defined( 'ABSPATH' ) || exit;
 /** Opens galleries in their photo management screen. */
 final class GalleryWorkspace {
 
-	public const SLUG    = 'slashphoto-gallery';
-	private const PARENT = 'edit.php?post_type=' . PostType::POST_TYPE;
-	private const ACTION = 'slashphoto_gallery_workspace';
+	public const SLUG             = 'slashphoto-gallery';
+	private const PARENT          = 'edit.php?post_type=' . PostType::POST_TYPE;
+	private const ACTION          = 'slashphoto_gallery_workspace';
+	private const PHOTOS_PER_PAGE = 48;
 
 	/**
 	 * Workspace screen hook.
@@ -136,6 +137,7 @@ final class GalleryWorkspace {
 			return;
 		}
 		AdminTabs::enqueue();
+		SelectionsBox::enqueue_style();
 		$file = 'assets/css/admin-workspace.css';
 		wp_enqueue_style( 'slashphoto-workspace', SLASHPHOTO_URL . $file, [], Assets::version( $file ) );
 		if ( current_user_can( 'upload_files' ) ) {
@@ -200,6 +202,7 @@ final class GalleryWorkspace {
 					$this->edit_form( $gallery );
 				} elseif ( 'selections' === $tab ) {
 					echo '<section class="slashphoto-workspace__panel" id="slashphoto-selections"><h2>' . esc_html( $tabs['selections'] ) . '</h2>';
+					echo '<p><a href="' . esc_url( SelectionsPage::url() ) . '">' . esc_html__( 'View selections across galleries', 'slashphoto' ) . '</a></p>';
 					$this->selections->render( $gallery );
 					echo '</section>';
 				} elseif ( 'invite' === $tab ) {
@@ -219,29 +222,71 @@ final class GalleryWorkspace {
 	 * @param WP_Post $gallery Gallery.
 	 */
 	private function photos( WP_Post $gallery ): void {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only screen parameters.
+		$arrange = isset( $_GET['arrange'] );
+		$result  = isset( $_GET['photo_order'] ) ? sanitize_key( wp_unslash( $_GET['photo_order'] ) ) : '';
+		$page    = isset( $_GET['photo_page'] ) ? absint( $_GET['photo_page'] ) : 1;
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		$images = $this->repository->images( $gallery->ID );
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
-		$page  = isset( $_GET['photo_page'] ) ? absint( $_GET['photo_page'] ) : 1;
-		$pages = max( 1, (int) ceil( count( $images ) / 48 ) );
-		$page  = max( 1, min( $page, $pages ) );
+		$total  = count( $images );
+		$pages  = max( 1, (int) ceil( $total / self::PHOTOS_PER_PAGE ) );
+		$page   = max( 1, min( $page, $pages ) );
+		$offset = ( $page - 1 ) * self::PHOTOS_PER_PAGE;
+		$base   = self::url( $gallery->ID );
+		$order  = add_query_arg( 'arrange', 1, $base );
+		$token  = $arrange ? GalleryRepository::order_token( $images ) : '';
 		?>
-		<?php if ( current_user_can( 'upload_files' ) ) : ?>
+		<?php if ( ! $arrange && current_user_can( 'upload_files' ) ) : ?>
 			<section class="slashphoto-workspace__panel">
 				<h2><?php esc_html_e( 'Upload photos', 'slashphoto' ); ?></h2>
 				<?php $this->upload->render_meta_box( $gallery ); ?>
 			</section>
 		<?php endif; ?>
 		<section class="slashphoto-workspace__panel">
-			<h2>
-				<?php esc_html_e( 'Photos', 'slashphoto' ); ?>
-				<span class="slashphoto-workspace__status" data-photo-count="<?php echo esc_attr( (string) count( $images ) ); ?>"><?php echo esc_html( number_format_i18n( count( $images ) ) ); ?></span>
-			</h2>
+			<div class="slashphoto-workspace__photo-header">
+				<h2>
+					<?php echo $arrange ? esc_html__( 'Reorder photos', 'slashphoto' ) : esc_html__( 'Photos', 'slashphoto' ); ?>
+					<span class="slashphoto-workspace__status" data-photo-count="<?php echo esc_attr( (string) $total ); ?>"><?php echo esc_html( number_format_i18n( $total ) ); ?></span>
+				</h2>
+				<?php if ( $arrange ) : ?>
+					<a class="button" href="<?php echo esc_url( add_query_arg( 'photo_page', $page, $base ) ); ?>"><?php esc_html_e( 'Done', 'slashphoto' ); ?></a>
+				<?php else : ?>
+					<a class="button" data-reorder-photos href="<?php echo esc_url( add_query_arg( 'photo_page', $page, $order ) ); ?>" <?php echo $total < 2 ? 'hidden' : ''; ?>><?php esc_html_e( 'Reorder photos', 'slashphoto' ); ?></a>
+				<?php endif; ?>
+			</div>
+			<?php if ( $arrange ) : ?>
+				<?php
+				$messages = [
+					'moved'   => __( 'Photo order saved.', 'slashphoto' ),
+					'stale'   => __( 'The photo order could not be saved. Review the current order and try again.', 'slashphoto' ),
+					'invalid' => __( 'Choose a photo in this gallery and a position within the photo count.', 'slashphoto' ),
+				];
+				?>
+				<?php if ( isset( $messages[ $result ] ) ) : ?>
+					<div class="notice inline <?php echo 'moved' === $result ? 'notice-success' : 'notice-error'; ?>"><p><?php echo esc_html( $messages[ $result ] ); ?></p></div>
+				<?php endif; ?>
+				<?php if ( $total > 1 ) : ?>
+					<p class="description"><?php esc_html_e( 'Enter a position and select Move. Position 1 is the first photo visitors see.', 'slashphoto' ); ?></p>
+				<?php endif; ?>
+			<?php endif; ?>
 			<p class="slashphoto-workspace__empty" <?php echo $images ? 'hidden' : ''; ?>><?php esc_html_e( 'This gallery has no photos yet.', 'slashphoto' ); ?></p>
 			<ul class="slashphoto-workspace__photos" data-photo-grid>
-				<?php foreach ( array_slice( $images, ( $page - 1 ) * 48, 48 ) as $image ) : ?>
+				<?php foreach ( array_slice( $images, $offset, self::PHOTOS_PER_PAGE ) as $index => $image ) : ?>
+					<?php $title = '' === $image->post_title ? __( '(Untitled photo)', 'slashphoto' ) : $image->post_title; ?>
 					<li data-photo-id="<?php echo esc_attr( (string) $image->ID ); ?>">
 						<?php echo wp_get_attachment_image( $image->ID, 'medium', false, [ 'alt' => '' ] ); ?>
-						<span><?php echo esc_html( $image->post_title ); ?></span>
+						<span><?php echo esc_html( $title ); ?></span>
+						<?php if ( $arrange && $total > 1 ) : ?>
+							<form class="slashphoto-workspace__move-photo" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+								<?php $this->fields( 'move_photo', $gallery->ID ); ?>
+								<input type="hidden" name="photo_id" value="<?php echo esc_attr( (string) $image->ID ); ?>">
+								<input type="hidden" name="photo_order_token" value="<?php echo esc_attr( $token ); ?>">
+								<?php /* translators: %s: photo title. */ ?>
+								<input name="photo_position" type="number" min="1" max="<?php echo esc_attr( (string) $total ); ?>" value="<?php echo esc_attr( (string) ( $offset + $index + 1 ) ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Position for %s', 'slashphoto' ), $title ) ); ?>" required>
+								<?php /* translators: %s: photo title. */ ?>
+								<button class="button" type="submit" aria-label="<?php echo esc_attr( sprintf( __( 'Move %s', 'slashphoto' ), $title ) ); ?>"><?php esc_html_e( 'Move', 'slashphoto' ); ?></button>
+							</form>
+						<?php endif; ?>
 					</li>
 				<?php endforeach; ?>
 			</ul>
@@ -251,7 +296,7 @@ final class GalleryWorkspace {
 					echo wp_kses_post(
 						paginate_links(
 							[
-								'base'    => add_query_arg( 'photo_page', '%#%', self::url( $gallery->ID ) ),
+								'base'    => add_query_arg( 'photo_page', '%#%', $arrange ? $order : $base ),
 								'format'  => '',
 								'current' => $page,
 								'total'   => $pages,
@@ -325,8 +370,9 @@ final class GalleryWorkspace {
 	 * @param int    $id        Gallery ID, if any.
 	 */
 	private function fields( string $operation, int $id ): void {
-		wp_nonce_field( self::ACTION . '_' . $operation . '_' . $id );
 		?>
+		<input type="hidden" name="_wpnonce" value="<?php echo esc_attr( wp_create_nonce( self::ACTION . '_' . $operation . '_' . $id ) ); ?>">
+		<?php wp_referer_field(); ?>
 		<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
 		<input type="hidden" name="operation" value="<?php echo esc_attr( $operation ); ?>">
 		<input type="hidden" name="gallery_id" value="<?php echo esc_attr( (string) $id ); ?>">
@@ -348,8 +394,11 @@ final class GalleryWorkspace {
 		$id        = isset( $_POST['gallery_id'] ) ? absint( $_POST['gallery_id'] ) : 0;
 		check_admin_referer( self::ACTION . '_' . $operation . '_' . $id );
 		$gallery = $this->editable_gallery( $id );
-		$title   = isset( $_POST['gallery_title'] ) ? sanitize_text_field( wp_unslash( $_POST['gallery_title'] ) ) : '';
-		$tab     = '';
+		if ( 'move_photo' === $operation && $gallery ) {
+			$this->save_photo_order( $gallery );
+		}
+		$title = isset( $_POST['gallery_title'] ) ? sanitize_text_field( wp_unslash( $_POST['gallery_title'] ) ) : '';
+		$tab   = '';
 
 		if ( 'create' === $operation && ! $id && current_user_can( get_post_type_object( PostType::POST_TYPE )->cap->create_posts ) ) {
 			$this->require_title( $title );
@@ -387,6 +436,29 @@ final class GalleryWorkspace {
 			$url = add_query_arg( 'saved', 1, $url );
 		}
 		wp_safe_redirect( $url );
+		exit;
+	}
+
+	/**
+	 * Moves a photo and, on success, opens the page containing its new position.
+	 *
+	 * @param WP_Post $gallery Authorized gallery.
+	 */
+	private function save_photo_order( WP_Post $gallery ): void {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- The workspace action was verified in save().
+		$id       = isset( $_POST['photo_id'] ) ? absint( $_POST['photo_id'] ) : 0;
+		$position = (int) filter_var( wp_unslash( $_POST['photo_position'] ?? '' ), FILTER_VALIDATE_INT );
+		$token    = sanitize_text_field( wp_unslash( $_POST['photo_order_token'] ?? '' ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+		$result = $this->repository->move_photo( $gallery->ID, $id, $position, $token );
+		$args   = [
+			'arrange'     => 1,
+			'photo_order' => $result,
+		];
+		if ( 'moved' === $result ) {
+			$args['photo_page'] = intdiv( $position - 1, self::PHOTOS_PER_PAGE ) + 1;
+		}
+		wp_safe_redirect( add_query_arg( $args, self::url( $gallery->ID ) ), 303 );
 		exit;
 	}
 

@@ -5,9 +5,8 @@ photographer. No payment is involved; the shop is a separate feature.
 
 ## Switching it on
 
-In the gallery editor, open **Client selections** in the sidebar (or the
-**Access** box in the classic editor) and choose **On**. Optionally set a
-maximum number of images.
+In the gallery workspace, open **Settings → Access** and set **Client
+selections** to **On**. Optionally set a maximum number of images.
 
 A selection belongs to the nearest gallery up the tree where proofing is
 **On**. Sub-galleries left on "Same as parent gallery" add to the same
@@ -38,11 +37,13 @@ sub-gallery's images.
 - When a selection is sent, the gallery's author gets a plain-text email
   (filter `slashphoto_selection_recipients`; return an empty array to send
   none). The client's address is set as Reply-To.
-- The **Client selections** box on the gallery's edit screen (in the block
-  editor: the Meta Boxes pane at the bottom) lists every client's selection
-  with thumbnails, notes, the message and the file names (without the random
-  suffix SlashPhoto adds to uploads) to paste into a catalogue filter such as
-  Lightroom's.
+- **SlashPhoto → Client selections** shows selections across galleries you
+  can edit. Filter by gallery or by whether the client has submitted their
+  selection, then open a selection for review.
+- The review shows the client's message, selected photos and image notes.
+  **File names for Lightroom** gives you the original file labels without
+  extensions and upload suffixes. **Download CSV** includes those labels,
+  image IDs and per-photo notes in the order the client chose them.
 - **Let the client change it** reopens a sent selection; **Delete selection**
   removes it.
 

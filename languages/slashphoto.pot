@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-21T20:40:19+00:00\n"
+"POT-Creation-Date: 2026-11-21T21:17:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: slashphoto\n"
@@ -110,7 +110,7 @@ msgid "Watermark"
 msgstr ""
 
 #: src/Admin/AccessSettings.php:137
-#: src/Admin/GalleryWorkspace.php:303
+#: src/Admin/GalleryWorkspace.php:348
 #: assets/js/editor-access.js:192
 msgid "Site default or parent gallery"
 msgstr ""
@@ -312,6 +312,7 @@ msgstr ""
 
 #. translators: %s: gallery title
 #: src/Admin/GalleryOverview.php:53
+#: src/Admin/SelectionsPage.php:128
 #: src/Admin/VisitorsPage.php:145
 #: src/Gallery/PostType.php:52
 msgid "All galleries"
@@ -323,14 +324,14 @@ msgid "List view"
 msgstr ""
 
 #: src/Admin/GalleryOverview.php:128
-#: src/Admin/GalleryWorkspace.php:66
-#: src/Admin/GalleryWorkspace.php:172
+#: src/Admin/GalleryWorkspace.php:67
+#: src/Admin/GalleryWorkspace.php:174
 #: src/Gallery/PostType.php:53
 msgid "Add new gallery"
 msgstr ""
 
 #: src/Admin/GalleryOverview.php:196
-#: src/Admin/GalleryWorkspace.php:172
+#: src/Admin/GalleryWorkspace.php:174
 #: src/Admin/VisitorsPage.php:421
 msgid "(Untitled gallery)"
 msgstr ""
@@ -344,112 +345,165 @@ msgstr ""
 msgid "No galleries in this group yet."
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:65
+#: src/Admin/GalleryWorkspace.php:66
 msgid "Gallery workspace"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:156
+#: src/Admin/GalleryWorkspace.php:158
 msgid "You cannot edit this gallery."
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:159
-#: src/Admin/GalleryWorkspace.php:236
+#: src/Admin/GalleryWorkspace.php:161
+#: src/Admin/GalleryWorkspace.php:248
 #: src/Shop/PriceLists.php:391
 msgid "Photos"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:160
+#: src/Admin/GalleryWorkspace.php:162
 #: src/Admin/SettingsPage.php:48
 msgid "Settings"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:161
-#: src/Admin/SelectionsBox.php:59
-#: src/Proofing/Selections.php:56
+#: src/Admin/GalleryWorkspace.php:163
+#: src/Admin/SelectionsBox.php:75
+#: src/Admin/SelectionsPage.php:48
+#: src/Admin/SelectionsPage.php:49
+#: src/Admin/SelectionsPage.php:119
+#: src/Proofing/Selections.php:57
 #: assets/js/editor-access.js:225
 msgid "Client selections"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:164
+#: src/Admin/GalleryWorkspace.php:166
 msgid "Invite"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:169
+#: src/Admin/GalleryWorkspace.php:171
 msgid "← All galleries"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:179
+#: src/Admin/GalleryWorkspace.php:181
 msgid "Edit page content"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:181
+#: src/Admin/GalleryWorkspace.php:183
 #: src/Gallery/PostType.php:56
 msgid "View gallery"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:185
+#: src/Admin/GalleryWorkspace.php:187
 msgid "Publish gallery"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:192
+#: src/Admin/GalleryWorkspace.php:194
 msgid "Gallery settings saved."
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:197
+#: src/Admin/GalleryWorkspace.php:199
 msgid "Gallery sections"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:230
+#: src/Admin/GalleryWorkspace.php:205
+msgid "View selections across galleries"
+msgstr ""
+
+#: src/Admin/GalleryWorkspace.php:241
 #: src/Admin/UploadPanel.php:111
 #: assets/js/editor-upload.js:53
 msgid "Upload photos"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:239
+#: src/Admin/GalleryWorkspace.php:248
+#: src/Admin/GalleryWorkspace.php:254
+msgid "Reorder photos"
+msgstr ""
+
+#: src/Admin/GalleryWorkspace.php:252
+msgid "Done"
+msgstr ""
+
+#: src/Admin/GalleryWorkspace.php:260
+msgid "Photo order saved."
+msgstr ""
+
+#: src/Admin/GalleryWorkspace.php:261
+msgid "The photo order could not be saved. Review the current order and try again."
+msgstr ""
+
+#: src/Admin/GalleryWorkspace.php:262
+msgid "Choose a photo in this gallery and a position within the photo count."
+msgstr ""
+
+#: src/Admin/GalleryWorkspace.php:269
+msgid "Enter a position and select Move. Position 1 is the first photo visitors see."
+msgstr ""
+
+#: src/Admin/GalleryWorkspace.php:272
 msgid "This gallery has no photos yet."
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:278
+#: src/Admin/GalleryWorkspace.php:275
+msgid "(Untitled photo)"
+msgstr ""
+
+#. translators: %s: photo title.
+#: src/Admin/GalleryWorkspace.php:285
+#, php-format
+msgid "Position for %s"
+msgstr ""
+
+#. translators: %s: photo title.
+#: src/Admin/GalleryWorkspace.php:287
+#, php-format
+msgid "Move %s"
+msgstr ""
+
+#. translators: %s: photo title.
+#: src/Admin/GalleryWorkspace.php:287
+msgid "Move"
+msgstr ""
+
+#: src/Admin/GalleryWorkspace.php:323
 msgid "Gallery name"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:282
+#: src/Admin/GalleryWorkspace.php:327
 msgid "Access and proofing"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:284
+#: src/Admin/GalleryWorkspace.php:329
 #: assets/js/editor-access.js:277
 msgid "Shop"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:288
+#: src/Admin/GalleryWorkspace.php:333
 msgid "Start with a draft. You can upload photos and choose who can see the gallery before publishing."
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:289
+#: src/Admin/GalleryWorkspace.php:334
 msgid "Create draft and add photos"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:304
+#: src/Admin/GalleryWorkspace.php:349
 #: assets/js/editor-access.js:284
 msgid "Not for sale"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:307
+#: src/Admin/GalleryWorkspace.php:352
 msgid "Current price list unavailable"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:311
+#: src/Admin/GalleryWorkspace.php:356
 #: src/Shop/PriceLists.php:58
 #: assets/js/editor-access.js:279
 msgid "Price list"
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:375
+#: src/Admin/GalleryWorkspace.php:424
 msgid "You cannot make this change to the gallery."
 msgstr ""
 
-#: src/Admin/GalleryWorkspace.php:400
+#: src/Admin/GalleryWorkspace.php:472
 msgid "Enter a name for the gallery."
 msgstr ""
 
@@ -795,6 +849,7 @@ msgid "Order"
 msgstr ""
 
 #: src/Admin/OrdersTable.php:85
+#: src/Admin/SelectionsPage.php:104
 msgid "All"
 msgstr ""
 
@@ -807,51 +862,117 @@ msgid "You cannot export print orders."
 msgstr ""
 
 #: src/Admin/PrintExport.php:52
+#: src/Admin/SelectionsBox.php:258
 msgid "The export could not be opened."
 msgstr ""
 
-#: src/Admin/SelectionsBox.php:70
+#: src/Admin/SelectionsBox.php:90
+msgid "All selections in this gallery"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:93
+msgid "This selection could not be found in the gallery."
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:101
 msgid "No client has chosen any images yet. Clients choose favourites while logged in and send them to you from the gallery page."
 msgstr ""
 
-#: src/Admin/SelectionsBox.php:83
+#: src/Admin/SelectionsBox.php:127
+#: src/Admin/SelectionsPage.php:194
 msgid "Deleted user"
 msgstr ""
 
-#. translators: 1: number of images, 2: date and time
-#: src/Admin/SelectionsBox.php:93
+#. translators: %s: number of photos in the selection.
+#: src/Admin/SelectionsBox.php:137
 #, php-format
-msgid "%1$d image, sent %2$s"
-msgid_plural "%1$d images, sent %2$s"
+msgid "%s photo"
+msgid_plural "%s photos"
 msgstr[0] ""
 msgstr[1] ""
 
-#. translators: %d: number of images
-#: src/Admin/SelectionsBox.php:95
-#, php-format
-msgid "%d image, still choosing"
-msgid_plural "%d images, still choosing"
-msgstr[0] ""
-msgstr[1] ""
-
-#: src/Admin/SelectionsBox.php:115
-msgid "File names (for a catalogue filter such as Lightroom):"
+#: src/Admin/SelectionsBox.php:161
+msgid "File names for Lightroom"
 msgstr ""
 
-#: src/Admin/SelectionsBox.php:121
+#: src/Admin/SelectionsBox.php:162
+msgid "Selected photo file names"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:168
+#: src/Admin/VisitorsPage.php:116
+msgid "Download CSV"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:171
 msgid "Let the client change it"
 msgstr ""
 
-#: src/Admin/SelectionsBox.php:123
+#: src/Admin/SelectionsBox.php:173
 msgid "Delete this selection? This cannot be undone."
 msgstr ""
 
-#: src/Admin/SelectionsBox.php:123
+#: src/Admin/SelectionsBox.php:173
 msgid "Delete selection"
 msgstr ""
 
-#: src/Admin/SelectionsBox.php:160
-msgid "You are not allowed to change this selection."
+#: src/Admin/SelectionsBox.php:186
+#: src/Admin/SelectionsPage.php:105
+msgid "Submitted"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:186
+#: src/Admin/SelectionsPage.php:106
+msgid "Still choosing"
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:220
+msgid "You are not allowed to manage this selection."
+msgstr ""
+
+#: src/Admin/SelectionsBox.php:233
+msgid "Unknown selection action."
+msgstr ""
+
+#: src/Admin/SelectionsPage.php:120
+msgid "Selection status"
+msgstr ""
+
+#: src/Admin/SelectionsPage.php:126
+#: src/Admin/VisitorsPage.php:156
+#: src/Admin/VisitorsPage.php:369
+#: src/Admin/VisitorsPage.php:389
+#: src/Gallery/PostType.php:50
+#: src/Privacy.php:143
+#: src/Privacy.php:308
+#: blocks/gallery/index.js:46
+#: blocks/gallery/index.js:71
+msgid "Gallery"
+msgstr ""
+
+#: src/Admin/SelectionsPage.php:133
+#: src/Admin/VisitorsPage.php:149
+msgid "Filter"
+msgstr ""
+
+#. translators: %s: number of selections.
+#: src/Admin/SelectionsPage.php:140
+#, php-format
+msgid "%s selection"
+msgid_plural "%s selections"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Admin/SelectionsPage.php:149
+msgid "Selection pages"
+msgstr ""
+
+#: src/Admin/SelectionsPage.php:171
+msgid "No client selections match these filters."
+msgstr ""
+
+#: src/Admin/SelectionsPage.php:198
+msgid "Review selection"
 msgstr ""
 
 #: src/Admin/SettingsPage.php:47
@@ -1567,10 +1688,6 @@ msgstr ""
 msgid "Accepted terms"
 msgstr ""
 
-#: src/Admin/VisitorsPage.php:116
-msgid "Download CSV"
-msgstr ""
-
 #: src/Admin/VisitorsPage.php:119
 msgid "Visitor log"
 msgstr ""
@@ -1614,24 +1731,9 @@ msgstr ""
 msgid "Email address"
 msgstr ""
 
-#: src/Admin/VisitorsPage.php:149
-msgid "Filter"
-msgstr ""
-
 #: src/Admin/VisitorsPage.php:155
 #: src/Privacy.php:304
 msgid "Entry"
-msgstr ""
-
-#: src/Admin/VisitorsPage.php:156
-#: src/Admin/VisitorsPage.php:369
-#: src/Admin/VisitorsPage.php:389
-#: src/Gallery/PostType.php:50
-#: src/Privacy.php:143
-#: src/Privacy.php:308
-#: blocks/gallery/index.js:46
-#: blocks/gallery/index.js:71
-msgid "Gallery"
 msgstr ""
 
 #: src/Admin/VisitorsPage.php:157

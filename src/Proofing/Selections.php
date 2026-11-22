@@ -9,6 +9,7 @@ namespace SlashPhoto\Proofing;
 
 use SlashPhoto\Gallery\PostType;
 use WP_Post;
+use WP_Query;
 use WP_User;
 
 defined( 'ABSPATH' ) || exit;
@@ -150,6 +151,70 @@ final class Selections {
 	}
 
 	/**
+	 * Finds the gallery IDs which have stored selections.
+	 *
+	 * @return int[]
+	 */
+	public static function root_ids(): array {
+		$parents = get_posts(
+			[
+				'post_type'   => self::POST_TYPE,
+				'post_status' => 'private',
+				'numberposts' => -1,
+				'fields'      => 'id=>parent',
+				'orderby'     => 'none',
+			]
+		);
+		return array_values( array_unique( $parents ) );
+	}
+
+	/**
+	 * Paginates recent selections within an already-authorized set of roots.
+	 *
+	 * @param int[]  $roots    Gallery IDs.
+	 * @param string $status   Selection status filter.
+	 * @param int    $page     One-based page.
+	 * @param int    $per_page Page size.
+	 */
+	public static function review_page( array $roots, string $status, int $page, int $per_page ): WP_Query {
+		if ( ! $roots ) {
+			return new WP_Query();
+		}
+		$args      = [
+			'post_type'        => self::POST_TYPE,
+			'post_status'      => 'private',
+			'post_parent__in'  => $roots,
+			'posts_per_page'   => $per_page,
+			'paged'            => $page,
+			'orderby'          => [
+				'modified' => 'DESC',
+				'ID'       => 'DESC',
+			],
+			'suppress_filters' => true,
+		];
+		$submitted = [
+			'key'     => self::META_SENT,
+			'value'   => 0,
+			'compare' => '>',
+			'type'    => 'NUMERIC',
+		];
+		if ( 'submitted' === $status ) {
+			$args['meta_query'] = [ $submitted ]; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Submission time is stored in post meta.
+		} elseif ( 'choosing' === $status ) {
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Submission time is stored in post meta.
+			$args['meta_query'] = [
+				'relation' => 'OR',
+				[
+					'key'     => self::META_SENT,
+					'compare' => 'NOT EXISTS',
+				],
+				array_replace( $submitted, [ 'compare' => '<=' ] ),
+			];
+		}
+		return new WP_Query( $args );
+	}
+
+	/**
 	 * All selections of a user.
 	 *
 	 * @param int $user_id User ID.
@@ -234,6 +299,7 @@ final class Selections {
 	public static function submit( WP_Post $selection, string $message ): void {
 		update_post_meta( $selection->ID, self::META_MESSAGE, self::clean_text( $message, self::MAX_MESSAGE_CHARS ) );
 		update_post_meta( $selection->ID, self::META_SENT, time() );
+		wp_update_post( [ 'ID' => $selection->ID ] );
 	}
 
 	/**
@@ -243,6 +309,7 @@ final class Selections {
 	 */
 	public static function reopen( WP_Post $selection ): void {
 		delete_post_meta( $selection->ID, self::META_SENT );
+		wp_update_post( [ 'ID' => $selection->ID ] );
 	}
 
 	/**

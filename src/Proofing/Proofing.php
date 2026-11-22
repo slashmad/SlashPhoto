@@ -139,6 +139,58 @@ final class Proofing {
 	}
 
 	/**
+	 * Whether the current user may review the gallery's saved client selections.
+	 *
+	 * @param WP_Post $gallery Gallery.
+	 */
+	public function can_review( WP_Post $gallery ): bool {
+		return PostType::POST_TYPE === $gallery->post_type && 'trash' !== $gallery->post_status && $this->access->is_editor( $gallery );
+	}
+
+	/**
+	 * Current, accessible photos in a stored selection, in the client's order.
+	 *
+	 * Historical selections remain reviewable if the gallery's proofing setting
+	 * changes. Images that have been moved elsewhere are no longer shown.
+	 *
+	 * @param WP_Post $gallery   Gallery owning the selection.
+	 * @param WP_Post $selection Stored client selection.
+	 * @return array<int, string>
+	 */
+	public function review_items( WP_Post $gallery, WP_Post $selection ): array {
+		if ( ! $this->can_review( $gallery ) || Selections::POST_TYPE !== $selection->post_type || 'private' !== $selection->post_status || $gallery->ID !== $selection->post_parent ) {
+			return [];
+		}
+		$items = Selections::items( $selection );
+		if ( ! $items ) {
+			return [];
+		}
+		$attachments = get_posts(
+			[
+				'post_type'      => 'attachment',
+				'post_mime_type' => 'image',
+				'post_status'    => 'inherit',
+				'include'        => array_keys( $items ),
+			]
+		);
+		$allowed     = [];
+		$visible     = [];
+		foreach ( $attachments as $attachment ) {
+			$parent_id = $attachment->post_parent;
+			if ( ! array_key_exists( $parent_id, $allowed ) ) {
+				$parent                = $parent_id ? get_post( $parent_id ) : null;
+				$allowed[ $parent_id ] = $parent && PostType::POST_TYPE === $parent->post_type && 'trash' !== $parent->post_status
+					&& in_array( $gallery->ID, array_column( $this->access->chain( $parent ), 'ID' ), true )
+					&& $this->can_see( $parent );
+			}
+			if ( $allowed[ $parent_id ] ) {
+				$visible[ $attachment->ID ] = true;
+			}
+		}
+		return array_intersect_key( $items, $visible );
+	}
+
+	/**
 	 * Name to give the photographer for finding the image in their own
 	 * catalogue (for example a Lightroom filter): the uploaded file name
 	 * without the random suffix SlashPhoto adds, the "-scaled" marker or the

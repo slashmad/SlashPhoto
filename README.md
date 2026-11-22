@@ -25,7 +25,8 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
 ## Features
 
 - **Galleries and sub-galleries** that use the active block or classic theme's
-  layout, colours and typography. The gallery block applies the same access
+  layout, colours and typography. Use **Photos → Reorder photos** to move
+  an image to any position in a gallery. The gallery block applies the same access
   rules on other pages. See [theme compatibility](docs/theme-compatibility.md).
 - **Panoramas and 360° images.** 360° images are detected from the GPano XMP
   metadata that cameras and stitchers such as PTGui write, including partial

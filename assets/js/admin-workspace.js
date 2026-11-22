@@ -25,5 +25,9 @@
 		count.dataset.photoCount = total;
 		count.textContent = total.toLocaleString( document.documentElement.lang );
 		document.querySelector( '.slashphoto-workspace__empty' ).hidden = true;
+		const reorder = document.querySelector( '[data-reorder-photos]' );
+		if ( reorder ) {
+			reorder.hidden = total < 2;
+		}
 	} );
 } )( document );
