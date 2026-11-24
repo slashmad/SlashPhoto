@@ -51,8 +51,15 @@ $slashphoto_target  = $args['directory'] ? $args['directory'] : '#' . $args['sec
 				<h2><?php esc_html_e( 'Public galleries', 'slashphoto' ); ?></h2>
 				<p><?php esc_html_e( 'Have a private gallery? Open the link from your photographer.', 'slashphoto' ); ?></p>
 			</div>
-			<?php if ( $slashphoto_hero && $args['directory'] ) : ?>
-				<a href="<?php echo esc_url( $args['directory'] ); ?>"><?php esc_html_e( 'All public galleries', 'slashphoto' ); ?> <span aria-hidden="true">→</span></a>
+			<?php if ( ( $slashphoto_hero && $args['directory'] ) || ! empty( $args['account'] ) ) : ?>
+				<div class="slashphoto-directory__actions">
+					<?php if ( $slashphoto_hero && $args['directory'] ) : ?>
+						<a href="<?php echo esc_url( $args['directory'] ); ?>"><?php esc_html_e( 'All public galleries', 'slashphoto' ); ?> <span aria-hidden="true">→</span></a>
+					<?php endif; ?>
+					<?php if ( ! empty( $args['account'] ) ) : ?>
+						<a href="<?php echo esc_url( $args['account'] ); ?>"><?php esc_html_e( 'My account', 'slashphoto' ); ?></a>
+					<?php endif; ?>
+				</div>
 			<?php endif; ?>
 		</header>
 

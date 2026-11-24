@@ -39,7 +39,7 @@ final class Settings {
 	 */
 	public const SECTIONS   = [
 		'general_watermark' => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity' ],
-		'general_galleries' => [ 'gallery_directory_page' ],
+		'general_galleries' => [ 'gallery_directory_page', 'account_page' ],
 		'general_copies'    => [ 'display_size', 'display_quality', 'display_format' ],
 		'general_snapotter' => [ 'snapotter_mode', 'snapotter_min_mp' ],
 		'general_visitors'  => [ 'stats_enabled', 'visitor_retention_days', 'terms_ask_email', 'signin_links' ],
@@ -48,7 +48,7 @@ final class Settings {
 		'shop_pages'        => [ 'shop_page', 'shop_terms_page' ],
 		'shop_prices'       => [ 'currency', 'prices_include_tax', 'tax_rate', 'tax_rates', 'shop_price_list' ],
 		'shop_prints'       => [ 'print_presets' ],
-		'shop_shipping'     => [ 'shipping_flat', 'free_shipping_over', 'shipping_countries' ],
+		'shop_shipping'     => [ 'shipping_flat', 'free_shipping_over', 'shipping_countries', 'express_shipping', 'express_price', 'pickup_country', 'pickup_instructions' ],
 		'shop_downloads'    => [ 'download_days' ],
 		'shop_giftcards'    => [ 'gift_cards', 'gift_card_amounts', 'gift_card_months' ],
 		'shop_receipts'     => [ 'business_name', 'business_details', 'receipt_note' ],
@@ -56,8 +56,8 @@ final class Settings {
 		'general'           => [ 'watermark_id', 'watermark_default', 'watermark_position', 'watermark_scale', 'watermark_opacity', 'display_size', 'display_quality', 'display_format', 'snapotter_mode', 'snapotter_min_mp', 'stats_enabled', 'visitor_retention_days', 'terms_ask_email', 'signin_links', 'selection_client_email' ],
 		'shop'              => [ 'currency', 'prices_include_tax', 'tax_rate', 'tax_rates', 'shipping_flat', 'free_shipping_over', 'shipping_countries', 'download_days', 'shop_page', 'shop_terms_page', 'shop_email', 'shop_price_list', 'manual_enabled', 'manual_title', 'manual_instructions', 'business_name', 'business_details', 'receipt_note' ],
 	];
-	public const CHECKBOXES = [ 'watermark_default', 'prices_include_tax', 'manual_enabled', 'stats_enabled', 'terms_ask_email', 'signin_links', 'selection_client_email', 'gift_cards', 'inbox_enabled' ];
-	public const AMOUNTS    = [ 'shipping_flat', 'free_shipping_over' ];
+	public const CHECKBOXES = [ 'watermark_default', 'prices_include_tax', 'manual_enabled', 'stats_enabled', 'terms_ask_email', 'signin_links', 'selection_client_email', 'gift_cards', 'inbox_enabled', 'express_shipping' ];
+	public const AMOUNTS    = [ 'shipping_flat', 'free_shipping_over', 'express_price' ];
 
 	/**
 	 * Default values.
@@ -68,6 +68,7 @@ final class Settings {
 		$swedish = str_starts_with( (string) get_locale(), 'sv' );
 		return [
 			'gallery_directory_page' => 0,
+			'account_page'           => 0,
 			'watermark_id'           => 0,
 			'watermark_default'      => false,
 			'watermark_position'     => 'center',
@@ -93,6 +94,10 @@ final class Settings {
 			'free_shipping_over'     => 0,
 			'print_presets'          => PrintPresets::IDS,
 			'shipping_countries'     => $swedish ? 'SE' : '',
+			'express_shipping'       => false,
+			'express_price'          => 0,
+			'pickup_country'         => '',
+			'pickup_instructions'    => '',
 			'download_days'          => 30,
 			'gift_cards'             => false,
 			'gift_card_amounts'      => [],
@@ -183,9 +188,11 @@ final class Settings {
 		$currencies = (array) apply_filters( 'slashphoto_currencies', Money::CURRENCIES );
 		$currency   = strtoupper( (string) $value( 'currency' ) );
 		$currency   = in_array( $currency, $currencies, true ) ? $currency : $defaults['currency'];
+		$pickup     = strtoupper( trim( (string) $value( 'pickup_country' ) ) );
 
 		$clean = [
 			'gallery_directory_page' => absint( $value( 'gallery_directory_page' ) ),
+			'account_page'           => absint( $value( 'account_page' ) ),
 			'watermark_id'           => $id,
 			'watermark_default'      => ! empty( $input['watermark_default'] ),
 			'watermark_position'     => in_array( $position, self::POSITIONS, true ) ? $position : $defaults['watermark_position'],
@@ -209,6 +216,9 @@ final class Settings {
 			'tax_rates'              => self::tax_rates( $value( 'tax_rates' ) ),
 			'print_presets'          => PrintPresets::sanitize( $value( 'print_presets' ) ),
 			'shipping_countries'     => implode( ', ', Countries::codes( $value( 'shipping_countries' ) ) ),
+			'express_shipping'       => (bool) $value( 'express_shipping' ),
+			'pickup_country'         => in_array( $pickup, Countries::all(), true ) ? $pickup : '',
+			'pickup_instructions'    => mb_substr( sanitize_textarea_field( (string) $value( 'pickup_instructions' ) ), 0, 1000 ),
 			'download_days'          => min( 3650, max( 0, (int) $value( 'download_days' ) ) ),
 			'gift_cards'             => (bool) $value( 'gift_cards' ),
 			'gift_card_amounts'      => self::amounts( $value( 'gift_card_amounts' ), $currency ),

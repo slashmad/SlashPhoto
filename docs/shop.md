@@ -33,7 +33,11 @@ There are no platform fees, no paid add-ons and no WooCommerce dependency.
 
 Under **Prints and shipping**, open **Choose countries** to select delivery
 destinations by name. The search narrows the checklist while keeping your
-selections. Clear the checklist to disable print orders.
+selections. Standard shipping uses the existing rate and free shipping
+threshold. Express has its own flat rate and uses the same countries.
+Set the pickup country and instructions to offer free local pickup. Pickup
+uses the shop's pickup country for country-specific VAT and does not ask for
+a delivery address. Clear the country checklist to disable shipping.
 
 ## Paper and framing options
 
@@ -79,32 +83,46 @@ The selected paper, framing and price are saved with the order for fulfilment
 and receipts. Customers will need to choose again if you add options to a
 plain print they have in their cart, or remove or rename the selected option.
 For a package with a fixed paper or frame, create a separate print named
-with that specification and choose it under **each with**. The package
+with that specification and choose it under **Products per photo**. The package
 price covers that configuration.
+
+## Print previews and panorama prints
+
+Include dimensions such as `20 × 30 cm`, `200 x 300 mm` or `8 x 12 in` in
+the product name. The lightbox shows the print format and lets the customer
+choose a crop. The print CSV includes the saved rectangle as
+`crop_xywh_10000` (left, top, width and height in ten-thousandths of the
+source). An empty column means the customer did not choose a crop.
+
+For a complete equirectangular 360° photo, frame the view in the lightbox
+and use **Use current 360° view** in the print preview. The order records the
+angle, zoom and print proportions. An editor with access to the original can
+export a JPEG from the paid order in the browser. The longest side is capped
+at 4800 pixels. Use a browser-readable full-sphere original. Partial
+panoramas and panoramas that need pitch or roll correction use the existing
+viewer without this print option.
 
 ## Packages
 
-A package is a number of photos the customer chooses, each with the same
-download or print, for one price: "10 downloads", "5 prints 13 × 18 cm".
-Add a row of type "Package" to a price list, set the number of photos and
-choose the product each photo gets (save new downloads and prints first).
-With the number set to 0 the package covers every photo in the gallery
-("the whole gallery as downloads").
+A package covers a number of photos the customer chooses for one price.
+In the price list, choose one or more downloads and prints under
+**Products per photo**. A set of six photos could include a print and a web
+download of each photo. Save new products first and set the photo count to
+0 to include every photo in the gallery.
 
 Customers add photos to a package from the lightbox ("Add to package");
 the cart shows "3 of 10 photos chosen", the photos as thumbnails that can
 be removed one by one, and the package price. A package can be ordered
-before it is full. After the order each photo is its own line (price 0)
-under the package, so downloads and prints work as usual and the order
-screen lists every file. A package of prints is shipped.
+before it is full. Each component of each selected photo becomes a zero-price
+line under the package price. A package containing prints needs a delivery method.
 
 ## Discount codes
 
 **SlashPhoto → Discount codes → Add discount code.** The title is the code
 (stored in capitals; customers can type it in any case). Rules:
 
-- percent or a fixed amount, on everything, downloads only or prints only
-  (a package counts as what it contains);
+- percent or a fixed amount, on everything, downloads only or prints only.
+  A type-specific code applies to packages containing only that type.
 - free shipping, with or without an amount off;
 - minimum order value, first and last day;
 - total number of uses and uses per customer (by email address).
@@ -220,6 +238,21 @@ under Shop settings → Receipts and invoices.
   a private link to it. Once the order is paid, the page has a download
   button for each download.
 
+To offer a customer account, go to **SlashPhoto → Settings → Galleries**
+and choose **Create account page**, or select a published page containing
+`[slashphoto_account]`. Link to it from your site menu. The public gallery
+directory links there when the page is configured. Customers can open
+orders placed while signed in to their account; guest orders remain
+available through their private email links.
+
+Paid orders with several downloadable files have **Download all (ZIP)**.
+The archive uses the purchased sizes, preserves the order of the files
+and includes licence terms where applicable. It is built on demand and
+removed after the response. ZIP needs PHP's ZipArchive extension and a
+writable system temporary directory outside the site. Each archive supports
+up to 500 download lines and 1 GiB of file data. Individual downloads remain
+available for bigger orders.
+
 ## Orders
 
 **SlashPhoto → Orders** lists orders with status filters and search. The
@@ -247,6 +280,17 @@ quantity, original file label (without extension), the saved description and
 the product, paper and frame where recorded. Older lines retain their saved
 description. The CSV includes order and image IDs and excludes contact details,
 addresses and download links.
+
+Use **Download sales report (CSV)** on the overview for an order-date
+range in UTC. The export includes currency, payment and delivery methods,
+amounts and recorded refunds. It does not include customer contact data.
+
+The **Refunds** panel tracks completed and partial refunds. It can send
+refunds through an order's existing Stripe, PayPal or Mollie payment, or
+record amounts already returned, with a transaction reference. Check an
+unresolved attempt with the provider before confirming or releasing it.
+The downloads close after a full refund. Orders paid with gift cards and
+orders selling gift cards use the existing gift card workflow.
 
 ## Stripe
 
@@ -311,8 +355,8 @@ when the customer returns.
   orders or downloads. Order pages are not cached, not indexed and send no
   referrer.
 - Downloads are streamed through PHP from the private originals folder,
-  only for paid orders, only during the download period and only with the
-  right key. Admin links to originals need a nonce and the right to edit
+  only for paid orders during the download period and only for the order
+  account or the correct private key. Admin links to originals need a nonce and the right to edit
   the gallery.
 - A smaller download is made from the original the first time it is
   downloaded and kept next to the original, in the same protected random

@@ -31,6 +31,7 @@ use SlashPhoto\Admin\VisitorsPage;
 use SlashPhoto\Admin\SettingsPage;
 use SlashPhoto\Blocks\GalleryBlock;
 use SlashPhoto\Frontend\Assets;
+use SlashPhoto\Frontend\AccountPage;
 use SlashPhoto\Frontend\GalleryDirectory;
 use SlashPhoto\Frontend\TemplateLoader;
 use SlashPhoto\Frontend\ThemeCompat;
@@ -40,6 +41,7 @@ use SlashPhoto\Gallery\GalleryRepository;
 use SlashPhoto\Gallery\Inbox;
 use SlashPhoto\Gallery\PostType;
 use SlashPhoto\Gallery\ChunkedUploads;
+use SlashPhoto\Gallery\ExpiryReminders;
 use SlashPhoto\Gallery\Importer;
 use SlashPhoto\Gallery\Uploads;
 use SlashPhoto\Media\DisplayCopy;
@@ -50,6 +52,7 @@ use SlashPhoto\Media\Panorama;
 use SlashPhoto\Media\Watermark;
 use SlashPhoto\Proofing\Notifications;
 use SlashPhoto\Proofing\Proofing;
+use SlashPhoto\Proofing\Revisions;
 use SlashPhoto\Proofing\Selections;
 use SlashPhoto\Proofing\SelectionsRest;
 use SlashPhoto\Shop\CheckoutRest;
@@ -175,6 +178,9 @@ final class Plugin {
 		( new Watermark( $this->access ) )->register_hooks();
 
 		$this->proofing = new Proofing( $this->access, $terms );
+		$revisions      = new Revisions( $this->access, $this->proofing );
+		$revisions->register_hooks();
+		( new AccountPage( $this->access, $this->proofing, $this->templates ) )->register_hooks();
 		( new Selections() )->register_hooks();
 		( new SelectionsRest( $this->proofing ) )->register_hooks();
 		( new Notifications( $this->access ) )->register_hooks();
@@ -185,6 +191,7 @@ final class Plugin {
 		( new Importer() )->register_hooks();
 		( new Inbox() )->register_hooks();
 		( new ChunkedUploads() )->register_hooks();
+		( new ExpiryReminders( $this->access ) )->register_hooks();
 
 		$this->shop = new Shop( $this->access, $terms );
 		( new Schema() )->register_hooks();
@@ -204,7 +211,7 @@ final class Plugin {
 		( new MollieGateway() )->register_hooks();
 
 		$galleries      = new GalleryRepository();
-		$this->renderer = new GalleryRenderer( $this->templates, $galleries, $panorama, $this->access, $terms, $this->proofing, $this->shop );
+		$this->renderer = new GalleryRenderer( $this->templates, $galleries, $panorama, $this->access, $terms, $this->proofing, $this->shop, $revisions );
 		( new ThemeCompat( $this->renderer ) )->register_hooks();
 		( new GalleryDirectory( $this->access, $galleries, $this->templates ) )->register_hooks();
 		( new Assets() )->register_hooks();
@@ -315,6 +322,7 @@ final class Plugin {
 		wp_clear_scheduled_hook( Orders::CRON );
 		wp_clear_scheduled_hook( VisitorLog::CRON );
 		wp_clear_scheduled_hook( Inbox::CRON );
+		wp_clear_scheduled_hook( ExpiryReminders::CRON );
 		unregister_post_type( PostType::POST_TYPE );
 		flush_rewrite_rules();
 	}

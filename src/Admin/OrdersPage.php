@@ -52,6 +52,7 @@ final class OrdersPage {
 		add_action( 'admin_post_' . self::ACTION, [ $this, 'handle' ] );
 		( new PrintExport() )->register_hooks();
 		( new TaxExport() )->register_hooks();
+		( new OrderRefunds() )->register_hooks();
 	}
 
 	/**
@@ -115,6 +116,8 @@ final class OrdersPage {
 		if ( str_ends_with( $hook, '_page_' . self::SLUG ) ) {
 			$file = 'assets/css/admin-galleries.css';
 			wp_enqueue_style( 'slashphoto-gallery-overview', SLASHPHOTO_URL . $file, [ 'dashicons' ], Assets::version( $file ) );
+			$file = 'assets/js/admin-panorama-print.js';
+			wp_enqueue_script( 'slashphoto-panorama-print', SLASHPHOTO_URL . $file, [], Assets::version( $file ), true );
 		}
 	}
 
@@ -140,6 +143,7 @@ final class OrdersPage {
 				</div>
 			</header>
 			<?php TaxExport::form(); ?>
+			<?php TaxExport::form( true ); ?>
 			<div class="slashphoto-gallery-overview__groups">
 				<?php foreach ( $groups as $status => $color ) : ?>
 					<?php $orders = $counts[ $status ] ? Orders::query( $status, '', 4, 1 )['rows'] : []; ?>
@@ -283,6 +287,13 @@ final class OrdersPage {
 									</td>
 									<td>
 										<?php echo esc_html( $item['name'] ); ?>
+										<?php if ( ! empty( $item['print_crop'] ) ) : ?>
+											<br><span class="description"><?php esc_html_e( 'Custom print crop', 'slashphoto' ); ?> <code><?php echo esc_html( $item['print_crop'] ); ?></code></span>
+										<?php endif; ?>
+										<?php if ( ! empty( $item['print_view'] ) ) : ?>
+											<br><span class="description"><?php esc_html_e( 'View from 360° panorama', 'slashphoto' ); ?></span>
+											<?php $this->panorama_download( $order, $item ); ?>
+										<?php endif; ?>
 										<?php if ( '' !== (string) ( $item['licence_name'] ?? '' ) ) : ?>
 											<br><span class="description">
 												<?php
@@ -351,6 +362,13 @@ final class OrdersPage {
 								<br><?php echo esc_html( (string) $order['phone'] ); ?>
 							<?php endif; ?>
 						</p>
+						<?php if ( ! empty( $order['delivery_label'] ) ) : ?>
+							<h3><?php esc_html_e( 'Delivery method', 'slashphoto' ); ?></h3>
+							<p><?php echo esc_html( $order['delivery_label'] ); ?></p>
+							<?php if ( ! empty( $order['pickup_instructions'] ) ) : ?>
+								<div><?php echo wp_kses_post( wpautop( esc_html( $order['pickup_instructions'] ) ) ); ?></div>
+							<?php endif; ?>
+						<?php endif; ?>
 						<?php if ( $order['address'] ) : ?>
 							<h3><?php esc_html_e( 'Delivery address', 'slashphoto' ); ?></h3>
 							<p><?php echo implode( '<br>', array_map( 'esc_html', Emails::address_lines( $order ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped per line. ?></p>
@@ -394,16 +412,49 @@ final class OrdersPage {
 								<?php endforeach; ?>
 							</select>
 						</p>
-						<p class="description"><?php esc_html_e( 'The customer gets an email when the order becomes paid, completed, cancelled or refunded. Marking it paid opens the downloads. Refunds through Stripe are made in the Stripe Dashboard.', 'slashphoto' ); ?></p>
+						<p class="description"><?php esc_html_e( 'The customer gets an email when the order becomes paid, completed, cancelled or refunded. Marking it paid opens the downloads.', 'slashphoto' ); ?></p>
 						<p>
 							<label for="slashphoto-admin-note"><?php esc_html_e( 'Private note', 'slashphoto' ); ?></label>
 							<textarea id="slashphoto-admin-note" name="admin_note" class="widefat" rows="3"><?php echo esc_textarea( (string) $order['admin_note'] ); ?></textarea>
 						</p>
 						<?php submit_button( __( 'Update order', 'slashphoto' ), 'primary', 'submit', false ); ?>
 					</form>
+					<?php OrderRefunds::render( $order ); ?>
 				</div>
 			</div>
 		</div>
+		<?php
+	}
+
+	/**
+	 * Offers a print file only to an editor allowed to read the private original.
+	 *
+	 * @param array $order Order.
+	 * @param array $item  Print line containing the camera view.
+	 */
+	private function panorama_download( array $order, array $item ): void {
+		if ( ! in_array( $order['status'], Orders::PAID, true ) || ! current_user_can( 'edit_post', $item['gallery_id'] ) ) {
+			return;
+		}
+		$format = json_decode( $item['print_view'], true );
+		if ( ! is_array( $format ) ) {
+			return;
+		}
+		$file = 'assets/js/panorama-print.js';
+		$data = [
+			'view'     => $format,
+			'source'   => html_entity_decode( Downloads::admin_url( $item['image_id'] ) ),
+			'module'   => add_query_arg( 'ver', Assets::version( $file ), SLASHPHOTO_URL . $file ),
+			'name'     => 'order-' . $order['id'] . '-' . $item['id'] . '-print.jpg',
+			'progress' => __( 'Preparing print file…', 'slashphoto' ),
+			'done'     => __( 'Print file ready.', 'slashphoto' ),
+			'error'    => __( 'The print file could not be made. Check that the original opens as a full panorama in this browser.', 'slashphoto' ),
+		];
+		?>
+		<p>
+			<button type="button" class="button" data-slashphoto-panorama-print="<?php echo esc_attr( (string) wp_json_encode( $data ) ); ?>"><?php esc_html_e( 'Download print view', 'slashphoto' ); ?></button>
+			<span role="status"></span>
+		</p>
 		<?php
 	}
 }

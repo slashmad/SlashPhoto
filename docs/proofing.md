@@ -23,7 +23,7 @@ separate selection.
   and send the selection with an optional message. After sending, the
   selection is locked until the photographer reopens it.
 - **Show only selected** filters the grid; the lightbox then steps through
-  the selected images only.
+  the selected images on that page.
 - Visitors who are not logged in keep favourites in their own browser and
   see a link to log in. After logging in, those favourites are added to
   their selection once.
@@ -53,7 +53,14 @@ sub-gallery's images.
 - The review shows the client's message, selected photos and image notes.
   **File names for Lightroom** gives you the original file labels without
   extensions and upload suffixes. **Download CSV** includes those labels,
-  image IDs and per-photo notes in the order the client chose them.
+  image IDs and per-photo notes in the order the client chose them. When
+  names repeat, use the gallery ID, capture time, camera and web image
+  dimensions alongside the file label.
+- In a protected gallery's **Photos** tab, open **Client revision** on
+  the photo you want to update. Upload a JPEG, PNG or WebP. A signed-in
+  client who selected that photo can switch between the original preview
+  and the latest version in the lightbox. Notes, the original file and
+  purchased files stay attached to the existing image.
 - **Let the client change it** reopens a sent selection; **Delete selection**
   removes it.
 

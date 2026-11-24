@@ -68,7 +68,7 @@ final class PrintExport {
 	 * @param string   $search Order search.
 	 */
 	public static function write( $output, string $status = '', string $search = '' ): void {
-		fputcsv( $output, [ 'order_id', 'status', 'gallery_id', 'image_id', 'file_label', 'description', 'product', 'paper', 'frame', 'quantity' ], ',', '"', '' );
+		fputcsv( $output, [ 'order_id', 'status', 'gallery_id', 'image_id', 'file_label', 'description', 'product', 'paper', 'frame', 'quantity', 'delivery_method', 'crop_xywh_10000', 'panorama_print_view' ], ',', '"', '' );
 		foreach ( Orders::print_rows( $status, $search ) as $row ) {
 			unset( $row['id'] );
 			fputcsv( $output, array_map( [ Csv::class, 'safe' ], $row ), ',', '"', '' );

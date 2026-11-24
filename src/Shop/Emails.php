@@ -195,6 +195,13 @@ final class Emails {
 			$lines[] = '';
 			$lines[] = $order['name'] . ' <' . $order['email'] . '>' . ( '' !== $order['phone'] ? ', ' . $order['phone'] : '' );
 		}
+		if ( ! empty( $order['delivery_label'] ) ) {
+			/* translators: %s: delivery method. */
+			$lines[] = sprintf( __( 'Delivery method: %s', 'slashphoto' ), $order['delivery_label'] );
+			if ( ! empty( $order['pickup_instructions'] ) ) {
+				$lines[] = (string) $order['pickup_instructions'];
+			}
+		}
 		if ( ! empty( $order['address'] ) ) {
 			$lines[] = '';
 			$lines[] = __( 'Delivery address:', 'slashphoto' );

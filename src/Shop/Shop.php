@@ -90,7 +90,8 @@ final class Shop {
 		}
 		$currency = (string) Settings::get( 'currency' );
 		$offer    = [];
-		foreach ( PriceLists::products( $list ) as $product ) {
+		$products = array_column( PriceLists::products( $list ), null, 'id' );
+		foreach ( $products as $product ) {
 			$entry   = [
 				'id'    => $product['id'],
 				'kind'  => $product['kind'],
@@ -101,10 +102,12 @@ final class Shop {
 			if ( $licence ) {
 				$entry['licence'] = $licence['name'];
 			}
+			if ( 'print' === $product['kind'] ) {
+				$entry['format'] = PrintCrop::format( $product['name'] );
+			}
 			if ( 'package' === $product['kind'] ) {
-				$includes          = PriceLists::product( $list, $product['includes'] );
 				$entry['count']    = $product['count'];
-				$entry['includes'] = $includes ? $includes['name'] : '';
+				$entry['includes'] = implode( ', ', array_column( array_intersect_key( $products, array_flip( $product['includes'] ) ), 'name' ) );
 				$entry['gallery']  = $gallery->ID;
 			}
 			if ( ! empty( $product['variants'] ) ) {
@@ -139,9 +142,10 @@ final class Shop {
 	 *
 	 * @param string $country Customer's country (delivery country for prints), for VAT by country.
 	 * @param string $gift    Gift card code to pay with, if any.
+	 * @param string $delivery Selected print delivery method, or the default.
 	 * @return array{lines: array, unavailable: array, currency: string, subtotal: int, discount: int, coupon: string, coupon_error: string, shipping: int, tax: int, total: int, tax_rate: float, tax_country: string, tax_by_country: bool, prices_include_tax: bool, needs_shipping: bool, gift_card: array{id: int, hint: string, amount: int, error: string}, due: int}
 	 */
-	public function quote( array $items, string $coupon = '', string $email = '', string $country = '', string $gift = '' ): array {
+	public function quote( array $items, string $coupon = '', string $email = '', string $country = '', string $gift = '', string $delivery = '' ): array {
 		$currency = (string) Settings::get( 'currency' );
 		$merged   = [];
 		$packages = [];
@@ -175,6 +179,14 @@ final class Shop {
 			$image   = (int) ( $item['image'] ?? 0 );
 			$variant = (string) ( $item['variant'] ?? '' );
 			$key     = $image . ':' . $product . ( '' === $variant ? '' : ':' . $variant );
+			$crop    = isset( $item['crop'] ) ? (int) $item['crop'] : null;
+			$view    = (string) ( $item['view'] ?? '' );
+			if ( null !== $crop ) {
+				$key .= ':crop-' . $crop;
+			}
+			if ( '' !== $view ) {
+				$key .= ':view-' . $view;
+			}
 			if ( $image <= 0 ) {
 				continue;
 			}
@@ -182,6 +194,8 @@ final class Shop {
 				'image'   => $image,
 				'product' => $product,
 				'variant' => $variant,
+				'crop'    => $crop,
+				'view'    => $view,
 				'qty'     => ( $merged[ $key ]['qty'] ?? 0 ) + max( 1, (int) ( $item['qty'] ?? 1 ) ),
 			];
 		}//end foreach
@@ -209,16 +223,18 @@ final class Shop {
 		$prints   = false;
 		foreach ( $lines as $line ) {
 			$subtotal += $line['total'];
-			$prints    = $prints || 'print' === ( $line['includes']['kind'] ?? $line['kind'] );
+			$prints    = $prints || in_array( 'print', self::line_kinds( $line ), true );
 		}
 		$goods = $lines;
 
 		// Licences the customer must accept, once each.
 		$licences = [];
 		foreach ( $lines as $line ) {
-			$licence = $line['licence'] ?? ( $line['includes']['licence'] ?? null );
-			if ( $licence ) {
-				$licences[ $licence['id'] ] = $licence;
+			foreach ( $line['includes'] ?? [ $line ] as $component ) {
+				$licence = $component['licence'] ?? null;
+				if ( $licence ) {
+					$licences[ $licence['id'] ] = $licence;
+				}
 			}
 		}
 
@@ -258,10 +274,15 @@ final class Shop {
 		}
 		$discount = min( $subtotal, $applied['discount'] );
 
-		$shipping = 0;
-		if ( $prints && ! $applied['free_shipping'] ) {
-			$free     = (int) Settings::get( 'free_shipping_over' );
-			$shipping = $free > 0 && $subtotal - $discount >= $free ? 0 : (int) Settings::get( 'shipping_flat' );
+		$method   = $prints ? Delivery::quote( $delivery, $subtotal - $discount, $applied['free_shipping'] ) : [
+			'id'           => '',
+			'label'        => '',
+			'instructions' => '',
+			'price'        => 0,
+		];
+		$shipping = $method['price'];
+		if ( 'pickup' === $method['id'] ) {
+			$country = (string) Settings::get( 'pickup_country' );
 		}
 		[ $rate, $tax_country ] = self::tax_rate( $country );
 
@@ -295,6 +316,7 @@ final class Shop {
 			'coupon'             => $applied['code'],
 			'coupon_error'       => $applied['error'],
 			'shipping'           => $shipping,
+			'delivery'           => $method,
 			'tax'                => $tax,
 			'total'              => $total,
 			'gift_card'          => $card,
@@ -324,6 +346,16 @@ final class Shop {
 	}
 
 	/**
+	 * Product kinds represented by a cart line.
+	 *
+	 * @param array $line Cart line.
+	 * @return string[]
+	 */
+	public static function line_kinds( array $line ): array {
+		return array_values( array_unique( array_column( $line['includes'] ?? [ $line ], 'kind' ) ) );
+	}
+
+	/**
 	 * Prices a package, or returns null when it is not available.
 	 *
 	 * Every photo must be visible to the visitor and sold through the same
@@ -344,15 +376,13 @@ final class Shop {
 		if ( ! $gallery || 'publish' !== $gallery->post_status ) {
 			return null;
 		}
-		$list    = $this->price_list( $gallery );
-		$product = $list ? PriceLists::product( $list, $product_id ) : null;
+		$list     = $this->price_list( $gallery );
+		$products = $list ? array_column( PriceLists::products( $list ), null, 'id' ) : [];
+		$product  = $products[ $product_id ] ?? null;
 		if ( ! $product || 'package' !== $product['kind'] ) {
 			return null;
 		}
-		$includes = PriceLists::product( $list, $product['includes'] );
-		if ( ! $includes ) {
-			return null;
-		}
+		$includes = array_map( static fn( string $id ): array => $products[ $id ], $product['includes'] );
 
 		if ( 0 === $product['count'] ) {
 			// The whole gallery: every photo in it, whatever the client sent.
@@ -397,13 +427,16 @@ final class Shop {
 			'total'    => $product['price'],
 			'count'    => $product['count'] ? $product['count'] : count( $images ),
 			'images'   => $images,
-			'includes' => [
-				'id'      => $includes['id'],
-				'kind'    => $includes['kind'],
-				'name'    => $includes['name'],
-				'size'    => 'download' === $includes['kind'] ? (int) ( $includes['size'] ?? 0 ) : 0,
-				'licence' => 'download' === $includes['kind'] ? Licences::get( (int) ( $includes['licence'] ?? 0 ) ) : null,
-			],
+			'includes' => array_map(
+				static fn( array $component ): array => [
+					'id'      => $component['id'],
+					'kind'    => $component['kind'],
+					'name'    => $component['name'],
+					'size'    => 'download' === $component['kind'] ? (int) ( $component['size'] ?? 0 ) : 0,
+					'licence' => 'download' === $component['kind'] ? Licences::get( (int) ( $component['licence'] ?? 0 ) ) : null,
+				],
+				$includes
+			),
 		];
 	}
 
@@ -427,6 +460,20 @@ final class Shop {
 		$product = $list ? PriceLists::product( $list, $item['product'] ) : null;
 		if ( ! $product || 'package' === $product['kind'] ) {
 			return null;
+		}
+		$crop = '';
+		$view = '';
+		if ( '' !== $item['view'] ) {
+			$view = 'print' === $product['kind'] ? PanoramaPrint::snapshot( $image_id, $product['name'], $item['view'] ) : '';
+			if ( '' === $view || null !== $item['crop'] ) {
+				return null;
+			}
+		}
+		if ( null !== $item['crop'] ) {
+			$crop = 'print' === $product['kind'] ? PrintCrop::rectangle( $image_id, PrintCrop::format( $product['name'] ), $item['crop'] ) : null;
+			if ( null === $crop ) {
+				return null;
+			}
 		}
 		$name    = $product['name'];
 		$unit    = $product['price'];
@@ -460,6 +507,8 @@ final class Shop {
 			'print_product' => 'print' === $product['kind'] ? $product['name'] : '',
 			'print_paper'   => $variant['paper'] ?? '',
 			'print_frame'   => $variant['frame'] ?? '',
+			'print_crop'    => $crop,
+			'print_view'    => $view,
 			'download_size' => 'download' === $product['kind'] ? (int) ( $product['size'] ?? 0 ) : 0,
 			'licence'       => 'download' === $product['kind'] ? Licences::get( (int) ( $product['licence'] ?? 0 ) ) : null,
 		];

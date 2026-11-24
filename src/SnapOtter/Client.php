@@ -147,9 +147,10 @@ final class Client {
 	 * @param int    $long_edge Longest side of the result in pixels.
 	 * @param int    $quality   JPEG quality (1-100).
 	 * @param string $target    Where to save the JPEG.
+	 * @param string $ext       Original extension if the upload is a temporary file.
 	 * @return true|WP_Error
 	 */
-	public function display_copy( string $source, int $long_edge, int $quality, string $target ) {
+	public function display_copy( string $source, int $long_edge, int $quality, string $target, string $ext = '' ) {
 		// optimize-for-web keeps the colour profile, EXIF and XMP when asked
 		// to (resize and convert drop them) and applies EXIF orientation.
 		$pipeline = [
@@ -167,7 +168,9 @@ final class Client {
 			],
 		];
 
-		$result = $this->upload( '/api/v1/pipeline/execute', $source, [ 'pipeline' => (string) wp_json_encode( $pipeline ) ] );
+		$ext      = '' === $ext ? strtolower( (string) pathinfo( $source, PATHINFO_EXTENSION ) ) : strtolower( $ext );
+		$filename = 'photo.' . ( preg_match( '/^[a-z0-9]{1,8}$/D', $ext ) ? $ext : 'bin' );
+		$result   = $this->upload( '/api/v1/pipeline/execute', $source, [ 'pipeline' => (string) wp_json_encode( $pipeline ) ], $filename );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
@@ -266,9 +269,10 @@ final class Client {
 	 * @param string               $path   API path.
 	 * @param string               $file   File to send in the "file" field.
 	 * @param array<string,string> $fields Other form fields.
+	 * @param string               $filename File name sent to the processor.
 	 * @return array|WP_Error Decoded JSON.
 	 */
-	private function upload( string $path, string $file, array $fields ) {
+	private function upload( string $path, string $file, array $fields, string $filename ) {
 		if ( ! is_readable( $file ) ) {
 			return new WP_Error( 'slashphoto_snapotter_file', __( 'The uploaded file could not be read.', 'slashphoto' ) );
 		}
@@ -276,8 +280,8 @@ final class Client {
 		$curl_fields = $fields;
 		$use_curl    = class_exists( '\CURLFile' );
 		if ( $use_curl ) {
-			$type                = (string) wp_check_filetype( $file )['type'];
-			$curl_fields['file'] = new \CURLFile( $file, '' !== $type ? $type : 'application/octet-stream', wp_basename( $file ) );
+			$type                = (string) wp_check_filetype( $filename )['type'];
+			$curl_fields['file'] = new \CURLFile( $file, '' !== $type ? $type : 'application/octet-stream', $filename );
 		}
 		$hook = static function ( $handle, $request, $url ) use ( $curl_fields, $path ) {
 			if ( str_ends_with( (string) wp_parse_url( $url, PHP_URL_PATH ), $path ) ) {
@@ -298,7 +302,7 @@ final class Client {
 		} else {
 			$boundary                        = 'slashphoto' . bin2hex( random_bytes( 12 ) );
 			$args['headers']['Content-Type'] = 'multipart/form-data; boundary=' . $boundary;
-			$args['body']                    = self::multipart( $boundary, $fields, $file );
+			$args['body']                    = self::multipart( $boundary, $fields, $file, $filename );
 		}
 
 		$response = wp_remote_request( $this->url . $path, $args );
@@ -314,13 +318,14 @@ final class Client {
 	 * @param string               $boundary Boundary.
 	 * @param array<string,string> $fields   Fields.
 	 * @param string               $file     File for the "file" field.
+	 * @param string               $filename Safe original extension under a neutral file name.
 	 */
-	private static function multipart( string $boundary, array $fields, string $file ): string {
+	private static function multipart( string $boundary, array $fields, string $file, string $filename ): string {
 		$body = '';
 		foreach ( $fields as $name => $value ) {
 			$body .= "--{$boundary}\r\nContent-Disposition: form-data; name=\"{$name}\"\r\n\r\n{$value}\r\n";
 		}
-		$body .= "--{$boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"" . str_replace( '"', '', wp_basename( $file ) ) . "\"\r\nContent-Type: application/octet-stream\r\n\r\n";
+		$body .= "--{$boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{$filename}\"\r\nContent-Type: application/octet-stream\r\n\r\n";
 		$body .= (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local file.
 		return $body . "\r\n--{$boundary}--\r\n";
 	}

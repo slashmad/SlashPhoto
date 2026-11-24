@@ -205,7 +205,12 @@ class Lightbox {
 		this.tools.replaceChildren();
 		document.dispatchEvent(
 			new CustomEvent( 'slashphoto:lightbox-show', {
-				detail: { element: item.element, tools: this.tools, dialog: this.dialog },
+				detail: {
+					element: item.element,
+					tools: this.tools,
+					dialog: this.dialog,
+					printView: () => 'true' === this.dialog.dataset.panoramaReady ? this.viewer?.printView() : null,
+				},
 			} )
 		);
 
@@ -232,6 +237,20 @@ class Lightbox {
 			img.height = item.height;
 		}
 		this.stage.append( img );
+		const revision = item.element.dataset.slashphotoRevision;
+		if ( revision ) {
+			const compare = document.createElement( 'button' );
+			compare.className = 'slashphoto-lightbox__button slashphoto-lightbox__compare';
+			compare.type = 'button';
+			compare.textContent = i18n.compare || 'Show revised photo';
+			let revised = false;
+			compare.addEventListener( 'click', () => {
+				revised = ! revised;
+				img.src = revised ? revision : item.src;
+				compare.textContent = revised ? i18n.original || 'Show original photo' : i18n.compare || 'Show revised photo';
+			} );
+			this.tools.append( compare );
+		}
 	}
 
 	async showPanorama( item, token ) {

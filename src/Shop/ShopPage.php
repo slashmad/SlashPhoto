@@ -7,6 +7,7 @@
 
 namespace SlashPhoto\Shop;
 
+use SlashPhoto\Frontend\AccountPage;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Frontend\TemplateLoader;
 use SlashPhoto\Settings;
@@ -35,6 +36,13 @@ final class ShopPage {
 	 * @var TemplateLoader
 	 */
 	private TemplateLoader $templates;
+
+	/**
+	 * Whether the protected front-end request can open keyless order links.
+	 *
+	 * @var bool
+	 */
+	private bool $account_order_context = false;
 
 	/**
 	 * Constructor.
@@ -95,8 +103,14 @@ final class ShopPage {
 		if ( ! self::is_shop_page() ) {
 			return;
 		}
-		nocache_headers();
-		header( 'Referrer-Policy: no-referrer' );
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Shared by page-cache plugins.
+		}
+		if ( ! headers_sent() ) {
+			nocache_headers();
+			header( 'Referrer-Policy: no-referrer' );
+			$this->account_order_context = ! is_feed() && ! is_embed() && ! is_preview() && ! wp_is_json_request();
+		}
 	}
 
 	/**
@@ -117,10 +131,10 @@ final class ShopPage {
 	 * Renders the shortcode.
 	 */
 	public function render(): string {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only view; the key is the authorisation.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only view verified against the key or account.
 		$order_id = isset( $_GET['order'] ) ? absint( $_GET['order'] ) : 0;
-		$key      = isset( $_GET['key'] ) ? sanitize_key( wp_unslash( $_GET['key'] ) ) : '';
-		if ( $order_id || '' !== $key ) {
+		$key      = isset( $_GET['key'] ) ? sanitize_key( wp_unslash( $_GET['key'] ) ) : null;
+		if ( $order_id || ( null !== $key && '' !== $key ) ) {
 			$query = [
 				'session_id' => isset( $_GET['session_id'] ) ? sanitize_text_field( wp_unslash( $_GET['session_id'] ) ) : '',
 				'token'      => isset( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : '',
@@ -145,6 +159,7 @@ final class ShopPage {
 			[
 				'gateways'   => $gateways,
 				'countries'  => $countries,
+				'delivery'   => Delivery::methods(),
 				// Countries with their own VAT rate first, then the rest.
 				'residence'  => Settings::get( 'tax_rates' ) ? Countries::options( array_values( array_unique( array_merge( $countries, array_keys( (array) Settings::get( 'tax_rates' ) ) ) ) ) ) : [],
 				'terms_page' => self::terms_page(),
@@ -184,24 +199,28 @@ final class ShopPage {
 	/**
 	 * Renders an order for its customer.
 	 *
-	 * @param int    $order_id Order.
-	 * @param string $key      Key from the link.
-	 * @param array  $query    Query arguments for the gateway.
+	 * @param int         $order_id Order.
+	 * @param string|null $key Key from the link, or null for an account order.
+	 * @param array       $query    Query arguments for the gateway.
 	 */
-	private function order_view( int $order_id, string $key, array $query ): string {
+	private function order_view( int $order_id, ?string $key, array $query ): string {
 		wp_enqueue_style( Assets::STYLE_HANDLE );
 		$order = $order_id ? Orders::get( $order_id ) : null;
-		if ( ! $order || ! Orders::verify_key( $order, $key ) ) {
+		if ( ! $order || ( null === $key && ! $this->account_order_context ) || ! Orders::customer_allowed( $order, $key ) ) {
 			return $this->templates->render( 'order.php', [ 'order' => null ] );
 		}
 		$gateway = Gateways::get( (string) $order['gateway'] );
-		if ( $gateway ) {
+		if ( $gateway && null !== $key ) {
 			$order = $gateway->on_return( $order, $query );
 		}
-		$items = Orders::items( (int) $order['id'] );
-		$open  = Orders::downloads_open( $order );
+		$items     = Orders::items( (int) $order['id'] );
+		$open      = Orders::downloads_open( $order );
+		$downloads = 0;
 		foreach ( $items as &$item ) {
-			$item['download'] = $open && 'download' === $item['kind'] ? Downloads::url( $order, $item ) : '';
+			if ( 'download' === $item['kind'] ) {
+				++$downloads;
+				$item['download'] = $open ? Downloads::url( $order, $item, null !== $key ) : '';
+			}
 		}
 		unset( $item );
 
@@ -213,8 +232,12 @@ final class ShopPage {
 				'status'       => Orders::labels()[ $order['status'] ] ?? $order['status'],
 				'instructions' => $gateway && in_array( $order['status'], [ 'pending', 'on-hold' ], true ) ? $gateway->instructions( $order ) : '',
 				'money'        => static fn( int $amount ): string => Money::format( $amount, (string) $order['currency'] ),
-				'has_download' => in_array( 'download', array_column( $items, 'kind' ), true ),
+				'has_download' => $downloads > 0,
+				'archive_url'  => $open && $downloads > 1 && DownloadArchive::available( $downloads ) ? Downloads::archive_url( $order, null !== $key ) : '',
+				'refunded'     => Refunds::completed( Refunds::for_order( $order['id'] ) ),
 				'open'         => $open,
+				'account_url'  => null === $key ? AccountPage::url() : '',
+				'signed_link'  => null !== $key,
 			]
 		);
 	}

@@ -75,6 +75,15 @@ final class CheckoutRest {
 						'type'    => 'string',
 						'pattern' => '^(?:[a-f0-9]{16})?$',
 					],
+					'crop'    => [
+						'type'    => 'integer',
+						'minimum' => 0,
+						'maximum' => 100,
+					],
+					'view'    => [
+						'type'    => 'string',
+						'pattern' => '^(?:-?[0-9]{1,6}:-?[0-9]{1,5}:[0-9]{1,6})?$',
+					],
 					'qty'     => [
 						'type'    => 'integer',
 						'minimum' => 1,
@@ -117,6 +126,7 @@ final class CheckoutRest {
 					'coupon'    => $text( 50 ),
 					'country'   => $text( 2 ),
 					'gift_card' => $text( 30 ),
+					'delivery'  => $text( 20 ),
 				],
 			]
 		);
@@ -147,6 +157,7 @@ final class CheckoutRest {
 							'country'  => $text( 2 ),
 						],
 					],
+					'delivery'  => $text( 20 ),
 					'note'      => $text( 2000 ),
 					// The customer's country when nothing is shipped (VAT by country).
 					'country'   => $text( 2 ),
@@ -168,7 +179,7 @@ final class CheckoutRest {
 	 * @param WP_REST_Request $request Request.
 	 */
 	public function quote( WP_REST_Request $request ): WP_REST_Response {
-		$response = rest_ensure_response( self::present( $this->shop->quote( (array) $request['items'], (string) $request['coupon'], '', (string) $request['country'], (string) $request['gift_card'] ) ) );
+		$response = rest_ensure_response( self::present( $this->shop->quote( (array) $request['items'], (string) $request['coupon'], '', (string) $request['country'], (string) $request['gift_card'], (string) $request['delivery'] ) ) );
 		$response->header( 'Cache-Control', 'no-store' );
 		return $response;
 	}
@@ -192,12 +203,17 @@ final class CheckoutRest {
 		$shipped = strtoupper( sanitize_text_field( (string) ( $raw['country'] ?? '' ) ) );
 		$billing = strtoupper( sanitize_text_field( (string) $request['country'] ) );
 		$gift    = (string) $request['gift_card'];
-		$quote   = $this->shop->quote( (array) $request['items'], $code, $email, $billing, $gift );
-		if ( $quote['needs_shipping'] ) {
-			$quote = $this->shop->quote( (array) $request['items'], $code, $email, $shipped, $gift );
+		$method  = (string) $request['delivery'];
+		$quote   = $this->shop->quote( (array) $request['items'], $code, $email, $billing, $gift, $method );
+		$pickup  = 'pickup' === $quote['delivery']['id'];
+		if ( $quote['needs_shipping'] && ! $pickup ) {
+			$quote = $this->shop->quote( (array) $request['items'], $code, $email, $shipped, $gift, $method );
 		}
 		if ( ! $quote['lines'] ) {
 			return new WP_Error( 'slashphoto_cart_empty', __( 'Your cart is empty.', 'slashphoto' ), [ 'status' => 400 ] );
+		}
+		if ( $quote['needs_shipping'] && '' === $quote['delivery']['id'] ) {
+			return self::invalid( 'delivery', __( 'Choose an available delivery method for your prints.', 'slashphoto' ) );
 		}
 		if ( $quote['unavailable'] || (int) $request['total'] !== $quote['total'] ) {
 			return new WP_Error(
@@ -228,7 +244,7 @@ final class CheckoutRest {
 		}
 
 		$address = [];
-		if ( $quote['needs_shipping'] ) {
+		if ( $quote['needs_shipping'] && ! $pickup ) {
 			$address = [
 				'line1'    => sanitize_text_field( (string) ( $raw['line1'] ?? '' ) ),
 				'line2'    => sanitize_text_field( (string) ( $raw['line2'] ?? '' ) ),
@@ -345,7 +361,7 @@ final class CheckoutRest {
 						$out['package']  = $line['package'];
 						$out['gallery']  = $line['gallery'];
 						$out['count']    = $line['count'];
-						$out['includes'] = $line['includes']['name'];
+						$out['includes'] = implode( ', ', array_column( $line['includes'], 'name' ) );
 						$out['images']   = array_map(
 							static fn( array $image ): array => [
 								'id'    => $image['id'],
@@ -354,6 +370,12 @@ final class CheckoutRest {
 							],
 							$line['images']
 						);
+					}
+					if ( ! empty( $line['print_crop'] ) ) {
+						$out['crop'] = __( 'Custom print crop', 'slashphoto' );
+					}
+					if ( ! empty( $line['print_view'] ) ) {
+						$out['crop'] = __( 'View from 360° panorama', 'slashphoto' );
 					}
 					return $out;
 				},
@@ -380,6 +402,9 @@ final class CheckoutRest {
 			'dueMinor'      => $quote['due'],
 			'giftCards'     => GiftCards::accepted(),
 			'needsShipping' => $quote['needs_shipping'],
+			'delivery'      => $quote['delivery']['id'],
+			'deliveryLabel' => $quote['delivery']['label'],
+			'needsAddress'  => $quote['needs_shipping'] && 'pickup' !== $quote['delivery']['id'],
 			'taxByCountry'  => $quote['tax_by_country'],
 			'licences'      => array_map(
 				static fn( array $licence ): array => [

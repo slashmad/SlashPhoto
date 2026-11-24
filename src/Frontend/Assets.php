@@ -73,7 +73,7 @@ final class Assets {
 		 *
 		 * @param bool $needed Whether the current view shows a gallery.
 		 */
-		if ( apply_filters( 'slashphoto_enqueue_frontend_styles', $needed || $directory ) ) {
+		if ( apply_filters( 'slashphoto_enqueue_frontend_styles', $needed || $directory || AccountPage::is_current() ) ) {
 			wp_enqueue_style( self::STYLE_HANDLE );
 		}
 
@@ -157,6 +157,8 @@ final class Assets {
 					'viewer360'  => __( '360° panorama. Drag to look around.', 'slashphoto' ),
 					'noWebGL'    => __( 'Your browser cannot show 360° images. Showing the flat image instead.', 'slashphoto' ),
 					'fullscreen' => __( 'Fullscreen', 'slashphoto' ),
+					'compare'    => __( 'Show revised photo', 'slashphoto' ),
+					'original'   => __( 'Show original photo', 'slashphoto' ),
 				],
 			]
 		);
@@ -218,10 +220,11 @@ final class Assets {
 		return array_merge(
 			(array) $data,
 			[
-				'restUrl' => esc_url_raw( rest_url( 'slashphoto/v1/shop/' ) ),
-				'nonce'   => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
-				'cartUrl' => $page ? (string) get_permalink( $page ) : '',
-				'i18n'    => [
+				'restUrl'       => esc_url_raw( rest_url( 'slashphoto/v1/shop/' ) ),
+				'nonce'         => is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '',
+				'cartUrl'       => $page ? (string) get_permalink( $page ) : '',
+				'panoramaPrint' => add_query_arg( 'ver', self::version( 'assets/js/panorama-print.js' ), SLASHPHOTO_URL . 'assets/js/panorama-print.js' ),
+				'i18n'          => [
 					'cart'              => __( 'Cart', 'slashphoto' ),
 					'buy'               => __( 'Buy this photo', 'slashphoto' ),
 					/* translators: %d: number of items */
@@ -238,6 +241,12 @@ final class Assets {
 					/* translators: %s: product name */
 					'quantityFor'       => __( 'Quantity, %s', 'slashphoto' ),
 					'printOptions'      => __( 'Paper and framing', 'slashphoto' ),
+					'printPreview'      => __( 'Print preview', 'slashphoto' ),
+					'printFill'         => __( 'Crop to fill the print', 'slashphoto' ),
+					'printPosition'     => __( 'Crop position', 'slashphoto' ),
+					'usePanoramaView'   => __( 'Use current 360° view', 'slashphoto' ),
+					'adjustView'        => __( 'Adjust the panorama or wait until the viewer has loaded.', 'slashphoto' ),
+					'viewSelected'      => __( 'This view will be used for this print.', 'slashphoto' ),
 					/* translators: %s: print product name */
 					'printOptionsFor'   => __( 'Paper and framing, %s', 'slashphoto' ),
 					'close'             => __( 'Close', 'slashphoto' ),

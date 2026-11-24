@@ -79,30 +79,33 @@ final class Orders {
 		$ok = $wpdb->insert(
 			Schema::orders(),
 			[
-				'token'              => bin2hex( random_bytes( 16 ) ),
-				'status'             => 'pending',
-				'user_id'            => (int) ( $order['user_id'] ?? 0 ),
-				'email'              => (string) $order['email'],
-				'name'               => (string) $order['name'],
-				'phone'              => (string) ( $order['phone'] ?? '' ),
-				'address'            => ! empty( $order['address'] ) ? (string) wp_json_encode( $order['address'] ) : null,
-				'customer_note'      => (string) ( $order['customer_note'] ?? '' ),
-				'currency'           => (string) $quote['currency'],
-				'subtotal'           => (int) $quote['subtotal'],
-				'discount'           => (int) ( $quote['discount'] ?? 0 ),
-				'coupon'             => (string) ( $quote['coupon'] ?? '' ),
-				'gift_card_id'       => (int) ( $quote['gift_card']['id'] ?? 0 ),
-				'gift_card_hint'     => (string) ( $quote['gift_card']['hint'] ?? '' ),
-				'gift_card_amount'   => (int) ( $quote['gift_card']['amount'] ?? 0 ),
-				'shipping'           => (int) $quote['shipping'],
-				'tax'                => (int) $quote['tax'],
-				'total'              => (int) $quote['total'],
-				'tax_rate'           => (float) $quote['tax_rate'],
-				'tax_country'        => (string) ( $quote['tax_country'] ?? '' ),
-				'prices_include_tax' => $quote['prices_include_tax'] ? 1 : 0,
-				'gateway'            => (string) ( $order['gateway'] ?? '' ),
-				'created_at'         => $now,
-				'updated_at'         => $now,
+				'token'               => bin2hex( random_bytes( 16 ) ),
+				'status'              => 'pending',
+				'user_id'             => (int) ( $order['user_id'] ?? 0 ),
+				'email'               => (string) $order['email'],
+				'name'                => (string) $order['name'],
+				'phone'               => (string) ( $order['phone'] ?? '' ),
+				'address'             => ! empty( $order['address'] ) ? (string) wp_json_encode( $order['address'] ) : null,
+				'customer_note'       => (string) ( $order['customer_note'] ?? '' ),
+				'currency'            => (string) $quote['currency'],
+				'subtotal'            => (int) $quote['subtotal'],
+				'discount'            => (int) ( $quote['discount'] ?? 0 ),
+				'coupon'              => (string) ( $quote['coupon'] ?? '' ),
+				'gift_card_id'        => (int) ( $quote['gift_card']['id'] ?? 0 ),
+				'gift_card_hint'      => (string) ( $quote['gift_card']['hint'] ?? '' ),
+				'gift_card_amount'    => (int) ( $quote['gift_card']['amount'] ?? 0 ),
+				'shipping'            => (int) $quote['shipping'],
+				'delivery_method'     => $quote['delivery']['id'] ?? '',
+				'delivery_label'      => $quote['delivery']['label'] ?? '',
+				'pickup_instructions' => $quote['delivery']['instructions'] ?? '',
+				'tax'                 => (int) $quote['tax'],
+				'total'               => (int) $quote['total'],
+				'tax_rate'            => (float) $quote['tax_rate'],
+				'tax_country'         => (string) ( $quote['tax_country'] ?? '' ),
+				'prices_include_tax'  => $quote['prices_include_tax'] ? 1 : 0,
+				'gateway'             => (string) ( $order['gateway'] ?? '' ),
+				'created_at'          => $now,
+				'updated_at'          => $now,
 			]
 		);
 		if ( ! $ok ) {
@@ -124,6 +127,8 @@ final class Orders {
 					'print_product' => $line['print_product'] ?? '',
 					'print_paper'   => $line['print_paper'] ?? '',
 					'print_frame'   => $line['print_frame'] ?? '',
+					'print_crop'    => $line['print_crop'] ?? '',
+					'print_view'    => $line['print_view'] ?? '',
 					'download_size' => $line['download_size'] ?? 0,
 					'licence_name'  => $line['licence']['name'] ?? '',
 					'licence_text'  => $line['licence']['text'] ?? null,
@@ -132,28 +137,29 @@ final class Orders {
 					'total'         => $line['total'],
 				]
 			);
-			// Each photo of a package becomes its own line (price 0), so
-			// downloads and prints work exactly as for single products.
+			// A package snapshots one fulfillment line per photo and component.
 			foreach ( $line['images'] ?? [] as $image ) {
-				self::insert_item(
-					[
-						'order_id'      => $id,
-						'parent_id'     => $parent,
-						'kind'          => $line['includes']['kind'],
-						'gallery_id'    => $image['gallery'],
-						'image_id'      => $image['id'],
-						'product_id'    => $line['includes']['id'],
-						'name'          => $line['includes']['name'],
-						'file_label'    => $image['file'],
-						'print_product' => 'print' === $line['includes']['kind'] ? $line['includes']['name'] : '',
-						'download_size' => $line['includes']['size'] ?? 0,
-						'licence_name'  => $line['includes']['licence']['name'] ?? '',
-						'licence_text'  => $line['includes']['licence']['text'] ?? null,
-						'quantity'      => 1,
-						'unit_price'    => 0,
-						'total'         => 0,
-					]
-				);
+				foreach ( $line['includes'] as $component ) {
+					self::insert_item(
+						[
+							'order_id'      => $id,
+							'parent_id'     => $parent,
+							'kind'          => $component['kind'],
+							'gallery_id'    => $image['gallery'],
+							'image_id'      => $image['id'],
+							'product_id'    => $component['id'],
+							'name'          => $component['name'],
+							'file_label'    => $image['file'],
+							'print_product' => 'print' === $component['kind'] ? $component['name'] : '',
+							'download_size' => $component['size'] ?? 0,
+							'licence_name'  => $component['licence']['name'] ?? '',
+							'licence_text'  => $component['licence']['text'] ?? null,
+							'quantity'      => 1,
+							'unit_price'    => 0,
+							'total'         => 0,
+						]
+					);
+				}//end foreach
 			}//end foreach
 		}//end foreach
 
@@ -279,7 +285,8 @@ final class Orders {
 			$rows = (array) $wpdb->get_results(
 				$wpdb->prepare(
 					"SELECT items.id, orders.id AS order_id, orders.status, items.gallery_id, items.image_id,
-						items.file_label, items.name, items.print_product, items.print_paper, items.print_frame, items.quantity
+						items.file_label, items.name, items.print_product, items.print_paper, items.print_frame, items.quantity,
+						orders.delivery_method, items.print_crop, items.print_view
 					FROM {$items} items INNER JOIN {$orders} orders ON orders.id = items.order_id
 					WHERE items.kind = 'print' AND items.id < %d AND {$sql}
 					ORDER BY items.id DESC LIMIT %d",
@@ -374,6 +381,41 @@ final class Orders {
 	}
 
 	/**
+	 * Streams order summaries for sales reconciliation, with no contact data.
+	 *
+	 * @param string $from Start date in UTC, inclusive.
+	 * @param string $to   End date in UTC, inclusive.
+	 * @return \Generator
+	 */
+	public static function sales_rows( string $from, string $to ): \Generator {
+		global $wpdb;
+		$orders  = Schema::orders();
+		$refunds = Schema::refunds();
+		$after   = 0;
+		do {
+			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom order table.
+			$rows = (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT id, created_at, paid_at, status, currency, tax_country, gateway, delivery_method,
+					subtotal, discount, shipping, tax, total, prices_include_tax, gift_card_amount,
+					(SELECT COALESCE(SUM(amount), 0) FROM {$refunds} WHERE order_id = o.id AND status = 'completed') AS refunded
+					FROM {$orders} o WHERE id > %d AND created_at BETWEEN %s AND %s ORDER BY id ASC LIMIT 200",
+					$after,
+					$from . ' 00:00:00',
+					$to . ' 23:59:59'
+				),
+				ARRAY_A
+			);
+			// phpcs:enable
+			$more = 200 === count( $rows );
+			foreach ( $rows as $row ) {
+				$after = (int) $row['id'];
+				yield $row;
+			}
+		} while ( $more );
+	}
+
+	/**
 	 * Orders placed with an email address (privacy export).
 	 *
 	 * @param string $email Email address.
@@ -385,6 +427,37 @@ final class Orders {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table.
 		$rows = (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE email = %s ORDER BY id LIMIT 500", $email ), ARRAY_A );
 		return array_map( [ self::class, 'hydrate' ], $rows );
+	}
+
+	/**
+	 * Orders owned by an account, newest first. Guest orders are excluded.
+	 *
+	 * @param int $user_id Account ID.
+	 * @param int $before  Optional exclusive order ID cursor.
+	 * @param int $limit   Number of orders to return.
+	 * @return array<int, array>
+	 */
+	public static function for_account( int $user_id, int $before, int $limit ): array {
+		if ( $user_id < 1 ) {
+			return [];
+		}
+		global $wpdb;
+		$orders = Schema::orders();
+		$items  = Schema::items();
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom order tables.
+		$rows = (array) $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT o.id, o.status, o.currency, o.total, o.created_at, o.downloads_until,
+					EXISTS(SELECT 1 FROM {$items} i WHERE i.order_id = o.id AND i.kind = 'download') AS has_downloads
+				FROM {$orders} o WHERE o.user_id = %d AND o.id < %d ORDER BY o.id DESC LIMIT %d",
+				$user_id,
+				$before > 0 ? $before : PHP_INT_MAX,
+				$limit
+			),
+			ARRAY_A
+		);
+		// phpcs:enable
+		return $rows;
 	}
 
 	/**
@@ -430,6 +503,9 @@ final class Orders {
 	public static function set_status( int $id, string $status ): bool {
 		$order = self::get( $id );
 		if ( ! $order || ! in_array( $status, self::STATUSES, true ) || $order['status'] === $status ) {
+			return false;
+		}
+		if ( in_array( $status, self::PAID, true ) && $order['total'] > 0 && Refunds::completed( Refunds::for_order( $id ) ) >= $order['total'] ) {
 			return false;
 		}
 		$fields = [ 'status' => $status ];
@@ -480,6 +556,20 @@ final class Orders {
 	 */
 	public static function verify_key( array $order, string $key ): bool {
 		return '' !== $key && hash_equals( self::key( $order ), $key );
+	}
+
+	/**
+	 * Whether this customer can open the order.
+	 *
+	 * @param array       $order Order.
+	 * @param string|null $key   Supplied key, or null to use the session.
+	 */
+	public static function customer_allowed( array $order, ?string $key ): bool {
+		if ( null !== $key ) {
+			return self::verify_key( $order, $key );
+		}
+		$user = get_current_user_id();
+		return $user > 0 && $user === (int) $order['user_id'];
 	}
 
 	/**

@@ -130,6 +130,7 @@ final class GalleryDirectory {
 				'homepage'  => $homepage,
 				'directory' => $url,
 				'cart'      => ShopPage::page_id() ? ShopPage::url() : '',
+				'account'   => AccountPage::url(),
 				'section'   => wp_unique_id( 'slashphoto-collections-' ),
 			]
 		);

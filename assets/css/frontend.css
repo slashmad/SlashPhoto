@@ -17,6 +17,85 @@
  *    below instead of overriding rules.
  */
 
+.slashphoto-account .slashphoto-account__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+	gap: 1rem;
+	margin-block: 1rem;
+}
+
+.slashphoto-account .slashphoto-account__section,
+.slashphoto-account.slashphoto-account__section {
+	padding: clamp(1rem, 3vw, 1.5rem);
+	overflow-wrap: anywhere;
+}
+
+:where(.slashphoto-account .slashphoto-account__section, .slashphoto-account.slashphoto-account__section) {
+	border: 1px solid currentColor;
+	border-color: color-mix(in srgb, currentColor 22%, transparent);
+	border-radius: 0.75rem;
+}
+
+.slashphoto-account__section h2 {
+	margin-block: 0 0.75rem;
+}
+
+.slashphoto-account .slashphoto-account__list {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.slashphoto-account__list li {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.4rem 1rem;
+	padding-block: 0.75rem;
+	margin: 0;
+}
+
+:where(.slashphoto-account__list li + li) {
+	border-block-start: 1px solid currentColor;
+	border-block-start-color: color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.slashphoto-account__list li:last-child {
+	padding-block-end: 0;
+}
+
+.slashphoto-account__date {
+	display: block;
+	margin-block-start: 0.25rem;
+}
+
+.slashphoto-account__actions,
+.slashphoto-account__order-status {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.75rem;
+}
+
+.slashphoto-account > .slashphoto-account__actions {
+	justify-content: flex-end;
+}
+
+.slashphoto-account__section .slashphoto-account__actions {
+	margin-block-start: 1rem;
+}
+
+:where(.slashphoto-account__status) {
+	padding: 0.15em 0.6em;
+	border-radius: 0.375rem;
+	background: color-mix(in srgb, currentColor 9%, transparent);
+}
+
+:where(.slashphoto-account__status--ready) {
+	font-weight: 600;
+}
+
 :where(.slashphoto) {
 	--slashphoto-gap: var(--wp--style--block-gap, 1rem);
 	--slashphoto-column-min: 14rem;
@@ -90,6 +169,70 @@
 
 :where(.slashphoto-item--wide .slashphoto-image) {
 	aspect-ratio: auto;
+}
+
+.slashphoto .slashphoto-grid--square {
+	--slashphoto-aspect: 1;
+}
+
+.slashphoto .slashphoto-grid--full {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.slashphoto-grid--full :where(.slashphoto-image) {
+	aspect-ratio: auto;
+}
+
+.slashphoto-browse__pages,
+.slashphoto-browse__search {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+	margin-block: 1rem;
+}
+
+.slashphoto-browse__search label {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.4rem 0.6rem;
+}
+
+.slashphoto-browse__search input {
+	max-width: 100%;
+}
+
+.slashphoto-lightbox__print-preview {
+	grid-column: 1 / -1;
+}
+
+.slashphoto-lightbox__print-frame {
+	max-width: min(100%, 16rem);
+	margin-block: 0.5rem;
+	background: #fff;
+}
+
+.slashphoto-lightbox__print-frame img,
+.slashphoto-lightbox__print-frame canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.slashphoto-lightbox__print-preview label {
+	display: block;
+}
+
+.slashphoto-lightbox__print-preview input[type="range"] {
+	display: block;
+	width: min(100%, 16rem);
+}
+
+.slashphoto-lightbox .slashphoto-lightbox__compare {
+	width: auto;
+	padding-inline: 0.5rem;
+	font-size: 0.875rem;
 }
 
 :where(.slashphoto-badge) {

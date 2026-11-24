@@ -86,6 +86,17 @@ $slashphoto_names     = function_exists( 'locale_get_display_region' );
 			</p>
 		<?php endif; ?>
 
+		<?php if ( count( $args['delivery'] ?? [] ) > 1 ) : ?>
+			<p class="slashphoto-field" data-slashphoto-delivery hidden>
+				<label for="slashphoto-delivery"><?php esc_html_e( 'Delivery method', 'slashphoto' ); ?></label>
+				<select id="slashphoto-delivery" name="delivery">
+					<?php foreach ( $args['delivery'] as $slashphoto_method => $slashphoto_label ) : ?>
+						<option value="<?php echo esc_attr( $slashphoto_method ); ?>"><?php echo esc_html( $slashphoto_label ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</p>
+		<?php endif; ?>
+
 		<fieldset class="slashphoto-checkout__address" data-slashphoto-address hidden>
 			<legend><?php esc_html_e( 'Delivery address for prints', 'slashphoto' ); ?></legend>
 			<?php if ( ! $slashphoto_countries ) : ?>

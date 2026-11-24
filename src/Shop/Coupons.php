@@ -237,9 +237,9 @@ final class Coupons {
 
 		$eligible = 0;
 		foreach ( $lines as $line ) {
-			// A package counts as the kind of product it gives each photo.
-			$kind = $line['includes']['kind'] ?? $line['kind'];
-			if ( 'all' === $rules['applies'] || $kind === $rules['applies'] ) {
+			// A kind-specific discount requires every item in a package to match.
+			$kinds = Shop::line_kinds( $line );
+			if ( 'all' === $rules['applies'] || ( 1 === count( $kinds ) && in_array( $rules['applies'], $kinds, true ) ) ) {
 				$eligible += (int) $line['total'];
 			}
 		}

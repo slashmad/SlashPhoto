@@ -326,6 +326,30 @@ final class ChunkedUploads {
 	}
 
 	/**
+	 * Recent unfinished uploads for one gallery, visible to its editors only.
+	 *
+	 * @param int $gallery_id Gallery.
+	 * @return string[] File names, without temporary IDs or paths.
+	 */
+	public static function pending_names( int $gallery_id ): array {
+		if ( ! current_user_can( 'edit_post', $gallery_id ) ) {
+			return [];
+		}
+		$dir = self::dir();
+		if ( '' === $dir ) {
+			return [];
+		}
+		$names = [];
+		foreach ( (array) glob( $dir . '/*.json' ) as $file ) {
+			$data = self::meta( wp_basename( $file, '.json' ) );
+			if ( $data && $gallery_id === $data['gallery'] && (int) ( $data['created'] ?? 0 ) > time() - self::STALE_SECS ) {
+				$names[] = $data['name'];
+			}
+		}
+		return $names;
+	}
+
+	/**
 	 * The private folder for parts, or '' when it cannot be created.
 	 */
 	public static function dir(): string {

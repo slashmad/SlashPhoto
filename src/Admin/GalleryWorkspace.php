@@ -9,10 +9,14 @@ namespace SlashPhoto\Admin;
 
 use SlashPhoto\Access\Access;
 use SlashPhoto\Frontend\Assets;
+use SlashPhoto\Gallery\ExpiryReminders;
+use SlashPhoto\Gallery\GalleryRenderer;
 use SlashPhoto\Gallery\GalleryRepository;
 use SlashPhoto\Gallery\PostType;
+use SlashPhoto\Media\Panorama;
 use SlashPhoto\Media\PhotoSearch;
 use SlashPhoto\Media\Reprocessor;
+use SlashPhoto\Proofing\Revisions;
 use SlashPhoto\Shop\PriceLists;
 use WP_Post;
 
@@ -155,9 +159,10 @@ final class GalleryWorkspace {
 	/** Renders the create form or the requested gallery. */
 	public function render(): void {
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only screen parameters.
-		$id      = isset( $_GET['gallery_id'] ) ? absint( $_GET['gallery_id'] ) : 0;
-		$saved   = isset( $_GET['saved'] );
-		$gallery = $this->editable_gallery( $id );
+		$id             = isset( $_GET['gallery_id'] ) ? absint( $_GET['gallery_id'] ) : 0;
+		$saved          = isset( $_GET['saved'] );
+		$revision_saved = isset( $_GET['revision'] ) && 'saved' === sanitize_key( wp_unslash( $_GET['revision'] ) );
+		$gallery        = $this->editable_gallery( $id );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ( ( $id && ! $gallery ) || ( ! $id && ! current_user_can( get_post_type_object( PostType::POST_TYPE )->cap->create_posts ) ) ) {
 			wp_die( esc_html__( 'You cannot edit this gallery.', 'slashphoto' ), '', [ 'response' => 403 ] );
@@ -166,6 +171,7 @@ final class GalleryWorkspace {
 			'photos'     => __( 'Photos', 'slashphoto' ),
 			'settings'   => __( 'Settings', 'slashphoto' ),
 			'selections' => __( 'Client selections', 'slashphoto' ),
+			'preflight'  => __( 'Publication check', 'slashphoto' ),
 		];
 		if ( $gallery && 'publish' === $gallery->post_status ) {
 			$tabs['invite'] = __( 'Invite', 'slashphoto' );
@@ -195,6 +201,9 @@ final class GalleryWorkspace {
 					</div>
 				<?php endif; ?>
 			</header>
+			<?php if ( $revision_saved ) : ?>
+				<div class="notice notice-success inline"><p><?php esc_html_e( 'Revision uploaded.', 'slashphoto' ); ?></p></div>
+			<?php endif; ?>
 			<?php if ( $saved ) : ?>
 				<div class="notice notice-success inline"><p><?php esc_html_e( 'Gallery settings saved.', 'slashphoto' ); ?></p></div>
 			<?php endif; ?>
@@ -212,6 +221,8 @@ final class GalleryWorkspace {
 					echo '</section>';
 				} elseif ( 'invite' === $tab ) {
 					$this->invitations->render( $gallery );
+				} elseif ( 'preflight' === $tab ) {
+					GalleryPreflight::render( $gallery, $this->access, $this->repository );
 				} else {
 					$this->photos( $gallery );
 				}
@@ -227,6 +238,8 @@ final class GalleryWorkspace {
 	 * @param WP_Post $gallery Gallery.
 	 */
 	private function photos( WP_Post $gallery ): void {
+		$panorama   = new Panorama();
+		$can_revise = $this->access->is_protected( $gallery ) && current_user_can( 'upload_files' );
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only screen parameters.
 		$arrange = isset( $_GET['arrange'] );
 		$result  = isset( $_GET['photo_order'] ) ? sanitize_key( wp_unslash( $_GET['photo_order'] ) ) : '';
@@ -321,6 +334,9 @@ final class GalleryWorkspace {
 						<?php if ( '' !== $details ) : ?>
 							<small class="slashphoto-workspace__photo-meta"><?php echo esc_html( $details ); ?></small>
 						<?php endif; ?>
+						<?php if ( ! $arrange && $can_revise && '360' !== $panorama->kind( $image->ID ) ) : ?>
+							<?php Revisions::form( $image ); ?>
+						<?php endif; ?>
 						<?php if ( $arrange && $total > 1 ) : ?>
 							<form class="slashphoto-workspace__move-photo" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 								<?php $this->fields( 'move_photo', $gallery->ID ); ?>
@@ -369,8 +385,22 @@ final class GalleryWorkspace {
 				<input class="widefat" type="text" id="slashphoto-gallery-title" name="gallery_title" value="<?php echo esc_attr( $gallery->post_title ?? '' ); ?>" required>
 			</p>
 			<?php if ( $gallery ) : ?>
+				<h2><?php esc_html_e( 'Gallery appearance', 'slashphoto' ); ?></h2>
+				<p>
+					<label for="slashphoto-gallery-layout"><?php esc_html_e( 'Photo layout', 'slashphoto' ); ?></label>
+					<select id="slashphoto-gallery-layout" name="gallery_layout">
+						<?php foreach ( GalleryRenderer::layouts() as $value => $label ) : ?>
+							<option value="<?php echo esc_attr( $value ); ?>" <?php selected( GalleryRenderer::layout( $gallery->ID ), $value ); ?>><?php echo esc_html( $label ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</p>
 				<h2><?php esc_html_e( 'Access and proofing', 'slashphoto' ); ?></h2>
 				<?php $this->settings->render_meta_box( $gallery, [ 'workspace' => true ] ); ?>
+				<p>
+					<label><input type="checkbox" name="expiry_reminder" value="1" <?php checked( (bool) get_post_meta( $gallery->ID, ExpiryReminders::META, true ) ); ?>>
+						<?php esc_html_e( 'Email assigned clients before this gallery expires', 'slashphoto' ); ?></label>
+				</p>
+				<p class="description"><?php esc_html_e( 'For galleries limited to selected accounts. Each eligible account gets one reminder within three days of expiry.', 'slashphoto' ); ?></p>
 				<h2><?php esc_html_e( 'Shop', 'slashphoto' ); ?></h2>
 				<?php $this->price_list( $gallery ); ?>
 				<?php submit_button(); ?>
@@ -474,6 +504,11 @@ final class GalleryWorkspace {
 		}
 		$url = self::url( (int) $result, $tab );
 		if ( 'settings' === $operation ) {
+			$layout = isset( $_POST['gallery_layout'] ) ? sanitize_key( wp_unslash( $_POST['gallery_layout'] ) ) : '';
+			if ( isset( GalleryRenderer::layouts()[ $layout ] ) ) {
+				update_post_meta( $id, GalleryRenderer::LAYOUT, $layout );
+				update_post_meta( $id, ExpiryReminders::META, empty( $_POST['expiry_reminder'] ) ? 0 : 1 );
+			}
 			$price_list = isset( $_POST['gallery_price_list'] ) ? sanitize_text_field( wp_unslash( $_POST['gallery_price_list'] ) ) : null;
 			if ( null !== $price_list && ( '' === $price_list || PriceLists::NONE === $price_list || isset( PriceLists::all()[ $price_list ] ) ) ) {
 				update_post_meta( $id, PriceLists::GALLERY_META, $price_list );

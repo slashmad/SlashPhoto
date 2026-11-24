@@ -119,7 +119,12 @@ final class PriceLists {
 				$plain[ $product['id'] ] = true;
 			}
 		}
-		return array_values( array_filter( $products, static fn( array $product ): bool => 'package' !== $product['kind'] || isset( $plain[ $product['includes'] ] ) ) );
+		return array_values(
+			array_filter(
+				$products,
+				static fn( array $product ): bool => 'package' !== $product['kind'] || ( $product['includes'] && ! array_diff_key( array_flip( $product['includes'] ), $plain ) )
+			)
+		);
 	}
 
 	/**
@@ -182,7 +187,8 @@ final class PriceLists {
 			];
 			if ( 'package' === $kind ) {
 				$product['count']    = min( self::MAX_PACKAGE, max( 0, (int) ( $row['count'] ?? 0 ) ) );
-				$product['includes'] = preg_match( '/^[a-f0-9]{8}$/', (string) ( $row['includes'] ?? '' ) ) ? (string) $row['includes'] : '';
+				$included            = array_filter( (array) ( $row['includes'] ?? [] ), static fn( $id ): bool => is_string( $id ) && (bool) preg_match( '/^[a-f0-9]{8}$/D', $id ) );
+				$product['includes'] = array_slice( array_values( array_unique( $included ) ), 0, 8 );
 			}
 			if ( 'download' === $kind ) {
 				$size = DownloadSizes::clean( $row['size'] ?? 0 );
@@ -323,7 +329,7 @@ final class PriceLists {
 		wp_nonce_field( self::NONCE, self::NONCE . '_nonce' );
 		?>
 		<p><?php esc_html_e( 'Customers choose one of these for each image. Downloads deliver the original file you uploaded, or a smaller copy of it when you set the longest side. You make and send the prints. Enter a price or configure print options. Use 0 for something free.', 'slashphoto' ); ?></p>
-		<p><?php esc_html_e( 'A package is a number of photos the customer chooses, each with the same download or print, for one price, e.g. “10 downloads”. Set the number to 0 for every photo in the gallery. Save new downloads and prints before choosing them in a package.', 'slashphoto' ); ?></p>
+		<p><?php esc_html_e( 'A package gives the customer the chosen downloads and prints for each photo, for one price. Set the number to 0 for every photo in the gallery. Save new products before adding them to a package.', 'slashphoto' ); ?></p>
 		<table class="widefat striped slashphoto-products" role="table" data-slashphoto-products>
 			<thead>
 				<tr>
@@ -408,12 +414,12 @@ final class PriceLists {
 				<p class="slashphoto-package-fields" data-slashphoto-package-fields <?php echo $package ? '' : 'hidden'; ?>>
 					<label for="slashphoto-count-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Photos', 'slashphoto' ); ?></label>
 					<input type="number" min="0" max="<?php echo esc_attr( (string) self::MAX_PACKAGE ); ?>" style="width:5em" id="slashphoto-count-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[count]" value="<?php echo esc_attr( (string) ( $row['count'] ?? 10 ) ); ?>">
-					<label for="slashphoto-includes-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'each with', 'slashphoto' ); ?></label>
-					<select id="slashphoto-includes-<?php echo esc_attr( $index ); ?>" name="<?php echo esc_attr( $name ); ?>[includes]">
+					<span class="slashphoto-package-components">
+						<strong><?php esc_html_e( 'Products per photo (up to eight)', 'slashphoto' ); ?></strong>
 						<?php foreach ( $plain as $option ) : ?>
-							<option value="<?php echo esc_attr( $option['id'] ); ?>" <?php selected( $row['includes'] ?? '', $option['id'] ); ?>><?php echo esc_html( $option['name'] ); ?></option>
+							<label style="display:block"><input type="checkbox" name="<?php echo esc_attr( $name ); ?>[includes][]" value="<?php echo esc_attr( $option['id'] ); ?>" <?php checked( in_array( $option['id'], (array) ( $row['includes'] ?? [] ), true ) ); ?>> <?php echo esc_html( $option['name'] ); ?></label>
 						<?php endforeach; ?>
-					</select>
+					</span>
 				</p>
 				<p class="slashphoto-download-fields" data-slashphoto-download-fields <?php echo 'download' === $row['kind'] ? '' : 'hidden'; ?>>
 					<label for="slashphoto-size-<?php echo esc_attr( $index ); ?>"><?php esc_html_e( 'Longest side (px)', 'slashphoto' ); ?></label>

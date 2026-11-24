@@ -103,7 +103,7 @@ final class Importer {
 		$post_data = [ 'post_title' => sanitize_text_field( $base ) ];
 
 		if ( self::use_snapotter( $path, $ext ) ) {
-			$display = self::snapotter_copy( $path );
+			$display = self::snapotter_copy( $path, $ext );
 			if ( ! is_wp_error( $display ) ) {
 				self::$pending = [
 					'path' => $path,
@@ -144,9 +144,10 @@ final class Importer {
 	 * Asks SnapOtter for a display copy, written next to $path.
 	 *
 	 * @param string $path Original.
+	 * @param string $ext  Original extension when the temporary path has a different extension.
 	 * @return string|WP_Error Path of the JPEG.
 	 */
-	public static function snapotter_copy( string $path ) {
+	public static function snapotter_copy( string $path, string $ext = '' ) {
 		$client = Connection::client();
 		if ( ! $client ) {
 			return new WP_Error( 'slashphoto_snapotter_off', __( 'SnapOtter is not connected.', 'slashphoto' ) );
@@ -155,7 +156,7 @@ final class Importer {
 		$panorama  = (int) apply_filters( 'slashphoto_panorama_max_size', Panorama::DEFAULT_MAX_SIZE );
 		$long_edge = null !== Panorama::detect_file( $path ) && $panorama > 0 ? $panorama : (int) Settings::get( 'display_size' );
 		$target    = $path . '-display.jpg';
-		$result    = $client->display_copy( $path, $long_edge, (int) Settings::get( 'display_quality' ), $target );
+		$result    = $client->display_copy( $path, $long_edge, (int) Settings::get( 'display_quality' ), $target, $ext );
 		return is_wp_error( $result ) ? $result : $target;
 	}
 

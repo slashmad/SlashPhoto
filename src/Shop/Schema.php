@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Schema {
 
-	public const VERSION = 8;
+	public const VERSION = 12;
 	public const OPTION  = 'slashphoto_db_version';
 
 	/**
@@ -49,6 +49,12 @@ final class Schema {
 	public static function items(): string {
 		global $wpdb;
 		return $wpdb->prefix . 'slashphoto_order_items';
+	}
+
+	/** Refunds and provider attempts for an order. */
+	public static function refunds(): string {
+		global $wpdb;
+		return $wpdb->prefix . 'slashphoto_refunds';
 	}
 
 	/**
@@ -92,6 +98,7 @@ final class Schema {
 		$charset = $wpdb->get_charset_collate();
 		$orders  = self::orders();
 		$items   = self::items();
+		$refunds = self::refunds();
 		$log     = self::visitors();
 		$stats   = self::stats();
 		$cards   = self::gift_cards();
@@ -101,6 +108,7 @@ final class Schema {
 		// the visitor log and anonymous daily view counts (D-021); version 4
 		// print option snapshots; version 5 download_size (D-033); version 6
 		// tax_country (D-036); version 7 gift cards (D-037); version 8 licences (D-043).
+		// Versions 9–11 add delivery, print crop and refunds.
 		// dbDelta needs two spaces after PRIMARY KEY and one field per line.
 		dbDelta(
 			"CREATE TABLE {$orders} (
@@ -122,6 +130,9 @@ final class Schema {
 	gift_card_hint varchar(4) NOT NULL DEFAULT '',
 	gift_card_amount bigint(20) NOT NULL DEFAULT 0,
 	shipping bigint(20) NOT NULL DEFAULT 0,
+	delivery_method varchar(20) NOT NULL DEFAULT '',
+	delivery_label varchar(100) NOT NULL DEFAULT '',
+	pickup_instructions text NULL,
 	tax bigint(20) NOT NULL DEFAULT 0,
 	total bigint(20) NOT NULL DEFAULT 0,
 	tax_rate decimal(6,3) NOT NULL DEFAULT 0,
@@ -153,6 +164,8 @@ CREATE TABLE {$items} (
 	print_product varchar(200) NOT NULL DEFAULT '',
 	print_paper varchar(36) NOT NULL DEFAULT '',
 	print_frame varchar(36) NOT NULL DEFAULT '',
+	print_crop varchar(32) NOT NULL DEFAULT '',
+	print_view varchar(255) NOT NULL DEFAULT '',
 	download_size int(10) unsigned NOT NULL DEFAULT 0,
 	licence_name varchar(200) NOT NULL DEFAULT '',
 	licence_text text NULL,
@@ -162,6 +175,17 @@ CREATE TABLE {$items} (
 	PRIMARY KEY  (id),
 	KEY order_id (order_id),
 	KEY image_id (image_id)
+) {$charset};
+CREATE TABLE {$refunds} (
+	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	order_id bigint(20) unsigned NOT NULL,
+	amount bigint(20) unsigned NOT NULL,
+	status varchar(20) NOT NULL,
+	request_key char(36) NOT NULL,
+	reference varchar(100) NOT NULL DEFAULT '',
+	created_at datetime NOT NULL,
+	PRIMARY KEY  (id),
+	UNIQUE KEY order_request (order_id,request_key)
 ) {$charset};
 CREATE TABLE {$log} (
 	id bigint(20) unsigned NOT NULL AUTO_INCREMENT,

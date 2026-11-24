@@ -260,10 +260,28 @@ final class SelectionsBox {
 		nocache_headers();
 		header( 'Content-Type: text/csv; charset=UTF-8' );
 		header( 'Content-Disposition: attachment; filename="slashphoto-selection-' . $selection->ID . '.csv"' );
-		fputcsv( $output, [ 'image_id', 'file_label', 'note' ], ',', '"', '' );
+		fputcsv( $output, [ 'image_id', 'file_label', 'note', 'gallery_id', 'capture_time_utc', 'camera', 'width', 'height' ], ',', '"', '' );
 		foreach ( $this->proofing->review_items( $gallery, $selection ) as $id => $note ) {
-			fputcsv( $output, [ $id, Csv::safe( Proofing::file_label( $id ) ), Csv::safe( $note ) ], ',', '"', '' );
-		}
+			$metadata = wp_get_attachment_metadata( $id );
+			$image    = $metadata['image_meta'] ?? [];
+			$taken    = (int) ( $image['created_timestamp'] ?? 0 );
+			fputcsv(
+				$output,
+				[
+					$id,
+					Csv::safe( Proofing::file_label( $id ) ),
+					Csv::safe( $note ),
+					(int) wp_get_post_parent_id( $id ),
+					$taken ? gmdate( 'Y-m-d H:i:s', $taken ) : '',
+					Csv::safe( (string) ( $image['camera'] ?? '' ) ),
+					(int) ( $metadata['width'] ?? 0 ),
+					(int) ( $metadata['height'] ?? 0 ),
+				],
+				',',
+				'"',
+				''
+			);
+		}//end foreach
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- HTTP response stream.
 		fclose( $output );
 		exit;

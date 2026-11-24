@@ -7,6 +7,7 @@
 
 namespace SlashPhoto\Admin;
 
+use SlashPhoto\Frontend\AccountPage;
 use SlashPhoto\Frontend\Assets;
 use SlashPhoto\Frontend\GalleryDirectory;
 use SlashPhoto\Gallery\PostType;
@@ -182,6 +183,7 @@ final class SettingsPage {
 						</tr>
 					</table>
 				<?php elseif ( 'galleries' === $tab ) : ?>
+					<?php $pages = (array) get_pages(); ?>
 					<h2><?php esc_html_e( 'Public gallery directory', 'slashphoto' ); ?></h2>
 					<table class="form-table" role="presentation">
 						<tr>
@@ -189,13 +191,38 @@ final class SettingsPage {
 							<td>
 								<select id="slashphoto-directory-page" name="<?php echo esc_attr( $name ); ?>[gallery_directory_page]" aria-describedby="slashphoto-directory-help">
 									<option value="0"><?php esc_html_e( 'Use the theme’s gallery archive', 'slashphoto' ); ?></option>
-									<?php foreach ( array_filter( (array) get_pages(), [ GalleryDirectory::class, 'is_directory_page' ] ) as $page ) : ?>
+									<?php foreach ( array_filter( $pages, [ GalleryDirectory::class, 'is_directory_page' ] ) as $page ) : ?>
 										<option value="<?php echo esc_attr( (string) $page->ID ); ?>" <?php selected( $settings['gallery_directory_page'], $page->ID ); ?>><?php echo esc_html( get_the_title( $page ) ); ?></option>
 									<?php endforeach; ?>
 								</select>
 								<p class="description" id="slashphoto-directory-help">
 									<?php esc_html_e( 'Choose a public page with the following shortcode. Visitors who open the gallery archive will land on that page.', 'slashphoto' ); ?>
 									<code>[slashphoto_galleries]</code>
+								</p>
+							</td>
+						</tr>
+					</table>
+					<h2><?php esc_html_e( 'Customer account', 'slashphoto' ); ?></h2>
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><label for="slashphoto-account-page"><?php esc_html_e( 'Account page', 'slashphoto' ); ?></label></th>
+							<td>
+								<select id="slashphoto-account-page" name="<?php echo esc_attr( $name ); ?>[account_page]" aria-describedby="slashphoto-account-help">
+									<option value="0"><?php esc_html_e( 'Select a page', 'slashphoto' ); ?></option>
+									<?php foreach ( array_filter( $pages, [ AccountPage::class, 'is_account_page' ] ) as $page ) : ?>
+										<option value="<?php echo esc_attr( (string) $page->ID ); ?>" <?php selected( $settings['account_page'], $page->ID ); ?>><?php echo esc_html( get_the_title( $page ) ); ?></option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description" id="slashphoto-account-help">
+									<?php esc_html_e( 'Choose a published page with this shortcode to give customers one place to access their galleries, selections and orders.', 'slashphoto' ); ?>
+									<code>[slashphoto_account]</code>
+								</p>
+								<p>
+									<?php if ( AccountPage::page_id() ) : ?>
+										<a class="button" href="<?php echo esc_url( AccountPage::url() ); ?>"><?php esc_html_e( 'View account page', 'slashphoto' ); ?></a>
+									<?php elseif ( current_user_can( 'publish_pages' ) ) : ?>
+										<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=' . AccountPage::CREATE ), AccountPage::CREATE ) ); ?>"><?php esc_html_e( 'Create account page', 'slashphoto' ); ?></a>
+									<?php endif; ?>
 								</p>
 							</td>
 						</tr>

@@ -151,7 +151,7 @@ $slashphoto_vat_in = '' !== (string) ( $slashphoto_order['tax_country'] ?? '' ) 
 					<td class="num"><?php echo esc_html( '−' . $slashphoto_money( $slashphoto_order['discount'] ) ); ?></td>
 				</tr>
 			<?php endif; ?>
-			<?php if ( $slashphoto_order['shipping'] > 0 || $slashphoto_order['address'] ) : ?>
+			<?php if ( $slashphoto_order['shipping'] > 0 || $slashphoto_order['address'] || ! empty( $slashphoto_order['delivery_label'] ) ) : ?>
 				<tr><th colspan="3"><?php esc_html_e( 'Shipping', 'slashphoto' ); ?></th><td class="num"><?php echo esc_html( $slashphoto_money( $slashphoto_order['shipping'] ) ); ?></td></tr>
 			<?php endif; ?>
 			<?php if ( ! $slashphoto_order['prices_include_tax'] && $slashphoto_order['tax'] > 0 ) : ?>

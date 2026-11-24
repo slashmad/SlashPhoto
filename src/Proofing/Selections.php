@@ -252,9 +252,10 @@ final class Selections {
 	 * All selections of a user.
 	 *
 	 * @param int $user_id User ID.
+	 * @param int $limit   Maximum number of records, or -1 for all.
 	 * @return WP_Post[]
 	 */
-	public static function for_user( int $user_id ): array {
+	public static function for_user( int $user_id, int $limit = 100 ): array {
 		if ( ! $user_id ) {
 			return [];
 		}
@@ -263,7 +264,7 @@ final class Selections {
 				'post_type'        => self::POST_TYPE,
 				'post_status'      => 'private',
 				'author'           => $user_id,
-				'numberposts'      => 100,
+				'numberposts'      => $limit,
 				'suppress_filters' => true,
 			]
 		);

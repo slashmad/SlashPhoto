@@ -81,6 +81,19 @@ export function createViewer( container, { src, panoData, caption, i18n } ) {
 
 	return {
 		ready,
+		printView() {
+			if ( ! hasData || panoData.fullWidth - panoData.croppedWidth > 1 || panoData.fullHeight - panoData.croppedHeight > 1 || panoData.posePitch || panoData.poseRoll ) {
+				return null;
+			}
+			const { textureX, textureY } = viewer.dataHelper.sphericalCoordsToTextureCoords( viewer.getPosition() );
+			const yaw = ( ( textureX + panoData.croppedX ) / panoData.fullWidth - 0.5 ) * 360;
+			const pitch = ( 0.5 - ( textureY + panoData.croppedY ) / panoData.fullHeight ) * 180;
+			const fov = viewer.state.vFov;
+			if ( ! Number.isFinite( yaw ) || ! Number.isFinite( pitch ) || Math.abs( pitch ) > 89.5 || fov < 15 || fov > 100 ) {
+				return null;
+			}
+			return [ yaw, pitch, fov ].map( value => Math.round( value * 1000 ) ).join( ':' );
+		},
 		destroy() {
 			viewer.destroy();
 		},

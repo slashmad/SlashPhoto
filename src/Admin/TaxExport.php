@@ -44,18 +44,24 @@ final class TaxExport {
 		return [ $first, gmdate( 'Y-m-t', (int) strtotime( $first . ' +2 months' ) ) ];
 	}
 
-	/** Renders the date-range form. */
-	public static function form(): void {
-		[ $from, $to ] = self::previous_quarter();
+	/**
+	 * Renders a report's date-range form.
+	 *
+	 * @param bool $sales Whether to offer the sales report.
+	 */
+	public static function form( bool $sales = false ): void {
+		[ $from, $to ] = $sales ? [ gmdate( 'Y-m-01' ), gmdate( 'Y-m-d' ) ] : self::previous_quarter();
+		$report        = $sales ? 'sales' : 'vat';
 		?>
 		<form class="slashphoto-tax-export" method="get" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION ); ?>">
+			<input type="hidden" name="report" value="<?php echo esc_attr( $report ); ?>">
 			<?php wp_nonce_field( self::ACTION, '_wpnonce', false ); ?>
-			<label for="slashphoto-tax-from"><?php esc_html_e( 'VAT report from', 'slashphoto' ); ?></label>
-			<input type="date" id="slashphoto-tax-from" name="from" value="<?php echo esc_attr( $from ); ?>" required>
-			<label for="slashphoto-tax-to"><?php esc_html_e( 'to', 'slashphoto' ); ?></label>
-			<input type="date" id="slashphoto-tax-to" name="to" value="<?php echo esc_attr( $to ); ?>" required>
-			<button type="submit" class="button"><?php esc_html_e( 'Download VAT report (CSV)', 'slashphoto' ); ?></button>
+			<label for="slashphoto-<?php echo esc_attr( $report ); ?>-from"><?php echo esc_html( $sales ? __( 'Sales report from', 'slashphoto' ) : __( 'VAT report from', 'slashphoto' ) ); ?></label>
+			<input type="date" id="slashphoto-<?php echo esc_attr( $report ); ?>-from" name="from" value="<?php echo esc_attr( $from ); ?>" required>
+			<label for="slashphoto-<?php echo esc_attr( $report ); ?>-to"><?php esc_html_e( 'to', 'slashphoto' ); ?></label>
+			<input type="date" id="slashphoto-<?php echo esc_attr( $report ); ?>-to" name="to" value="<?php echo esc_attr( $to ); ?>" required>
+			<button type="submit" class="button"><?php echo esc_html( $sales ? __( 'Download sales report (CSV)', 'slashphoto' ) : __( 'Download VAT report (CSV)', 'slashphoto' ) ); ?></button>
 		</form>
 		<?php
 	}
@@ -66,13 +72,14 @@ final class TaxExport {
 			wp_die( esc_html__( 'You cannot export orders.', 'slashphoto' ), '', [ 'response' => 403 ] );
 		}
 		check_admin_referer( self::ACTION );
-		$date = static function ( string $key ): string {
+		$sales = isset( $_GET['report'] ) && 'sales' === sanitize_key( wp_unslash( $_GET['report'] ) );
+		$date  = static function ( string $key ): string {
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- checked by check_admin_referer() above.
 			$value = isset( $_GET[ $key ] ) ? sanitize_text_field( wp_unslash( $_GET[ $key ] ) ) : '';
-			return preg_match( '/^\d{4}-\d{2}-\d{2}$/D', $value ) ? $value : '';
+			return preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/D', $value, $parts ) && checkdate( (int) $parts[2], (int) $parts[3], (int) $parts[1] ) ? $value : '';
 		};
-		$from = $date( 'from' );
-		$to   = $date( 'to' );
+		$from  = $date( 'from' );
+		$to    = $date( 'to' );
 		if ( '' === $from || '' === $to || $from > $to ) {
 			wp_die( esc_html__( 'Choose a start date on or before the end date.', 'slashphoto' ), '', [ 'response' => 400 ] );
 		}
@@ -83,11 +90,53 @@ final class TaxExport {
 		}
 		nocache_headers();
 		header( 'Content-Type: text/csv; charset=UTF-8' );
-		header( 'Content-Disposition: attachment; filename="slashphoto-vat-' . $from . '-' . $to . '.csv"' );
-		self::write( $output, $from, $to );
+		header( 'Content-Disposition: attachment; filename="slashphoto-' . ( $sales ? 'sales-' : 'vat-' ) . $from . '-' . $to . '.csv"' );
+		if ( $sales ) {
+			self::write_sales( $output, $from, $to );
+		} else {
+			self::write( $output, $from, $to );
+		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- HTTP response stream.
 		fclose( $output );
 		exit;
+	}
+
+	/**
+	 * Writes order amounts in major units, one row per order placed.
+	 *
+	 * @param resource $output Writable CSV stream.
+	 * @param string   $from   First UTC date.
+	 * @param string   $to     Last UTC date.
+	 */
+	public static function write_sales( $output, string $from, string $to ): void {
+		fputcsv( $output, [ 'order_id', 'placed_at_utc', 'paid_at_utc', 'status', 'currency', 'vat_country', 'payment_method', 'delivery_method', 'subtotal', 'discount', 'shipping', 'vat', 'total', 'prices_include_vat', 'paid_with_gift_card', 'refunded' ], ',', '"', '' );
+		foreach ( Orders::sales_rows( $from, $to ) as $row ) {
+			$amount = static fn( string $key ): string => Money::to_input( (int) $row[ $key ], $row['currency'] );
+			fputcsv(
+				$output,
+				[
+					$row['id'],
+					$row['created_at'],
+					$row['paid_at'],
+					$row['status'],
+					$row['currency'],
+					$row['tax_country'],
+					sanitize_key( $row['gateway'] ),
+					sanitize_key( $row['delivery_method'] ),
+					$amount( 'subtotal' ),
+					$amount( 'discount' ),
+					$amount( 'shipping' ),
+					$amount( 'tax' ),
+					$amount( 'total' ),
+					(int) $row['prices_include_tax'],
+					$amount( 'gift_card_amount' ),
+					$amount( 'refunded' ),
+				],
+				',',
+				'"',
+				''
+			);
+		}//end foreach
 	}
 
 	/**

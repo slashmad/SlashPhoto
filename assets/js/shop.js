@@ -76,6 +76,8 @@ function readCart() {
 					image: parseInt( item?.image, 10 ) || 0,
 					product: String( item?.product || '' ),
 					variant: String( item?.variant || '' ),
+					crop: Number.isInteger( item?.crop ) && item.crop >= 0 && item.crop <= 100 ? item.crop : undefined,
+					view: /^-?\d{1,6}:-?\d{1,5}:\d{1,6}$/.test( item?.view ) ? item.view : undefined,
 					qty: Math.min( MAX_QTY, Math.max( 1, parseInt( item?.qty, 10 ) || 1 ) ),
 				};
 			} )
@@ -114,18 +116,18 @@ function lineKey( item ) {
 	if ( item.package ) {
 		return 'pkg:' + item.package;
 	}
-	return item.image + ':' + item.product + ( item.variant ? ':' + item.variant : '' );
+	return item.image + ':' + item.product + ( item.variant ? ':' + item.variant : '' ) + ( Number.isInteger( item.crop ) ? ':crop-' + item.crop : '' ) + ( item.view ? ':view-' + item.view : '' );
 }
 
-function addToCart( image, product, variant, qty, kind ) {
+function addToCart( image, product, variant, qty, kind, crop, view ) {
 	const items = getCart();
-	const key = lineKey( { image, product, variant } );
+	const key = lineKey( { image, product, variant, crop, view } );
 	const existing = items.find( ( item ) => lineKey( item ) === key );
 	if ( existing ) {
 		// A download is bought once; prints add up.
 		existing.qty = 'download' === kind ? 1 : Math.min( MAX_QTY, existing.qty + qty );
 	} else {
-		items.push( { image, product, variant, qty: 'download' === kind ? 1 : qty } );
+		items.push( { image, product, variant, crop, view, qty: 'download' === kind ? 1 : qty } );
 	}
 	setCart( items );
 }
@@ -295,7 +297,7 @@ function buildBar( gallery ) {
 }
 
 function onLightboxShow( event ) {
-	const { element, tools, dialog } = event.detail || {};
+	const { element, tools, dialog, printView } = event.detail || {};
 	dialog?.querySelector( '.slashphoto-lightbox__buy' )?.remove();
 	const token = ++lightboxToken;
 	const gallery = element?.closest( '.slashphoto-gallery[data-slashphoto-shop]' );
@@ -324,14 +326,106 @@ function onLightboxShow( event ) {
 			open.remove();
 			buy.setAttribute( 'aria-expanded', 'false' );
 		} else {
-			openBuyPanel( dialog, buy, id, products );
+			openBuyPanel( dialog, buy, id, products, element, printView );
 		}
 	} );
 	group.append( buy );
 	tools.append( group );
 }
 
-function openBuyPanel( dialog, opener, id, products ) {
+function printPreview( row, actions, product, element ) {
+	const link = element.querySelector( '.slashphoto-link' );
+	const width = Number( link?.dataset.slashphotoWidth );
+	const height = Number( link?.dataset.slashphotoHeight );
+	if ( ! width || ! height || ! product.format?.length ) {
+		return () => undefined;
+	}
+
+	const ratio = Math.max( ...product.format ) / Math.min( ...product.format );
+	const details = document.createElement( 'details' );
+	const summary = document.createElement( 'summary' );
+	const frame = document.createElement( 'div' );
+	const image = document.createElement( 'img' );
+	const crop = document.createElement( 'input' );
+	const position = document.createElement( 'input' );
+	const optionLabel = document.createElement( 'label' );
+	const positionLabel = document.createElement( 'label' );
+	details.className = 'slashphoto-lightbox__print-preview';
+	summary.textContent = i18n.printPreview || 'Print preview';
+	frame.className = 'slashphoto-lightbox__print-frame';
+	frame.style.aspectRatio = width < height ? 1 / ratio : ratio;
+	image.alt = '';
+	crop.type = 'checkbox';
+	position.type = 'range';
+	position.min = '0';
+	position.max = '100';
+	position.value = '50';
+	position.disabled = true;
+	optionLabel.append( crop, ' ', i18n.printFill || 'Crop to fill the print' );
+	positionLabel.append( i18n.printPosition || 'Crop position', position );
+	const update = () => {
+		image.style.objectFit = crop.checked ? 'cover' : 'contain';
+		image.style.objectPosition = position.value + '% ' + position.value + '%';
+		position.disabled = ! crop.checked;
+	};
+	crop.addEventListener( 'change', update );
+	position.addEventListener( 'input', update );
+	details.addEventListener( 'toggle', () => {
+		if ( details.open && ! image.hasAttribute( 'src' ) ) {
+			image.src = link.href;
+		}
+	} );
+	frame.append( image );
+	details.append( summary, frame, optionLabel, positionLabel );
+	row.insertBefore( details, actions );
+	update();
+	return () => crop.checked ? Number( position.value ) : undefined;
+}
+
+function panoramaPreview( row, actions, product, element, getView ) {
+	const source = element.querySelector( '.slashphoto-link' )?.href;
+	const data = JSON.parse( element.dataset.slashphotoPanorama || '{}' );
+	if ( ! source || ! getView || ! product.format?.length || ! data.fullWidth || data.posePitch || data.poseRoll || data.fullWidth - data.croppedWidth > 1 || data.fullHeight - data.croppedHeight > 1 ) {
+		return () => undefined;
+	}
+	const details = document.createElement( 'details' );
+	details.className = 'slashphoto-lightbox__print-preview';
+	const summary = document.createElement( 'summary' );
+	summary.textContent = i18n.printPreview || 'Print preview';
+	const button = document.createElement( 'button' );
+	button.type = 'button';
+	button.textContent = i18n.usePanoramaView || 'Use current 360° view';
+	const preview = document.createElement( 'div' );
+	preview.className = 'slashphoto-lightbox__print-frame';
+	const status = document.createElement( 'p' );
+	status.setAttribute( 'role', 'status' );
+	let selected;
+	button.addEventListener( 'click', async () => {
+		const capture = getView();
+		if ( ! capture ) {
+			status.textContent = i18n.adjustView || 'Adjust the panorama or wait until the viewer has loaded.';
+			return;
+		}
+		button.disabled = true;
+		try {
+			const [ yaw, pitch, fov ] = capture.split( ':' ).map( value => Number( value ) / 1000 );
+			const { project } = await import( config.panoramaPrint );
+			const canvas = await project( source, { yaw, pitch, fov, width: Math.max( ...product.format ), height: Math.min( ...product.format ) }, 440 );
+			preview.replaceChildren( canvas );
+			selected = capture;
+			status.textContent = i18n.viewSelected || 'This view will be used for this print.';
+		} catch {
+			status.textContent = i18n.adjustView || 'Adjust the panorama or wait until the viewer has loaded.';
+		} finally {
+			button.disabled = false;
+		}
+	} );
+	details.append( summary, button, status, preview );
+	row.insertBefore( details, actions );
+	return () => selected;
+}
+
+function openBuyPanel( dialog, opener, id, products, element, printView ) {
 	const panel = document.createElement( 'div' );
 	panel.className = 'slashphoto-lightbox__buy';
 	panel.setAttribute( 'role', 'group' );
@@ -397,7 +491,14 @@ function openBuyPanel( dialog, opener, id, products ) {
 			return;
 		}
 		let qty = null;
+		let getCrop = () => undefined;
+		let getView = () => undefined;
 		if ( 'print' === product.kind ) {
+			if ( '360' === element.dataset.slashphotoKind ) {
+				getView = panoramaPreview( row, actions, product, element, printView );
+			} else {
+				getCrop = printPreview( row, actions, product, element );
+			}
 			const label = document.createElement( 'label' );
 			label.className = 'screen-reader-text';
 			label.htmlFor = uid;
@@ -442,7 +543,7 @@ function openBuyPanel( dialog, opener, id, products ) {
 		updateChoice();
 		add.addEventListener( 'click', () => {
 			const amount = qty ? Math.min( MAX_QTY, Math.max( 1, parseInt( qty.value, 10 ) || 1 ) ) : 1;
-			addToCart( id, product.id, option?.id ?? '', amount, product.kind );
+			addToCart( id, product.id, option?.id ?? '', amount, product.kind, getCrop(), getView() );
 			status.replaceChildren( document.createTextNode( format( i18n.added || 'Added: %s.', productName() ) + ' ' ) );
 			if ( config.cartUrl ) {
 				const link = document.createElement( 'a' );
@@ -491,6 +592,8 @@ class Checkout {
 		this.form = root.querySelector( '[data-slashphoto-checkout-form]' );
 		this.error = root.querySelector( '[data-slashphoto-checkout-error]' );
 		this.address = root.querySelector( '[data-slashphoto-address]' );
+		this.delivery = root.querySelector( '[data-slashphoto-delivery]' );
+		this.revision = 0;
 		this.coupon = root.querySelector( '[data-slashphoto-coupon]' );
 		this.gift = root.querySelector( '[data-slashphoto-gift-card-code]' );
 		this.residence = root.querySelector( '[data-slashphoto-residence]' );
@@ -534,7 +637,7 @@ class Checkout {
 		// VAT can depend on the country: the delivery country for prints,
 		// otherwise the country the customer lives in.
 		this.form?.addEventListener( 'change', ( event ) => {
-			if ( [ 'country', 'residence' ].includes( event.target.name ) && this.quote?.taxByCountry ) {
+			if ( 'delivery' === event.target.name || ( [ 'country', 'residence' ].includes( event.target.name ) && this.quote?.taxByCountry ) ) {
 				this.refresh();
 			}
 		} );
@@ -549,6 +652,7 @@ class Checkout {
 	}
 
 	async refresh() {
+		const revision = ++this.revision;
 		const items = getCart();
 		if ( ! items.length ) {
 			this.quote = null;
@@ -556,7 +660,10 @@ class Checkout {
 			return;
 		}
 		try {
-			const quote = await api( 'quote', { items, coupon: getCoupon(), country: this.country(), gift_card: getGift() } );
+			const quote = await api( 'quote', { items, coupon: getCoupon(), country: this.country(), gift_card: getGift(), delivery: this.delivery?.querySelector( 'select' ).value ?? '' } );
+			if ( revision !== this.revision ) {
+				return;
+			}
 			// The first quote tells whether prints decide the country; ask again if so.
 			if ( quote.taxByCountry && quote.taxCountry !== this.country( quote ) && this.country( quote ) ) {
 				this.quote = quote;
@@ -564,7 +671,9 @@ class Checkout {
 			}
 			this.apply( quote );
 		} catch ( error ) {
-			this.cart.textContent = error.message;
+			if ( revision === this.revision ) {
+				this.cart.textContent = error.message;
+			}
 		}
 	}
 
@@ -577,7 +686,7 @@ class Checkout {
 	 */
 	country( quote = this.quote ) {
 		const field = ( name ) => this.form?.elements.namedItem( name )?.value || '';
-		return quote?.needsShipping ? field( 'country' ) : field( 'residence' );
+		return quote?.needsShipping ? ( 'pickup' === quote.delivery ? '' : field( 'country' ) ) : field( 'residence' );
 	}
 
 	apply( quote ) {
@@ -664,7 +773,7 @@ class Checkout {
 			row( format( i18n.discount || 'Discount (%s)', quote.coupon ), quote.discount );
 		}
 		if ( quote.needsShipping ) {
-			row( i18n.shipping || 'Shipping', quote.shipping );
+			row( quote.deliveryLabel || i18n.shipping || 'Shipping', quote.shipping );
 		}
 		if ( quote.tax ) {
 			row( quote.taxLabel, quote.tax );
@@ -678,7 +787,11 @@ class Checkout {
 		this.cart.append( list, totals );
 		if ( this.form ) {
 			this.form.hidden = false;
-			this.address.hidden = ! quote.needsShipping;
+			const needsAddress = quote.needsAddress ?? quote.needsShipping;
+			this.address.hidden = ! needsAddress;
+			if ( this.delivery ) {
+				this.delivery.hidden = ! quote.needsShipping;
+			}
 			if ( this.licences ) {
 				const list = this.licences.querySelector( '[data-slashphoto-licence-list]' );
 				const box = this.licences.querySelector( 'input[name="licences"]' );
@@ -710,7 +823,7 @@ class Checkout {
 			[ 'line1', 'postcode', 'city', 'country' ].forEach( ( name ) => {
 				const field = this.form.elements.namedItem( name );
 				if ( field ) {
-					field.required = !! quote.needsShipping;
+					field.required = !! needsAddress;
 				}
 			} );
 		}
@@ -805,7 +918,7 @@ class Checkout {
 			img.remove();
 		}
 		li.querySelector( '.slashphoto-cart__name' ).textContent = line.name;
-		li.querySelector( '.slashphoto-cart__title' ).textContent = line.title;
+		li.querySelector( '.slashphoto-cart__title' ).textContent = [ line.title, line.crop ].filter( Boolean ).join( ' · ' );
 		li.querySelector( '.slashphoto-cart__price' ).textContent = line.total;
 		const qtyCell = li.querySelector( '.slashphoto-cart__qty' );
 		if ( 'print' === line.kind || 'giftcard' === line.kind ) {
@@ -872,10 +985,11 @@ class Checkout {
 			gateway: this.form.querySelector( 'input[name="gateway"]:checked' )?.value || '',
 			terms: !! this.form.querySelector( 'input[name="terms"]' )?.checked,
 			licences: !! this.form.querySelector( 'input[name="licences"]' )?.checked,
+			delivery: value( 'delivery' ),
 		};
-		if ( this.quote.needsShipping ) {
+		if ( this.quote.needsAddress ?? this.quote.needsShipping ) {
 			body.address = { line1: value( 'line1' ), line2: value( 'line2' ), postcode: value( 'postcode' ), city: value( 'city' ), country: value( 'country' ) };
-		} else if ( this.quote.taxByCountry ) {
+		} else if ( this.quote.taxByCountry && ! this.quote.needsShipping ) {
 			body.country = value( 'residence' );
 		}
 

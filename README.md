@@ -28,6 +28,8 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
   layout, colours and typography. Use **Photos → Reorder photos** to move
   an image to any position in a gallery. The gallery block applies the same access
   rules on other pages. See [theme compatibility](docs/theme-compatibility.md).
+  Gallery pages support title and caption search, pages of 48 photos,
+  square grids and a one-photo-per-row layout.
 - **Panoramas and 360° images.** 360° images are detected from the GPano XMP
   metadata that cameras and stitchers such as PTGui write, including partial
   spheres. They keep up to 8192 px instead of WordPress' usual 2560 px, and
@@ -44,10 +46,15 @@ uploads. See [image storage and server configuration](docs/security-and-privacy.
   client accounts or any signed-in account. Add expiry dates and terms that
   visitors must accept. Sub-galleries follow their ancestors' access rules.
   Send a gallery link from the **Invite** tab in a published gallery.
+  The **Publication check** tab shows unfinished uploads, access issues
+  and estimated print sizes. Assigned clients can receive expiry reminders.
   Clients can sign in with a one-time emailed link instead of a password.
   **Make new copies** applies changed watermark and display settings to
   photos uploaded earlier and moves older uploads to private paths.
   See [gallery access and privacy](docs/security-and-privacy.md).
+- **Customer account.** Create a **My account** page under **Settings →
+  Galleries**. Customers can find their assigned galleries, selections and
+  orders and open any available downloads from their order pages.
 - **Full-size originals.** Upload one full-resolution file per image through
   the gallery editor's **Upload photos** panel. Chunked uploads can handle
   originals larger than PHP's per-upload limit. SlashPhoto stores the original

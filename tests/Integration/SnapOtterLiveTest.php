@@ -80,5 +80,33 @@ final class SnapOtterLiveTest extends AccessTestCase {
 			$this->assertSame( 1600, wp_get_attachment_metadata( $id )['height'] );
 			$this->assertStringEndsWith( '.tif', wp_get_original_image_path( $id ) );
 		}
+
+		$tests_dir = getenv( 'WP_TESTS_DIR' );
+		$fixture   = ( $tests_dir ? $tests_dir : '/wordpress-phpunit' ) . '/data/images/test-image.heic';
+		if ( is_readable( $fixture ) ) {
+			$this->assert_external_conversion( $fixture, $gallery );
+		}
+		$raw = getenv( 'SLASHPHOTO_SNAPOTTER_RAW_FIXTURE' );
+		if ( $raw ) {
+			$this->assertFileIsReadable( $raw );
+			$this->assert_external_conversion( $raw, $gallery );
+		}
+	}
+
+	/**
+	 * Imports a test file while checking that SnapOtter preserves the original.
+	 *
+	 * @param string $fixture Source test file.
+	 * @param int    $gallery Gallery to import into.
+	 */
+	private function assert_external_conversion( string $fixture, int $gallery ): void {
+		$name = wp_basename( $fixture );
+		$copy = wp_tempnam( $name );
+		$this->assertTrue( copy( $fixture, $copy ) );
+		$id = Importer::import( $copy, $name, $gallery );
+		$this->assertIsInt( $id, is_wp_error( $id ) ? $id->get_error_message() : '' );
+		$this->assertSame( 'snapotter', get_post_meta( $id, Importer::META_MADE_BY, true ) );
+		$this->assertSame( hash_file( 'sha256', $fixture ), hash_file( 'sha256', wp_get_original_image_path( $id ) ) );
+		$this->assertSame( 'image/jpeg', wp_get_image_mime( get_attached_file( $id ) ) );
 	}
 }

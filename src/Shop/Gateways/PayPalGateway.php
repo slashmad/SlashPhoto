@@ -350,9 +350,13 @@ final class PayPalGateway implements Gateway {
 				}
 				break;
 			case 'PAYMENT.CAPTURE.REFUNDED':
-				Orders::set_status( (int) $order['id'], 'refunded' );
+				$money = $resource['seller_payable_breakdown']['total_refunded_amount'] ?? $resource['amount'] ?? [];
+				$due   = GiftCards::due( $order );
+				if ( $due > 0 && hash_equals( $order['currency'], (string) ( $money['currency_code'] ?? '' ) ) && Money::parse( (string) ( $money['value'] ?? '' ), $order['currency'] ) >= $due ) {
+					Orders::set_status( (int) $order['id'], 'refunded' );
+				}
 				break;
-		}
+		}//end switch
 		return new WP_REST_Response( [ 'received' => true ], 200 );
 	}
 

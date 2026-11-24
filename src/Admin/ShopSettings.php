@@ -496,6 +496,32 @@ final class ShopSettings {
 								<?php $this->country_picker( $field( 'shipping_countries' ), Countries::codes( $s['shipping_countries'] ) ); ?>
 							</td>
 						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Express shipping', 'slashphoto' ); ?></th>
+							<td>
+								<label><input type="checkbox" name="<?php echo esc_attr( $field( 'express_shipping' ) ); ?>" value="1" <?php checked( $s['express_shipping'] ); ?>> <?php esc_html_e( 'Offer express shipping to the same countries', 'slashphoto' ); ?></label>
+								<p><label for="slashphoto-express-price"><?php esc_html_e( 'Express price', 'slashphoto' ); ?></label>
+									<input type="text" inputmode="decimal" size="8" id="slashphoto-express-price" name="<?php echo esc_attr( $field( 'express_price_input' ) ); ?>" value="<?php echo esc_attr( Money::to_input( (int) $s['express_price'], $currency ) ); ?>"> <?php echo esc_html( $currency ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="slashphoto-pickup-country"><?php esc_html_e( 'Pickup country', 'slashphoto' ); ?></label></th>
+							<td>
+								<select id="slashphoto-pickup-country" name="<?php echo esc_attr( $field( 'pickup_country' ) ); ?>">
+									<option value=""><?php esc_html_e( 'Pickup disabled', 'slashphoto' ); ?></option>
+									<?php foreach ( Countries::all() as $code ) : ?>
+										<option value="<?php echo esc_attr( $code ); ?>" <?php selected( $s['pickup_country'], $code ); ?>><?php echo esc_html( Countries::name( $code ) ); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="slashphoto-pickup-instructions"><?php esc_html_e( 'Pickup instructions', 'slashphoto' ); ?></label></th>
+							<td>
+								<textarea class="large-text" id="slashphoto-pickup-instructions" name="<?php echo esc_attr( $field( 'pickup_instructions' ) ); ?>" rows="3" maxlength="1000"><?php echo esc_textarea( $s['pickup_instructions'] ); ?></textarea>
+								<p class="description"><?php esc_html_e( 'Choose a country and add instructions to offer free local pickup. Customers see these instructions with their order.', 'slashphoto' ); ?></p>
+							</td>
+						</tr>
 					</table>
 				<?php elseif ( 'downloads' === $tab ) : ?>
 					<h2><?php esc_html_e( 'Downloads', 'slashphoto' ); ?></h2>

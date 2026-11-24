@@ -1,6 +1,6 @@
 <?php
 /**
- * A customer's order, opened through the private link in their email.
+ * A customer's order, opened through their account or private email link.
  *
  * Override: copy this file to yourtheme/slashphoto/order.php.
  *
@@ -14,6 +14,10 @@
  *     @type callable   $money        Formats an amount in the order's currency.
  *     @type bool       $has_download Whether the order contains downloads.
  *     @type bool       $open         Whether downloads are available now.
+ *     @type string     $account_url  Return link for account orders.
+ *     @type string     $archive_url  Archive URL when batch delivery is available.
+ *     @type bool       $signed_link Whether the page URL includes a private key.
+ *     @type int        $refunded    Confirmed refund amount.
  * }
  */
 
@@ -33,6 +37,9 @@ $slashphoto_money = $args['money'];
 $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphoto_order['downloads_until'] . ' UTC' ) : 0;
 ?>
 <div class="slashphoto slashphoto-order" data-slashphoto-order="<?php echo esc_attr( (string) $slashphoto_order['id'] ); ?>" data-slashphoto-order-status="<?php echo esc_attr( (string) $slashphoto_order['status'] ); ?>">
+	<?php if ( ! empty( $args['account_url'] ) ) : ?>
+		<p><a href="<?php echo esc_url( $args['account_url'] ); ?>"><?php esc_html_e( 'Back to my account', 'slashphoto' ); ?></a></p>
+	<?php endif; ?>
 	<h2 class="slashphoto-order__title">
 		<?php
 		/* translators: %d: order number */
@@ -56,6 +63,9 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 			);
 			?>
 		</p>
+		<?php if ( ! empty( $args['archive_url'] ) ) : ?>
+			<p><a class="wp-element-button" href="<?php echo esc_url( $args['archive_url'] ); ?>" download><?php esc_html_e( 'Download all (ZIP)', 'slashphoto' ); ?></a></p>
+		<?php endif; ?>
 	<?php elseif ( $args['has_download'] && in_array( $slashphoto_order['status'], [ 'paid', 'completed' ], true ) ) : ?>
 		<p class="slashphoto-order__downloads"><?php esc_html_e( 'The download period for this order has ended. Contact us if you need the files again.', 'slashphoto' ); ?></p>
 	<?php elseif ( $args['has_download'] ) : ?>
@@ -69,6 +79,12 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 				<span class="slashphoto-order__what">
 					<span class="slashphoto-order__name"><?php echo esc_html( $slashphoto_item['name'] ); ?></span>
 					<span class="slashphoto-order__file"><?php echo esc_html( $slashphoto_item['file_label'] ); ?></span>
+					<?php if ( ! empty( $slashphoto_item['print_crop'] ) ) : ?>
+						<span class="slashphoto-order__file"><?php esc_html_e( 'Custom print crop', 'slashphoto' ); ?></span>
+					<?php endif; ?>
+					<?php if ( ! empty( $slashphoto_item['print_view'] ) ) : ?>
+						<span class="slashphoto-order__file"><?php esc_html_e( 'View from 360° panorama', 'slashphoto' ); ?></span>
+					<?php endif; ?>
 					<?php if ( '' !== (string) ( $slashphoto_item['licence_name'] ?? '' ) && ! $slashphoto_item['parent_id'] ) : ?>
 						<span class="slashphoto-order__file">
 							<?php
@@ -101,8 +117,8 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 			</dt>
 			<dd><?php echo esc_html( '−' . $slashphoto_money( $slashphoto_order['discount'] ) ); ?></dd>
 		<?php endif; ?>
-		<?php if ( $slashphoto_order['shipping'] > 0 || $slashphoto_order['address'] ) : ?>
-			<dt><?php esc_html_e( 'Shipping', 'slashphoto' ); ?></dt>
+		<?php if ( $slashphoto_order['shipping'] > 0 || $slashphoto_order['address'] || ! empty( $slashphoto_order['delivery_label'] ) ) : ?>
+			<dt><?php echo esc_html( ! empty( $slashphoto_order['delivery_label'] ) ? $slashphoto_order['delivery_label'] : __( 'Shipping', 'slashphoto' ) ); ?></dt>
 			<dd><?php echo esc_html( $slashphoto_money( $slashphoto_order['shipping'] ) ); ?></dd>
 		<?php endif; ?>
 		<?php if ( $slashphoto_order['tax'] > 0 ) : ?>
@@ -111,6 +127,10 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 		<?php endif; ?>
 		<dt class="slashphoto-order__total"><?php esc_html_e( 'Total', 'slashphoto' ); ?></dt>
 		<dd class="slashphoto-order__total"><?php echo esc_html( $slashphoto_money( $slashphoto_order['total'] ) ); ?></dd>
+		<?php if ( ! empty( $args['refunded'] ) ) : ?>
+			<dt><?php esc_html_e( 'Amount refunded', 'slashphoto' ); ?></dt>
+			<dd><?php echo esc_html( $slashphoto_money( $args['refunded'] ) ); ?></dd>
+		<?php endif; ?>
 		<?php if ( (int) ( $slashphoto_order['gift_card_amount'] ?? 0 ) > 0 ) : ?>
 			<dt>
 				<?php
@@ -166,7 +186,10 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 		</ul>
 	<?php endif; ?>
 
-	<?php if ( $slashphoto_order['address'] ) : ?>
+	<?php if ( ! empty( $slashphoto_order['pickup_instructions'] ) ) : ?>
+		<h3 class="slashphoto-order__subtitle"><?php esc_html_e( 'Pickup instructions', 'slashphoto' ); ?></h3>
+		<div><?php echo wp_kses_post( wpautop( esc_html( $slashphoto_order['pickup_instructions'] ) ) ); ?></div>
+	<?php elseif ( $slashphoto_order['address'] ) : ?>
 		<h3 class="slashphoto-order__subtitle"><?php esc_html_e( 'Delivery address', 'slashphoto' ); ?></h3>
 		<p class="slashphoto-order__address"><?php echo implode( '<br>', array_map( 'esc_html', \SlashPhoto\Shop\Emails::address_lines( $slashphoto_order ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped per line. ?></p>
 	<?php endif; ?>
@@ -180,10 +203,12 @@ $slashphoto_until = $slashphoto_order['downloads_until'] ? strtotime( $slashphot
 		<?php endif; ?>
 	</p>
 
-	<p class="slashphoto-order__privacy"><?php esc_html_e( 'Keep the link to this page to yourself: anyone who has it can see the order and download the files.', 'slashphoto' ); ?></p>
+	<?php if ( $args['signed_link'] ?? true ) : ?>
+		<p class="slashphoto-order__privacy"><?php esc_html_e( 'Keep the link to this page to yourself: anyone who has it can see the order and download the files.', 'slashphoto' ); ?></p>
+	<?php endif; ?>
 </div>
 <?php
 // The order is placed: empty the cart in this browser.
-if ( in_array( $slashphoto_order['status'], [ 'on-hold', 'paid', 'completed' ], true ) ) {
+if ( ( $args['signed_link'] ?? true ) && in_array( $slashphoto_order['status'], [ 'on-hold', 'paid', 'completed' ], true ) ) {
 	wp_print_inline_script_tag( 'try{window.localStorage.removeItem("slashphoto-cart");window.localStorage.removeItem("slashphoto-coupon")}catch(e){}' );
 }
